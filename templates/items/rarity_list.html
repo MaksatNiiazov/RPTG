@@ -7,7 +7,7 @@
       {% for r in rarities %}
         <li class="card" style="border-color: {{ r.color }};">
           <h2>{{ r.name }}</h2>
-          <p>Уровень: {{ r.lvl }}{% if r.legendary %} ⭐{% endif %}</p>
+          <p>Редкость: {{ r.lvl }}{% if r.legendary %} ⭐{% endif %}</p>
         </li>
       {% endfor %}
     </ul>

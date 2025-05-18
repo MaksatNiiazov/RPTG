@@ -40,6 +40,11 @@ class ItemListView(ListView):
             qs = qs.filter(rarity__slug=rarity_slug)
         return qs.order_by('type__name', 'name')
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["types"] = Type.objects.order_by("rarity__lvl")
+        ctx["rarities"] = Rarity.objects.order_by("lvl")
+        return ctx
 
 
 class LootConfigView(View):

@@ -3,33 +3,47 @@
 {% block content %}
   <div class="container-box">
     <h1>Каталог предметов</h1>
+
     <form method="get" class="filters">
-      <select name="type">
-        <option value="">Все типы</option>
-        {% for t in types %}
-          <option value="{{ t.slug }}" {% if request.GET.type == t.slug %}selected{% endif %}>
-            {{ t.name }}
-          </option>
-        {% endfor %}
-      </select>
-      <select name="rarity">
-        <option value="">Все редкости</option>
-        {% for r in rarities %}
-          <option value="{{ r.slug }}" {% if request.GET.rarity == r.slug %}selected{% endif %}>
-            {{ r.name }}
-          </option>
-        {% endfor %}
-      </select>
+      <label>
+        Тип:
+        <select name="type">
+          <option value="">Все типы</option>
+          {% for t in types %}
+            <option value="{{ t.slug }}" {% if request.GET.type == t.slug %}selected{% endif %}>
+              {{ t.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        Редкость:
+        <select name="rarity">
+          <option value="">Все редкости</option>
+          {% for r in rarities %}
+            <option value="{{ r.slug }}" {% if request.GET.rarity == r.slug %}selected{% endif %}>
+              {{ r.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </label>
+
       <button class="btn">Фильтровать</button>
     </form>
 
-    <ul class="grid-2">
+    <ul class="item-list">
       {% for item in items %}
-        <li class="card">
+        <li>
           <h2>{{ item.name }}</h2>
-          <p>Тип: {{ item.type.name }}</p>
-          <p>Редкость: <span style="color: {{ item.rarity.color }};">{{ item.rarity.name }}</span></p>
-          <p>Бонус: {{ item.bonus }}</p>
+          <p>
+            <strong>Тип:</strong> {{ item.type.name }}<br>
+            <strong>Редкость:</strong>
+              <span style="color: {{ item.rarity.color }};">
+                {{ item.rarity.name }}
+              </span><br>
+            <strong>Бонус:</strong> {{ item.bonus }}
+          </p>
         </li>
       {% empty %}
         <li>Нет предметов.</li>
@@ -37,15 +51,19 @@
     </ul>
 
     {% if is_paginated %}
-      <div class="pagination">
+      <nav class="pagination">
         {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}">« Назад</a>
+          <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.rarity %}&rarity={{ request.GET.rarity }}{% endif %}">
+            « Назад
+          </a>
         {% endif %}
         <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
         {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}">Вперёд »</a>
+          <a href="?page={{ page_obj.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.rarity %}&rarity={{ request.GET.rarity }}{% endif %}">
+            Вперёд »
+          </a>
         {% endif %}
-      </div>
+      </nav>
     {% endif %}
   </div>
 {% endblock %}
