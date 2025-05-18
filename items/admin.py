@@ -19,8 +19,8 @@ class TypeAdmin(ModelAdmin):
 
 @admin.register(Item)
 class ItemAdmin(ModelAdmin):
-    list_display = ("name", "type", "rarity", "bonus", "created_at")
+    list_display = ("name", "type", "rarity", "bonus", "weight", "legendary_buff")
     list_filter = ("type", "rarity")
-    list_editable = ("type", "rarity", "bonus",)
+    list_editable = ("bonus", "weight","legendary_buff")
     search_fields = ("name", "bonus")
     prepopulated_fields = {"slug": ("name",)}
