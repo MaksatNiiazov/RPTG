@@ -218,3 +218,119 @@ footer {
 .pagination a:hover {
   background: #e8d8b0;
 }
+
+
+/* === Адаптивность для старой книги === */
+
+/* Телефоны (до 600px) */
+@media (max-width: 600px) {
+  /* Контейнер: чуть больше отступов */
+  .container {
+    width: 95%;
+    padding: 1rem 0;
+  }
+
+  /* Геройский блок: текст центрируем, уменьшаем шрифты */
+  .home-hero {
+    padding: 3rem 1rem;
+  }
+  .hero-title {
+    font-size: 2rem;
+  }
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  /* Навигация: столбец, кнопки во всю ширину */
+  nav .container {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  nav a {
+    margin-right: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Кнопки и форма: растягиваем по ширине */
+  .btn,
+  button {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  input,
+  select,
+  textarea {
+    width: 100%;
+  }
+
+  /* Сетка карточек: 1 колонка */
+  .grid-2 {
+    display: block;
+  }
+
+  /* Список предметов: увеличим отступ у маркера */
+  .item-list {
+    padding-left: 1.5rem;
+  }
+
+  .item-list li {
+    padding: 0.5rem 0;
+  }
+
+  /* Таблицы (если используются) */
+  .type-rarity-table,
+  .type-rarity-table thead {
+    display: block;
+  }
+  .type-rarity-table tbody {
+    display: block;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .type-rarity-table th,
+  .type-rarity-table td {
+    display: block;
+    width: 100%;
+  }
+  .type-rarity-table th {
+    background: #e8d8b0;
+  }
+
+  /* Формат пагинации */
+  .pagination {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* Планшеты (600–1023px) */
+@media (min-width: 601px) and (max-width: 1023px) {
+  .container {
+    width: 92%;
+  }
+
+  /* Сетка: две колонки, но с меньшим промежутком */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  /* Навигация: в ряд, но центрируем */
+  nav .container {
+    justify-content: center;
+  }
+}
+
+/* Десктопы (от 1024px) — уже есть ваша сетка */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1140px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+}

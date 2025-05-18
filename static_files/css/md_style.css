@@ -140,3 +140,76 @@
   text-decoration: none;
   color: #0066cc;
 }
+
+
+/* === Адаптивность для .article-content === */
+
+/* Малые экраны (до 600px) */
+@media (max-width: 600px) {
+  .article-content {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    padding: 0 0.5rem;
+  }
+
+  .article-content h1 { font-size: 1.75rem; }
+  .article-content h2 { font-size: 1.5rem; }
+  .article-content h3 { font-size: 1.25rem; }
+
+  /* Списки и абзацы */
+  .article-content ul,
+  .article-content ol {
+    margin: 0.75em 0 0.75em 1.25em;
+  }
+
+  /* Блоки кода */
+  .article-content pre {
+    font-size: 0.8em;
+    padding: 0.75em;
+  }
+  .article-content code {
+    font-size: 0.85em;
+  }
+
+  /* Таблицы — горизонтальная прокрутка */
+  .article-content table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .article-content th,
+  .article-content td {
+    white-space: nowrap;
+  }
+
+  /* Изображения — уменьшаем отступы */
+  .article-content img {
+    margin: 1em 0;
+  }
+}
+
+/* Средние экраны (601px–1023px) */
+@media (min-width: 601px) and (max-width: 1023px) {
+  .article-content {
+    font-size: 1rem;
+    line-height: 1.5;
+    padding: 0 1rem;
+  }
+
+  .article-content h1 { font-size: 2rem; }
+  .article-content h2 { font-size: 1.5rem; }
+  .article-content h3 { font-size: 1.25rem; }
+
+  /* Блоки кода */
+  .article-content pre {
+    font-size: 0.85em;
+    padding: 0.9em;
+  }
+
+  /* Таблицы — можно оставить без прокрутки, но отступы добавим */
+  .article-content table {
+    margin: 1em auto;
+  }
+}
+
+/* Большие экраны (от 1024px) — базовые стили без изменений */
