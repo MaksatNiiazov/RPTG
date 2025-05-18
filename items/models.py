@@ -64,7 +64,7 @@ class Item(models.Model):
     created_at = models.DateTimeField("Создано", auto_now_add=True)
     updated_at = models.DateTimeField("Обновлено", auto_now=True)
 
-    legendary_buff = models.CharField("Легендарный бонус", max_length=200, null=True, default=None)
+    legendary_buff = models.CharField("Легендарный бонус", max_length=200, null=True, blank=True, default=None)
 
     class Meta:
         verbose_name = "Предмет"
