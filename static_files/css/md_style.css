@@ -71,14 +71,15 @@
 
 /* Код и блоки кода */
 .article-content code {
-  background: #afafaf;
+  background: #bbb5b5;
   padding: 0.2em 0.4em;
   font-family: Menlo, Consolas, monospace;
   font-size: 0.95em;
   border-radius: 3px;
+  color: #000000;
 }
 .article-content pre {
-  background: #2d2d2d;
+  background: #bbb5b5;
   color: #f8f8f2;
   padding: 1em;
   overflow: auto;
