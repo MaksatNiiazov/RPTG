@@ -12,7 +12,7 @@
       <div class="card">
         <h2>{{ it.name }}</h2>
         <p>Тип: {{ it.type.name }}</p>
-        <p>Редкость: {{ it.rarity.name }} {% if it.rarity.legendary %}⭐{% endif %}</p>
+        <p  style="color: {{ it.rarity.color }}">Редкость: {{ it.rarity.name }} {% if it.rarity.legendary %}⭐{% endif %}</p>
         <p>Бонус: {{ it.bonus }}</p>
       </div>
     {% endfor %}
