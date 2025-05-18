@@ -1,0 +1,57 @@
+# byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# tests and coverage
+*.pytest_cache
+.coverage
+.vscode
+# database & logs
+*.db
+*.sqlite3
+*.log
+
+# venv
+.env2
+.venv
+venv
+postgres/
+
+apps/static/admin
+apps/static/rest_framework
+
+# other
+.DS_Store
+
+# javascrip
+package-lock.json
+
+staticfiles/*
+!staticfiles/.gitkeep 
+.vscode/symbols.json
+
+apps/static/assets/node_modules
+apps/static/assets/yarn.lock
+apps/static/assets/.temp
+staticfiles/
+core/settings.py
+**/migrations/**
+!**/migrations/__init__.py
+
+.env
+.env.dev
+.env.logos
+# TODO may be remove?
+apps/media/images/*
+apps/media/docs/*
+apps/media/pdf/*
+test.py
+.idea/
+
+
+data/cookies/
+/logs/
+apps/media/
+
+*.json
+/static/

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }}{% endblock %}
+{% block content %}
+  <article class="article-detail">
+    <h1>{{ article.title }}</h1>
+    <p class="meta">
+      Опубликовано: {{ article.created_at|date:"d.m.Y H:i" }}
+      &nbsp;|&nbsp;
+      Папка:
+      <a href="{% url 'article_list' slug=article.folder.slug %}">
+        {{ article.folder.name }}
+      </a>
+    </p>
+    <div class="article-content">
+      {{ article.content_html|safe }}
+    </div>
+  </article>
+{% endblock %}

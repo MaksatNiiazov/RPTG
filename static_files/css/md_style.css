@@ -1,0 +1,142 @@
+/* файл: static/css/style.css */
+
+/* Баз */
+.article-content {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Заголовки */
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+  margin: 1.5em 0 0.5em;
+  font-weight: bold;
+  line-height: 1.25;
+  color: #222;
+}
+.article-content h1 { font-size: 2.25em; }
+.article-content h2 { font-size: 1.75em; }
+.article-content h3 { font-size: 1.5em; }
+.article-content h4 { font-size: 1.25em; }
+.article-content h5 { font-size: 1em; }
+.article-content h6 { font-size: 0.875em; color: #555; }
+
+/* Абзацы */
+.article-content p {
+  margin: 1em 0;
+}
+
+/* Ссылки */
+.article-content a {
+  color: #0066cc;
+  text-decoration: none;
+}
+.article-content a:hover {
+  text-decoration: underline;
+}
+
+/* Списки */
+.article-content ul,
+.article-content ol {
+  margin: 1em 0 1em 1.5em;
+}
+.article-content ul li {
+  list-style-type: disc;
+}
+.article-content ul ul {
+  list-style-type: circle;
+  margin-left: 1.5em;
+}
+.article-content ul ul ul {
+  list-style-type: square;
+  margin-left: 1.5em;
+}
+.article-content ol li {
+  margin-bottom: 0.5em;
+}
+
+/* Цитаты */
+.article-content blockquote {
+  border-left: 4px solid #ddd;
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  color: #666;
+  background: #f9f9f9;
+}
+
+/* Код и блоки кода */
+.article-content code {
+  background: #f5f5f5;
+  padding: 0.2em 0.4em;
+  font-family: Menlo, Consolas, monospace;
+  font-size: 0.95em;
+  border-radius: 3px;
+}
+.article-content pre {
+  background: #2d2d2d;
+  color: #f8f8f2;
+  padding: 1em;
+  overflow: auto;
+  border-radius: 4px;
+  margin: 1em 0;
+  font-family: Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+/* Таблицы */
+.article-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+.article-content th,
+.article-content td {
+  border: 1px solid #ddd;
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.article-content th {
+  background: #f3f3f3;
+  font-weight: bold;
+}
+
+/* Горизонтальная линия */
+.article-content hr {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 2em 0;
+}
+
+/* Изображения */
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1em auto;
+}
+
+/* Сноски и примечания */
+.article-content sup {
+  font-size: 0.8em;
+}
+
+/* Стили для ссылок с анкорами (TOC) */
+.article-content .toc {
+  background: #f9f9f9;
+  padding: 1em;
+  border: 1px solid #eee;
+  margin: 1em 0;
+}
+.article-content .toc ul {
+  list-style: none;
+  padding-left: 0;
+}
+.article-content .toc a {
+  text-decoration: none;
+  color: #0066cc;
+}
