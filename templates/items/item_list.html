@@ -42,9 +42,9 @@
               <span style="color: {{ item.rarity.color }};">
                 {{ item.rarity.name }}
               </span><br>
-            <strong>Бонус:</strong> {{ item.bonus }}
+            <strong>Бонус:</strong> {{ item.bonus }} <br>
 
-              {% if item.legendary_buff %} ({{ item.legendary_buff }}) {% endif %}
+             <strong>Легендарный бонус:</strong> {% if item.legendary_buff %} ({{ item.legendary_buff }}) {% endif %}
           </p>
         </li>
       {% empty %}
