@@ -1,5 +1,5 @@
 # catalog/models.py
-
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import slugify
 from unidecode import unidecode
@@ -59,9 +59,12 @@ class Item(models.Model):
         Rarity, verbose_name="Редкость",
         related_name="items", on_delete=models.PROTECT
     )
-    bonus = models.CharField("Бонус", max_length=50, default="0")
+    bonus = models.PositiveIntegerField("Бонус", default=0)
+    weight = models.PositiveIntegerField("Вес", default=0)
     created_at = models.DateTimeField("Создано", auto_now_add=True)
     updated_at = models.DateTimeField("Обновлено", auto_now=True)
+
+    legendary_buff = models.CharField("Легендарный бонус", max_length=200, null=True, default=None)
 
     class Meta:
         verbose_name = "Предмет"
@@ -73,6 +76,12 @@ class Item(models.Model):
         if not self.slug:
             self.slug = slugify(unidecode(self.name))[:60]
         super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.rarity.legendary and not self.legendary_buff:
+            raise ValidationError("Поле 'Легендарный бонус' обязательно для легендарных предметов.")
+        if not self.rarity.legendary and self.legendary_buff:
+            raise ValidationError("Поле 'Легендарный бонус' не может быть заполнено для обычных предметов.")
 
     def __str__(self):
         return self.name
