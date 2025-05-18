@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Настройка сундука{% endblock %}
+{% block content %}
+<div class="container container-box">
+  <h1>Настройка сундука</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn" type="submit">Сгенерировать содержимое</button>
+  </form>
+</div>
+{% endblock %}

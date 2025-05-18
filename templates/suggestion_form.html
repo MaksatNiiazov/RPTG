@@ -1,0 +1,25 @@
+{# templates/suggestions/suggestion_form.html #}
+<form action="{% url 'rulebook:submit' %}" method="post" class="suggestion-form">
+  {% csrf_token %}
+  {{ form.article_slug }}
+  <div>
+    {{ form.suggestion.label_tag }}<br>
+    {{ form.suggestion }}<br>
+    {{ form.suggestion.errors }}
+  </div>
+  <div>
+    {{ form.submitter_name.label_tag }}<br>
+    {{ form.submitter_name }}<br>
+    {{ form.submitter_name.errors }}
+  </div>
+  <div>
+    {{ form.submitter_email.label_tag }}<br>
+    {{ form.submitter_email }}<br>
+    {{ form.submitter_email.errors }}
+  </div>
+  <button type="submit" class="btn">Отправить</button>
+
+  {% if request.GET.suggestion == 'ok' %}
+    <p class="success">Спасибо! Ваше предложение получено.</p>
+  {% endif %}
+</form>

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Каталог предметов{% endblock %}
+{% block content %}
+  <div class="container-box">
+    <h1>Каталог предметов</h1>
+    <form method="get" class="filters">
+      <select name="type">
+        <option value="">Все типы</option>
+        {% for t in types %}
+          <option value="{{ t.slug }}" {% if request.GET.type == t.slug %}selected{% endif %}>
+            {{ t.name }}
+          </option>
+        {% endfor %}
+      </select>
+      <select name="rarity">
+        <option value="">Все редкости</option>
+        {% for r in rarities %}
+          <option value="{{ r.slug }}" {% if request.GET.rarity == r.slug %}selected{% endif %}>
+            {{ r.name }}
+          </option>
+        {% endfor %}
+      </select>
+      <button class="btn">Фильтровать</button>
+    </form>
+
+    <ul class="grid-2">
+      {% for item in items %}
+        <li class="card">
+          <h2>{{ item.name }}</h2>
+          <p>Тип: {{ item.type.name }}</p>
+          <p>Редкость: <span style="color: {{ item.rarity.color }};">{{ item.rarity.name }}</span></p>
+          <p>Бонус: {{ item.bonus }}</p>
+        </li>
+      {% empty %}
+        <li>Нет предметов.</li>
+      {% endfor %}
+    </ul>
+
+    {% if is_paginated %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}">« Назад</a>
+        {% endif %}
+        <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">Вперёд »</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

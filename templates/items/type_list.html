@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Типы предметов{% endblock %}
+{% block content %}
+  <div class="container-box">
+    <h1>Типы предметов</h1>
+    <ul class="grid-2">
+      {% for t in types %}
+        <li class="card">
+          <h2>{{ t.name }}</h2>
+          <p>Редкость: <span style="color: {{ t.rarity.color }};">{{ t.rarity.name }}</span></p>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

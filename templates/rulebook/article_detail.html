@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load suggestion_tags %}
 
 {% block title %}{{ article.title }}{% endblock %}
 {% block content %}
@@ -8,12 +9,16 @@
       Опубликовано: {{ article.created_at|date:"d.m.Y H:i" }}
       &nbsp;|&nbsp;
       Папка:
-      <a href="{% url 'article_list' slug=article.folder.slug %}">
+      <a href="{% url 'rulebook:article_list' slug=article.folder.slug %}">
         {{ article.folder.name }}
       </a>
     </p>
     <div class="article-content">
       {{ article.content_html|safe }}
     </div>
+    {% suggestion_form article.slug %}
+
   </article>
 {% endblock %}
+
+

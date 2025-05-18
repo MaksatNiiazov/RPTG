@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Результат{% endblock %}
+{% block content %}
+<div class="container container-box">
+  <h1>Выпавшие предметы</h1>
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn" type="submit">Сбросить настройки</button>
+  </form>
+  <div class="grid-2">
+    {% for it in items %}
+      <div class="card">
+        <h2>{{ it.name }}</h2>
+        <p>Тип: {{ it.type.name }}</p>
+        <p>Редкость: {{ it.rarity.name }} {% if it.rarity.legendary %}⭐{% endif %}</p>
+        <p>Бонус: {{ it.bonus }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

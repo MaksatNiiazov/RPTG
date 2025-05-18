@@ -1,5 +1,6 @@
 # models.py
 from django.db import models
+from django.urls import reverse
 from django.utils.text import slugify
 from unidecode import unidecode
 from mptt.models import MPTTModel, TreeForeignKey
@@ -77,3 +78,49 @@ class Article(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ImprovementProposal(models.Model):
+    """
+    Предложение по улучшению статьи или общее.
+    Если article = None — это глобальная идея.
+    """
+    article = models.ForeignKey(
+        Article,
+        verbose_name="Статья",
+        related_name="proposals",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        help_text="Оставьте пустым для глобальной идеи"
+    )
+    suggestion = models.TextField("Текст предложения")
+    submitter_name = models.CharField("Имя автора", max_length=100, blank=True)
+    submitter_email = models.EmailField("Email автора", blank=True)
+    submitted_at = models.DateTimeField("Дата подачи", auto_now=True)
+    STATUS_CHOICES = [
+        ("new", "Новое"),
+        ("reviewed", "В работе"),
+        ("accepted", "Принято"),
+        ("rejected", "Отклонено"),
+    ]
+    status = models.CharField(
+        "Статус",
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="new",
+        help_text="Для внутреннего использования"
+    )
+    reviewed_at = models.DateTimeField("Дата обзора", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Предложение по улучшению"
+        verbose_name_plural = "Предложения по улучшению"
+        ordering = ["-submitted_at"]
+
+    def __str__(self):
+        target = self.article.slug if self.article else "Глобальное"
+        return f"{target} @ {self.submitted_at:%Y-%m-%d %H:%M}"
+
+    def get_admin_url(self):
+        return reverse("admin:suggestions_improvementproposal_change", args=(self.pk,))

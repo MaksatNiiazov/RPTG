@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Редкости{% endblock %}
+{% block content %}
+  <div class="container-box">
+    <h1>Редкости</h1>
+    <ul class="grid-2">
+      {% for r in rarities %}
+        <li class="card" style="border-color: {{ r.color }};">
+          <h2>{{ r.name }}</h2>
+          <p>Уровень: {{ r.lvl }}{% if r.legendary %} ⭐{% endif %}</p>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

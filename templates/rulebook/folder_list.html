@@ -7,7 +7,7 @@
   <ul>
     {% recursetree folders %}
       <li>
-        <a href="{% url 'article_list' node.slug %}">{{ node.name }}</a>
+        <a href="{% url 'rulebook:article_list' node.slug %}">{{ node.name }}</a>
         {% if not node.is_leaf_node %}
           <ul class="children">
             {{ children }}
