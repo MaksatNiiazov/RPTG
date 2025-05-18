@@ -30,6 +30,8 @@ class Folder(MPTTModel):
         order_insertion_by = ['order']
 
     class Meta:
+        index_together = []
+
         unique_together = (('parent', 'slug'),)
         ordering = ['tree_id', 'lft']
         verbose_name = "Папка"
