@@ -43,6 +43,8 @@
                 {{ item.rarity.name }}
               </span><br>
             <strong>Бонус:</strong> {{ item.bonus }}
+
+              {% if item.legendary_buff %} ({{ item.legendary_buff }}) {% endif %}
           </p>
         </li>
       {% empty %}
