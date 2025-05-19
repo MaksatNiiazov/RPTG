@@ -1,12 +1,42 @@
 {% extends "base.html" %}
 {% block title %}Настройка сундука{% endblock %}
 {% block content %}
-<div class="container container-box">
-  <h1>Настройка сундука</h1>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button class="btn" type="submit">Сгенерировать содержимое</button>
-  </form>
-</div>
+    <div class="container container-box">
+        <h1>Настройка сундука</h1>
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="field-luck">
+                <label class="field-label">Удача:</label>
+                <div class="radios-inline">
+                    {% for radio in form.luck %}
+                        <div class="radio-item">
+                            <!-- цифра над инпутом -->
+                            <div class="radio-label">{{ radio.choice_label }}</div>
+                            <!-- сам инпут -->
+                            <div class="radio-input">{{ radio.tag }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+                {{ form.luck.errors }}
+            </div>
+
+            {# остальные поля формы #}
+            {{ form.chest_rarity.label_tag }}
+            {{ form.chest_rarity }}
+            {{ form.count.label_tag }}
+            {{ form.count }}
+            {{ form.rare_count.label_tag }}
+            {{ form.rare_count }}
+            {{ form.rare_rarity.label_tag }}
+            {{ form.rare_rarity }}
+            {{ form.type_bias.label_tag }}
+            {{ form.type_bias }}
+            {{ form.type_bias_count.label_tag }}
+            {{ form.type_bias_count }}
+
+            <button class="btn" type="submit">Сгенерировать</button>
+        </form>
+
+    </div>
 {% endblock %}

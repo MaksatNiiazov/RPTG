@@ -393,3 +393,41 @@ footer {
     gap: 1.5rem;
   }
 }
+
+
+/* контейнер для luck */
+.field-luck {
+  margin-bottom: 1.5rem;
+}
+.field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #3e2f1b;
+}
+
+/* сама строка радиокнопок */
+.radios-inline {
+  display: flex;
+  justify-content: flex-start;  /* выравнивание по центру */
+  gap: 1rem;                /* расстояние между цифрами */
+}
+
+/* каждая пара цифра + input */
+.radio-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* цифра над инпутом */
+.radio-label {
+  margin-bottom: 0.25rem;
+  color: #4a3723;
+  font-family: "Merriweather", serif;
+}
+
+/* сам кружок */
+.radio-input input[type="radio"] {
+  transform: scale(1.2); /* чуть больше, если нужно */
+}

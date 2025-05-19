@@ -1,11 +1,15 @@
-# catalog/forms.py
-
 from django import forms
 from .models import Rarity, Type
 
+
 class LootConfigForm(forms.Form):
-    luck = forms.IntegerField(
-        label="Удача (1–10)", min_value=1, max_value=10, initial=5
+    LUCK_CHOICES = [(i, str(i)) for i in range(1, 11)]
+
+    luck = forms.ChoiceField(
+        choices=LUCK_CHOICES,
+        label="Удача",
+        widget=forms.RadioSelect,
+        initial=5
     )
     chest_rarity = forms.ModelChoiceField(
         label="Редкость сундука",

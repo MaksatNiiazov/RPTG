@@ -46,7 +46,7 @@ def generate_loot_items(
             r = item.rarity.lvl
             base_w = 1 / (r + 1)
             chest_mod = chest_rarity + 1
-            luck_mod = 1 + (luck / 10)
+            luck_mod = 1 + (int(luck) / 10)
             w = base_w * chest_mod * luck_mod
             # если bias по типу, слегка усиливаем вес в пуле
             if type_bias and item.type == type_bias:

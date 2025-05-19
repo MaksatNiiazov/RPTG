@@ -62,7 +62,7 @@ class LootConfigView(View):
         cd = form.cleaned_data
         # сохраняем только числовые и id-поля
         request.session["loot_params"] = {
-            "luck": cd["luck"],
+            "luck": int(cd["luck"]),
             "chest_rarity_id": cd["chest_rarity"].pk,
             "count": cd["count"],
             "rare_count": cd.get("rare_count") or 0,
