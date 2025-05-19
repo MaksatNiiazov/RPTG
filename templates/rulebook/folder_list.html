@@ -3,17 +3,17 @@
 
 {% block title %}Справочник{% endblock %}
 {% block content %}
-  <h1>Справочник</h1>
-  <ul>
-    {% recursetree folders %}
-      <li>
-        <a href="{% url 'rulebook:article_list' node.slug %}">{{ node.name }}</a>
-        {% if not node.is_leaf_node %}
-          <ul class="children">
-            {{ children }}
-          </ul>
-        {% endif %}
-      </li>
-    {% endrecursetree %}
-  </ul>
+    <h1>Справочник</h1>
+    <ul>
+        {% recursetree folders %}
+            <li>
+                <a href="{% url 'rulebook:article_list' node.slug %}">{{ node.name }}</a>
+                {% if not node.is_leaf_node %}
+                    <ul class="children">
+                        {{ children }}
+                    </ul>
+                {% endif %}
+            </li>
+        {% endrecursetree %}
+    </ul>
 {% endblock %}

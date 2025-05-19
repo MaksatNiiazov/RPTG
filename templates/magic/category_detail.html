@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Категория {{ category.name }}{% endblock %}
+{% block content %}
+    <div class="container-box">
+        <h1>Категория: {{ category.name }}</h1>
+        <p>Заклинания данной категории:</p>
+
+        <table class="item-table">
+            <thead>
+            <tr>
+                <th>Уровень</th>
+                <th>Название</th>
+                <th>Школа</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for spell in spells %}
+                <tr>
+                    <td>{{ spell.level }}</td>
+                    <td><a href="{% url 'magic:spell_detail' spell.slug %}">{{ spell.name }}</a></td>
+                    <td>{{ spell.school.name }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">Нет заклинаний.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

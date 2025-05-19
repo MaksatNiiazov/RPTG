@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Категории заклинаний{% endblock %}
+{% block content %}
+    <div class="container-box">
+        <h1>Категории заклинаний</h1>
+        <ul class="item-list">
+            {% for cat in categories %}
+                <li>
+                    <a href="{% url 'magic:category_detail' cat.slug %}">{{ cat.name }}</a>
+                </li>
+            {% empty %}
+                <li>Нет категорий.</li>
+            {% endfor %}
+        </ul>
+
+        {% if is_paginated %}
+            <nav class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}">« Назад</a>
+                {% endif %}
+                <span>Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">Вперёд »</a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </div>
+{% endblock %}

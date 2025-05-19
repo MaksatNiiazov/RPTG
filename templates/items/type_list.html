@@ -1,32 +1,32 @@
 {% extends "base.html" %}
 {% block title %}Типы предметов{% endblock %}
 {% block content %}
-  <div class="container-box">
-    <h1>Типы предметов</h1>
+    <div class="container-box">
+        <h1>Типы предметов</h1>
 
-    <table class="type-table">
-      <thead>
-        <tr>
-          <th>Тип предмета</th>
-          <th>Редкость</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for t in types %}
-        <tr>
-          <td>{{ t.name }}</td>
-          <td>
+        <table class="type-table">
+            <thead>
+            <tr>
+                <th>Тип предмета</th>
+                <th>Редкость</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for t in types %}
+                <tr>
+                    <td>{{ t.name }}</td>
+                    <td>
             <span style="border-left: 15px solid {{ t.rarity.color }}; padding-left: 8px;">
               {{ t.rarity.name }}
             </span>
-          </td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="2">Типы предметов не найдены.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="2">Типы предметов не найдены.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

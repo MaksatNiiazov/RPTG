@@ -1,30 +1,30 @@
 {% extends "base.html" %}
 {% block title %}Редкости{% endblock %}
 {% block content %}
-  <div class="container-box">
-    <h1>Редкости</h1>
+    <div class="container-box">
+        <h1>Редкости</h1>
 
-    <table class="rarity-table">
-      <thead>
-        <tr>
-          <th>Название</th>
-          <th>Уровень</th>
-          <th>Легендарная</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in rarities %}
-        <tr style="border-left: 4px solid {{ r.color }};">
-          <td>{{ r.name }}</td>
-          <td>{{ r.lvl }}</td>
-          <td>{% if r.legendary %}Да ⭐{% else %}Нет{% endif %}</td>
-        </tr>
-        {% empty %}
-        <tr>
-          <td colspan="3">Редкости не найдены.</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+        <table class="rarity-table">
+            <thead>
+            <tr>
+                <th>Название</th>
+                <th>Уровень</th>
+                <th>Легендарная</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for r in rarities %}
+                <tr style="border-left: 4px solid {{ r.color }};">
+                    <td>{{ r.name }}</td>
+                    <td>{{ r.lvl }}</td>
+                    <td>{% if r.legendary %}Да ⭐{% else %}Нет{% endif %}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3">Редкости не найдены.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

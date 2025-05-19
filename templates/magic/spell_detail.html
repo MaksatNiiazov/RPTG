@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ spell.name }}{% endblock %}
+{% block content %}
+    <div class="container-box">
+        <h1>{{ spell.name }}</h1>
+        <p><strong>Уровень:</strong> {{ spell.level }}</p>
+        <p><strong>Школа:</strong> <a
+                href="{% url 'magic:school_detail' spell.school.slug %}">{{ spell.school.name }}</a></p>
+        <p><strong>Категория:</strong> <a
+                href="{% url 'magic:category_detail' spell.category.slug %}">{{ spell.category.name }}</a></p>
+        <p><strong>Тип действия:</strong> {{ spell.get_action_cost_display }}</p>
+        <p><strong>Concentration Check:</strong> {% if spell.requires_check %}Да{% else %}Нет{% endif %}</p>
+
+        <hr>
+
+        <div class="article-content">
+            {{ spell.description|linebreaks }}
+        </div>
+    </div>
+{% endblock %}

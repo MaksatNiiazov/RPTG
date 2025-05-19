@@ -25,6 +25,7 @@ urlpatterns = [
     path('', TemplateView.as_view(template_name='index.html'), name='index'),
     path('rulebook/', include('rulebook.urls')),
     path('items/', include('items.urls')),
+    path('magic/', include('magic.urls')),
 
 ]
 

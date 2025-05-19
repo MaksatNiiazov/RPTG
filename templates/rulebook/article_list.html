@@ -2,16 +2,16 @@
 
 {% block title %}Статьи в «{{ folder.name }}»{% endblock %}
 {% block content %}
-  <h1>Папка: {{ folder.name }}</h1>
-  <ul>
-    {% for article in articles %}
-      <li>
-        <a href="{% url 'rulebook:article_detail' slug=article.slug %}">
-          {{ article.title }}
-        </a>
-      </li>
-    {% empty %}
-      <li>В этой папке пока нет статей.</li>
-    {% endfor %}
-  </ul>
+    <h1>Папка: {{ folder.name }}</h1>
+    <ul>
+        {% for article in articles %}
+            <li>
+                <a href="{% url 'rulebook:article_detail' slug=article.slug %}">
+                    {{ article.title }}
+                </a>
+            </li>
+        {% empty %}
+            <li>В этой папке пока нет статей.</li>
+        {% endfor %}
+    </ul>
 {% endblock %}

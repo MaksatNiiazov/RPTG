@@ -4,25 +4,25 @@
 
 {% block title %}{{ article.title }}{% endblock %}
 {% block css %}
-	  <link rel="stylesheet" href="{% static 'css/md_style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/md_style.css' %}">
 {% endblock %}
 {% block content %}
-  <article class="article-detail">
-    <h1>{{ article.title }}</h1>
-    <p class="meta">
-      Опубликовано: {{ article.created_at|date:"d.m.Y H:i" }}
-      &nbsp;|&nbsp;
-      Папка:
-      <a href="{% url 'rulebook:article_list' slug=article.folder.slug %}">
-        {{ article.folder.name }}
-      </a>
-    </p>
-    <div class="article-content">
-      {{ article.content_html|safe }}
-    </div>
-    {% suggestion_form article.slug %}
+    <article class="article-detail">
+        <h1>{{ article.title }}</h1>
+        <p class="meta">
+            Опубликовано: {{ article.created_at|date:"d.m.Y H:i" }}
+            &nbsp;|&nbsp;
+            Папка:
+            <a href="{% url 'rulebook:article_list' slug=article.folder.slug %}">
+                {{ article.folder.name }}
+            </a>
+        </p>
+        <div class="article-content">
+            {{ article.content_html|safe }}
+        </div>
+        {% suggestion_form article.slug %}
 
-  </article>
+    </article>
 {% endblock %}
 
 
