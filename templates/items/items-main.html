@@ -1,0 +1,27 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% load suggestion_tags %}
+
+{% block title %}Deep Dark Fantasy{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/style_index.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="home-hero">
+  <div class="container">
+    <h1 class="hero-title">Предметы</h1>
+    <p class="hero-subtitle">Справочник предметов и всего что может быть с ними связанно</p>
+    <ul class="home-nav">
+      <li><a href="{% url 'items:type_list' %}">Types (Типы предметов {{ types.count }})</a></li>
+      <li><a href="{% url 'items:rarity_list' %}">Rares (Редкости {{ rarities.count }})</a></li>
+      <li><a href="{% url 'items:item_list' %}">Items (Предметы {{ items.count }})</a></li>
+      <li><a href="{% url 'items:loot_config' %}">Loot (Генератор лута)</a></li>
+
+    </ul>
+  </div>
+</div>
+    {% suggestion_form %}
+
+{% endblock %}

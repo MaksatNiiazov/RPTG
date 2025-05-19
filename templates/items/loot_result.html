@@ -1,21 +1,37 @@
 {% extends "base.html" %}
 {% block title %}Результат{% endblock %}
 {% block content %}
-<div class="container container-box">
-  <h1>Выпавшие предметы</h1>
-  <form method="post">
-    {% csrf_token %}
-    <button class="btn" type="submit">Сбросить настройки</button>
-  </form>
-  <div class="grid-2">
-    {% for it in items %}
-      <div class="card">
-        <h2>{{ it.name }}</h2>
-        <p>Тип: {{ it.type.name }}</p>
-        <p  style="color: {{ it.rarity.color }}">Редкость: {{ it.rarity.name }} {% if it.rarity.legendary %}⭐{% endif %}</p>
-        <p>Бонус: {{ it.bonus }}</p>
-      </div>
-    {% endfor %}
+  <div class="container container-box">
+    <h1>Выпавшие предметы</h1>
+
+    <form method="post" style="display: inline-block; margin-right: 1rem;">
+      {% csrf_token %}
+      <button class="btn" type="submit">Сбросить настройки</button>
+    </form>
+
+
+    <button class="btn reset" type="button">Перезагрузить страницу</button>
+
+    <div class="grid-2" style="margin-top: 1.5rem;">
+      {% for it in items %}
+        <div class="card" style="border-left: 6px solid {{ it.rarity.color }};">
+          <h4>{{ it.name }}</h4>
+          <p>Тип: {{ it.type.name }}</p>
+          <p>Редкость: {{ it.rarity.name }} {% if it.rarity.legendary %}⭐{% endif %}</p>
+          <p>Бонус: {{ it.bonus }}</p>
+          {% if it.rarity.legendary %}
+            <p>Легендарный бонус: {{ it.legendary_buff }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
   </div>
-</div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      document.querySelector(".reset").addEventListener("click", function() {
+        window.location.reload();
+      });
+    });
+  </script>
 {% endblock %}

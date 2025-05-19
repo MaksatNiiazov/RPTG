@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 {% load static %}
 {% load suggestion_tags %}
@@ -9,20 +8,21 @@
 {% endblock %}
 
 {% block content %}
-<div class="home-hero">
-  <div class="container">
-    <h1 class="hero-title">Deep Dark Fantasy</h1>
-    <p class="hero-subtitle">Пробуем сделать что то годное</p>
-    <ul class="home-nav">
-      <li><a href="{% url 'rulebook:folder_list' %}">Rulebook</a></li>
-      <li><a href="{% url 'items:type_list' %}">Types</a></li>
-      <li><a href="{% url 'items:rarity_list' %}">Rares</a></li>
-      <li><a href="{% url 'items:item_list' %}">Items</a></li>
-      <li><a href="{% url 'items:loot_config' %}">Loot</a></li>
+    <div class="home-hero">
+        <div class="container">
+            <h1 class="hero-title">Deep Dark Fantasy</h1>
+            <p class="hero-subtitle">Пробуем сделать что-то годное</p>
+            <ul class="home-nav">
+                <li><a href="{% url 'rulebook:folder_list' %}">Rulebook (Правила)</a></li>
 
-    </ul>
-  </div>
-</div>
+
+                <li><a href="{% url 'items:items_main' %}">Items (Предметы)</a></li>
+                <li><a href="">Magic (Магия)</a></li>
+
+
+            </ul>
+        </div>
+    </div>
     {% suggestion_form %}
 
 {% endblock %}

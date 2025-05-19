@@ -3,13 +3,28 @@
 {% block content %}
   <div class="container-box">
     <h1>Редкости</h1>
-    <ul class="grid-2">
-      {% for r in rarities %}
-        <li class="card" style="border-color: {{ r.color }};">
-          <h2>{{ r.name }}</h2>
-          <p>Редкость: {{ r.lvl }}{% if r.legendary %} ⭐{% endif %}</p>
-        </li>
-      {% endfor %}
-    </ul>
+
+    <table class="rarity-table">
+      <thead>
+        <tr>
+          <th>Название</th>
+          <th>Уровень</th>
+          <th>Легендарная</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rarities %}
+        <tr style="border-left: 4px solid {{ r.color }};">
+          <td>{{ r.name }}</td>
+          <td>{{ r.lvl }}</td>
+          <td>{% if r.legendary %}Да ⭐{% else %}Нет{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3">Редкости не найдены.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 {% endblock %}

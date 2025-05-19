@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% load suggestion_tags %}
+{% load static %}
 
 {% block title %}{{ article.title }}{% endblock %}
+{% block css %}
+	  <link rel="stylesheet" href="{% static 'css/md_style.css' %}">
+{% endblock %}
 {% block content %}
   <article class="article-detail">
     <h1>{{ article.title }}</h1>

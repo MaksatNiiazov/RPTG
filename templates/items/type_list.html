@@ -3,13 +3,30 @@
 {% block content %}
   <div class="container-box">
     <h1>Типы предметов</h1>
-    <ul class="grid-2">
-      {% for t in types %}
-        <li class="card">
-          <h2>{{ t.name }}</h2>
-          <p>Редкость: <span style="color: {{ t.rarity.color }};">{{ t.rarity.name }}</span></p>
-        </li>
-      {% endfor %}
-    </ul>
+
+    <table class="type-table">
+      <thead>
+        <tr>
+          <th>Тип предмета</th>
+          <th>Редкость</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in types %}
+        <tr>
+          <td>{{ t.name }}</td>
+          <td>
+            <span style="color: {{ t.rarity.color }};">
+              {{ t.rarity.name }}
+            </span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="2">Типы предметов не найдены.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 {% endblock %}

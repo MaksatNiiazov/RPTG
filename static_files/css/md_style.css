@@ -1,10 +1,13 @@
 /* файл: static/css/style.css */
 
-/* Баз */
+/* Базовые стили (цвета «старой книги») */
 .article-content {
-  font-family: Arial, sans-serif;
+  font-family: "Merriweather", serif;
   line-height: 1.6;
-  color: #333;
+  color: #4a3723;            /* тёмно-коричневый */
+  background: #fbf6ee;       /* светлый пергамент */
+  padding: 1rem;
+  border-radius: 6px;
 }
 
 /* Заголовки */
@@ -15,16 +18,16 @@
 .article-content h5,
 .article-content h6 {
   margin: 1.5em 0 0.5em;
-  font-weight: bold;
+  font-weight: 600;
+  color: #3e2f1b;            /* почти чёрный коричневый */
   line-height: 1.25;
-  color: #222;
 }
 .article-content h1 { font-size: 2.25em; }
 .article-content h2 { font-size: 1.75em; }
 .article-content h3 { font-size: 1.5em; }
 .article-content h4 { font-size: 1.25em; }
 .article-content h5 { font-size: 1em; }
-.article-content h6 { font-size: 0.875em; color: #555; }
+.article-content h6 { font-size: 0.875em; color: #65513d; }
 
 /* Абзацы */
 .article-content p {
@@ -33,11 +36,11 @@
 
 /* Ссылки */
 .article-content a {
-  color: #0066cc;
-  text-decoration: none;
+  color: #6b4f2b;            /* коричневый */
+  text-decoration: underline;
 }
 .article-content a:hover {
-  text-decoration: underline;
+  color: #48341f;
 }
 
 /* Списки */
@@ -62,25 +65,25 @@
 
 /* Цитаты */
 .article-content blockquote {
-  border-left: 4px solid #ddd;
+  border-left: 4px solid #dac8a0;
   margin: 1em 0;
   padding: 0.5em 1em;
-  color: #666;
-  background: #f9f9f9;
+  color: #65513d;
+  background: #f7f1e7;
 }
 
 /* Код и блоки кода */
 .article-content code {
-  background: #bbb5b5;
+  background: #e8d8b0;      /* светлый пергаментный */
   padding: 0.2em 0.4em;
   font-family: Menlo, Consolas, monospace;
   font-size: 0.95em;
   border-radius: 3px;
-  color: #000000;
+  color: #3e2f1b;
 }
 .article-content pre {
-  background: #bbb5b5;
-  color: #f8f8f2;
+  background: #dac8a0;      /* чуть темнее, чем inline code */
+  color: #3e2f1b;
   padding: 1em;
   overflow: auto;
   border-radius: 4px;
@@ -97,19 +100,20 @@
 }
 .article-content th,
 .article-content td {
-  border: 1px solid #ddd;
+  border: 1px solid #dac8a0;
   padding: 0.5em 0.75em;
   text-align: left;
+  color: #4a3723;
 }
 .article-content th {
-  background: #f3f3f3;
-  font-weight: bold;
+  background: #e8d8b0;
+  font-weight: 600;
 }
 
 /* Горизонтальная линия */
 .article-content hr {
   border: none;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid #dac8a0;
   margin: 2em 0;
 }
 
@@ -121,16 +125,16 @@
   margin: 1em auto;
 }
 
-/* Сноски и примечания */
+/* Сноски */
 .article-content sup {
   font-size: 0.8em;
 }
 
-/* Стили для ссылок с анкорами (TOC) */
+/* TOC */
 .article-content .toc {
-  background: #f9f9f9;
+  background: #f7f1e7;
   padding: 1em;
-  border: 1px solid #eee;
+  border: 1px solid #e1d7c2;
   margin: 1em 0;
 }
 .article-content .toc ul {
@@ -139,78 +143,47 @@
 }
 .article-content .toc a {
   text-decoration: none;
-  color: #0066cc;
+  color: #6b4f2b;
 }
 
-
-/* === Адаптивность для .article-content === */
-
-/* Малые экраны (до 600px) */
+/* === Адаптивность === */
+/* Малые экраны */
 @media (max-width: 600px) {
   .article-content {
     font-size: 0.9rem;
     line-height: 1.4;
-    padding: 0 0.5rem;
+    padding: 0.5rem;
   }
-
   .article-content h1 { font-size: 1.75rem; }
   .article-content h2 { font-size: 1.5rem; }
   .article-content h3 { font-size: 1.25rem; }
-
-  /* Списки и абзацы */
-  .article-content ul,
-  .article-content ol {
-    margin: 0.75em 0 0.75em 1.25em;
-  }
-
-  /* Блоки кода */
   .article-content pre {
     font-size: 0.8em;
     padding: 0.75em;
   }
-  .article-content code {
-    font-size: 0.85em;
-  }
-
-  /* Таблицы — горизонтальная прокрутка */
   .article-content table {
     display: block;
-    width: 100%;
     overflow-x: auto;
   }
   .article-content th,
   .article-content td {
     white-space: nowrap;
   }
-
-  /* Изображения — уменьшаем отступы */
-  .article-content img {
-    margin: 1em 0;
-  }
 }
 
-/* Средние экраны (601px–1023px) */
+/* Средние экраны */
 @media (min-width: 601px) and (max-width: 1023px) {
   .article-content {
     font-size: 1rem;
     line-height: 1.5;
-    padding: 0 1rem;
+    padding: 0.75rem;
   }
-
   .article-content h1 { font-size: 2rem; }
   .article-content h2 { font-size: 1.5rem; }
-  .article-content h3 { font-size: 1.25rem; }
-
-  /* Блоки кода */
   .article-content pre {
     font-size: 0.85em;
     padding: 0.9em;
   }
-
-  /* Таблицы — можно оставить без прокрутки, но отступы добавим */
-  .article-content table {
-    margin: 1em auto;
-  }
 }
 
-/* Большие экраны (от 1024px) — базовые стили без изменений */
+/* Большие экраны — базовые стили */

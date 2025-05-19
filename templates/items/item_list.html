@@ -32,25 +32,36 @@
       <button class="btn">Фильтровать</button>
     </form>
 
-    <ul class="item-list">
-      {% for item in items %}
-        <li>
-          <h2>{{ item.name }}</h2>
-          <p>
-            <strong>Тип:</strong> {{ item.type.name }}<br>
-            <strong>Редкость:</strong>
-              <span style="color: {{ item.rarity.color }};">
-                {{ item.rarity.name }}
-              </span><br>
-            <strong>Бонус:</strong> {{ item.bonus }} <br>
-
-             <strong>Легендарный бонус:</strong> {% if item.legendary_buff %} {{ item.legendary_buff }} {% endif %}
-          </p>
-        </li>
-      {% empty %}
-        <li>Нет предметов.</li>
-      {% endfor %}
-    </ul>
+    <table class="item-table">
+      <thead>
+        <tr>
+          <th>Название</th>
+          <th>Тип</th>
+          <th>Редкость</th>
+          <th>Бонус</th>
+          <th>Легендарный бонус</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.name }}</td>
+          <td>{{ item.type.name }}</td>
+          <td>
+            <span style="border-left: 15px solid {{ item.rarity.color }}; padding-left: 8px;">
+              {{ item.rarity.name }}
+            </span>
+          </td>
+          <td>{{ item.bonus }}</td>
+          <td>{% if item.legendary_buff %}{{ item.legendary_buff }}{% else %}—{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5">Нет предметов.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
     {% if is_paginated %}
       <nav class="pagination">
