@@ -95,6 +95,7 @@ main {
   font-size: 1rem;
   color: #4a3723;
 }
+
 .nav-links a:hover {
   color: #3e2f1b;
 }
@@ -250,6 +251,7 @@ footer {
 @media (max-width: 600px) {
   .btn,
   button { width: 100%; }
+  .nav-back { width: 150px }
   .grid-2 { display: block; }
 }
 /* Tablet */
