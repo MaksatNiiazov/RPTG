@@ -22,13 +22,15 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
     path('', TemplateView.as_view(template_name='index.html'), name='index'),
+    path("accounts/", include("accounts.urls")),
     path('rulebook/', include('rulebook.urls')),
     path('items/', include('items.urls')),
     path('magic/', include('magic.urls')),
+    path("characters/", include("character.urls")),
 
 ]
-
 
 if settings.DEBUG:
     urlpatterns += static(

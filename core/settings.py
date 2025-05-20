@@ -43,12 +43,13 @@ INSTALLED_APPS = [
 
     "ckeditor",
     "ckeditor_uploader",
-
+    'accounts',
     'rulebook',
     'items',
     'magic',
     'character',
 ]
+AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

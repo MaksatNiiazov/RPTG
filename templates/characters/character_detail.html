@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Персонаж: {{ char.name }}{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>{{ char.name }}</h1>
+        <p><strong>Раса:</strong> {{ char.race|default:"—" }}</p>
+        <p><strong>Пол:</strong> {{ char.get_gender_display|default:"—" }}</p>
+        {% if char.background %}
+            <h2>Предыстория</h2>
+            <p>{{ char.background|linebreaks }}</p>
+        {% endif %}
+        {% if char.notes %}
+            <h2>Заметки</h2>
+            <p>{{ char.notes|linebreaks }}</p>
+        {% endif %}
+
+        <h2>Характеристики</h2>
+        <table class="item-table">
+            <tr>
+                <th>Сила</th>
+                <td>{{ char.str_stat }}</td>
+            </tr>
+            <tr>
+                <th>Ловкость</th>
+                <td>{{ char.dex_stat }}</td>
+            </tr>
+            <tr>
+                <th>Телосложение</th>
+                <td>{{ char.con_stat }}</td>
+            </tr>
+            <tr>
+                <th>Интеллект</th>
+                <td>{{ char.int_stat }}</td>
+            </tr>
+            <tr>
+                <th>Мудрость</th>
+                <td>{{ char.wis_stat }}</td>
+            </tr>
+            <tr>
+                <th>Харизма</th>
+                <td>{{ char.cha_stat }}</td>
+            </tr>
+            <tr>
+                <th>Меткость</th>
+                <td>{{ char.acc_stat }}</td>
+            </tr>
+            <tr>
+                <th>Удача</th>
+                <td>{{ char.lck_stat }}</td>
+            </tr>
+        </table>
+
+        <h2>Показатели</h2>
+        <ul>
+            <li><strong>HP:</strong> {{ char.current_hp }} / {{ char.max_hp }}</li>
+            <li><strong>CP:</strong> {{ char.concentration }}</li>
+            <li><strong>Грузоподъёмность:</strong> {{ char.carry_capacity }} кг</li>
+            <li><strong>Макс. вес оружия:</strong> {{ char.max_weapon_weight }} кг</li>
+            <li><strong>Макс. вес доспехов:</strong> {{ char.max_armor_weight }} кг</li>
+        </ul>
+        <br>
+        <a href="{% url 'characters:character_create' %}" class="btn">Создать нового</a>
+        <a href="{% url 'accounts:profile' %}" class="btn">Назад в профиль</a>
+    </div>
+{% endblock %}

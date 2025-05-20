@@ -4,9 +4,11 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.utils import timezone
 from items.models import Item
+from accounts.models import User
 
 
 class Character(models.Model):
+    account = models.ForeignKey(User, on_delete=models.CASCADE, related_name="characters")
     GENDER_CHOICES = [('M', 'Мужской'), ('F', 'Женский'), ('O', 'Другой')]
 
     name = models.CharField("Имя", max_length=100)
@@ -230,7 +232,9 @@ class EquippedItem(models.Model):
     def clean(self):
         # Проверяем соответствие item.equipment_type ↔ slot
         et = self.item.equipment_slot
-        # mapping et->slots как выше...
+        if self.slot not in et:
+            raise ValidationError(f"Нельзя надеть {self.item.name} в слот {self.get_slot_display()}.")
+
         super().clean()  # или оставить более детально, см. выше примеры
 
     def save(self, *args, **kwargs):

@@ -3,6 +3,8 @@
 from django.contrib import admin
 from .models import Character, Inventory, InventoryItem, EquippedItem
 from unfold.admin import ModelAdmin, TabularInline
+
+
 class InventoryItemInline(TabularInline):
     model = InventoryItem
     extra = 1
