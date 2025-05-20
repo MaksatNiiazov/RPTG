@@ -8,7 +8,7 @@ from accounts.models import User
 
 
 class Character(models.Model):
-    account = models.ForeignKey(User, on_delete=models.CASCADE, related_name="characters")
+    account = models.ForeignKey(User, on_delete=models.CASCADE, related_name="characters", blank=True, null=True)
     GENDER_CHOICES = [('M', 'Мужской'), ('F', 'Женский'), ('O', 'Другой')]
 
     name = models.CharField("Имя", max_length=100)
