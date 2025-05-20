@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rulebook',
     'items',
     'magic',
+    'character',
 ]
 
 MIDDLEWARE = [

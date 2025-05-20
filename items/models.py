@@ -15,7 +15,7 @@ class Rarity(models.Model):
     class Meta:
         verbose_name = "Редкость"
         verbose_name_plural = "Редкости"
-        ordering = [ "lvl"]
+        ordering = ["lvl"]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -49,8 +49,36 @@ class Type(models.Model):
 
 
 class Item(models.Model):
+    EQUIP_CHOICES = [
+        ("HEAD", "Шлем / Головной убор"),
+        ("NECK", "Ожерелье / Амулет"),
+        ("CHEST", "Нагрудник / Доспех"),
+        ("HAND", "Перчатки / Наручи"),
+        ("WAIST", "Пояс"),
+        ("LEGS", "Наголенники / Поножи"),
+        ("FEET", "Ботинки / Сапоги"),
+        ("RING", "Кольцо"),
+        ("CLOAK", "Плащ / Накидка"),
+        ("SHIELD", "Щит"),
+        ("1H", "Одноручное оружие"),
+        ("2H", "Двуручное оружие"),
+        ("DAG", "Кинжал"),
+        ("BOW", "Лук"),
+        ("XBW", "Арбалет"),
+        ("STAFF", "Посох"),
+        ("WAND", "Жезл"),
+        ("ORB", "Сфера / Фокус"),
+        ("OFFH", "Доп. в руке (торговый фонарь и т.д.)"),
+        ("OTR", "Прочее"),
+    ]
+
     name = models.CharField("Название предмета", max_length=50)
     slug = models.SlugField("URL-имя", max_length=60, unique=True, blank=True)
+    equipment_slot = models.CharField(
+        "Тип экипировки", max_length=6,
+        choices=EQUIP_CHOICES, default="OTR",
+        help_text="Слот, в который надевается этот предмет"
+    )
     type = models.ForeignKey(
         Type, verbose_name="Тип предмета",
         related_name="items", on_delete=models.PROTECT
