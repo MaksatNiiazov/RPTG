@@ -1,14 +1,18 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DetailView
 
+from items.models import Item
 from worlds.models import PendingLoot, World
 from .forms import CharacterForm, CharacterKnowledgeForm
-from .models import Character, InventoryItem
+from .models import Character, InventoryItem, Equipment
 
 
 class CharacterCreateView(LoginRequiredMixin, CreateView):
@@ -36,6 +40,20 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         # Смотрим только своих персонажей
         return Character.objects.filter(owner=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        character = self.object
+
+        # если нет связанной экипировки — создаём
+        if not hasattr(character, "equipment"):
+            Equipment.objects.create(character=character)
+
+        context["equipment"] = character.equipment
+        context["legendary_bonuses"] = character.get_legendary_bonuses()
+
+        context["slot_names"] = SLOT_NAMES
+        return context
 
 
 class PickLootView(LoginRequiredMixin, View):
@@ -97,61 +115,123 @@ class ManageKnowledgeView(LoginRequiredMixin, View):
         })
 
 
-class CharacterInventoryView(DetailView):
+SLOT_NAMES = [
+    {"head": 'Голова'},
+    {"neck": 'Шея'},
+    {"chest": 'Туловище'},
+    {"hands": 'Руки'},
+    {"waist": 'Пояс'},
+    {"legs": 'Ноги'},
+    {"feet": 'Ступни'},
+    {"cloak": 'Мантия'},
+    {"ring_left": 'Кольцо на левую руку'},
+    {"ring_right": 'Кольцо на правую руку'},
+    {"main_hand": 'Основная рука'},
+    {"off_hand": 'Второстепенная рука'},
+    {"two_hands": 'Две руки'},
+]
+
+
+class CharacterInventoryView(LoginRequiredMixin, DetailView):
     model = Character
     template_name = "characters/inventory.html"
-    context_object_name = "character"
+    context_object_name = "char"
+    pk_url_kwarg = "character_id"
 
-    def get_object(self, queryset=None):
-        object = super().get_object(queryset)
-        if not object.has_inventory():
-            object.inventory = object.create_inventory()
-        return Character.objects.get(pk=self.kwargs["pk"], owner=self.request.user)
+    def get_queryset(self):
+        return Character.objects.filter(owner=self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        inventory = self.object.inventory
-        context["equipped"] = {
-            item.slot: item for item in inventory.equipped.select_related("item")
-        }
-        context["inventory_items"] = inventory.items.select_related("item")
+        char = self.object
+
+        # Гарантированно получаем или создаём экипировку
+        equipment, created = Equipment.objects.get_or_create(character=char)
+
+        context["equipment"] = equipment
+        context["inventory_items"] = char.items.select_related("item")
+        context["slot_names"] = SLOT_NAMES
         return context
 
 
+class EquipItemView(LoginRequiredMixin, View):
+    def post(self, request, character_id, item_id):
+        character = get_object_or_404(Character, id=character_id, owner=request.user)
+        item = get_object_or_404(Item, id=item_id)
+
+        # выполнится ли AJAX?
+        is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
+
+        try:
+            eq = character.equip_item(item)
+            message = f"{item.name} экипирован."
+            status = "ok"
+            data = {
+                "slot": eq.slot,
+                "item": {"id": item.id, "name": item.name, "bonus": item.bonus, "weight": item.weight}
+            }
+        except Exception as e:
+            message = str(e)
+            status = "error"
+            data = {}
+
+        if is_ajax:
+            return JsonResponse({"status": status, "message": message, "data": data})
+        # fallback обычный
+        messages_method = messages.success if status=="ok" else messages.error
+        messages_method(request, message)
+        return redirect("characters:character-inventory", character_id)
 
 
-@require_POST
-def equip_item(request, character_id, item_id):
-    character = get_object_or_404(Character, id=character_id)
-    inventory = character.inventory
-    item = get_object_or_404(InventoryItem, inventory=inventory, item_id=item_id)
-    try:
-        inventory.equip_item(item.item)
-        messages.success(request, f"Экипирован предмет: {item.item.name}")
-    except Exception as e:
-        messages.error(request, f"Ошибка экипировки: {e}")
-    return redirect("characters:character-inventory", pk=character_id)
+class UnequipSlotView(LoginRequiredMixin, View):
+    def post(self, request, character_id, slot):
+        character = get_object_or_404(Character, id=character_id, owner=request.user)
+        is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
+
+        try:
+            item = character.unequip_slot(slot)
+            message = f"{item.name} снят."
+            status = "ok"
+            data = {"slot": slot, "item": {"id": item.id, "name": item.name,
+                                           "bonus": item.bonus, "weight": item.weight}}
+        except Exception as e:
+            message = str(e)
+            status = "error"
+            data = {}
+
+        if is_ajax:
+            return JsonResponse({"status": status, "message": message, "data": data})
+        messages_method = messages.success if status=="ok" else messages.error
+        messages_method(request, message)
+        return redirect("characters:character-inventory", character_id)
 
 
-@require_POST
-def unequip_item(request, character_id, slot):
-    character = get_object_or_404(Character, id=character_id)
-    inventory = character.inventory
-    try:
-        inventory.unequip_slot(slot)
-        messages.success(request, f"Слот {slot} освобождён.")
-    except Exception as e:
-        messages.error(request, f"Ошибка снятия: {e}")
-    return redirect("characters:character-inventory", pk=character_id)
+class DropItemView(LoginRequiredMixin, View):
+    def post(self, request, character_id, item_id):
+        character = get_object_or_404(Character, id=character_id, owner=request.user)
+        item = get_object_or_404(Item, id=item_id)
+        is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
 
+        inv_item = InventoryItem.objects.filter(character=character, item=item).first()
+        if not inv_item:
+            message = "У персонажа нет такого предмета."
+            status = "error"
+            data = {}
+        else:
+            inv_item.quantity -= 1
+            if inv_item.quantity <= 0:
+                inv_item.delete()
+                remaining = 0
+            else:
+                inv_item.save()
+                remaining = inv_item.quantity
+            message = f"{item.name} выброшен."
+            status = "ok"
+            data = {"item_id": item.id, "remaining": remaining}
 
-@require_POST
-def drop_item(request, character_id, item_id):
-    character = get_object_or_404(Character, id=character_id)
-    inventory = character.inventory
-    try:
-        inventory.drop_item(item_id)
-        messages.success(request, "Предмет удалён из инвентаря.")
-    except Exception as e:
-        messages.error(request, f"Ошибка удаления: {e}")
-    return redirect("characters:character-inventory", pk=character_id)
+        if is_ajax:
+            return JsonResponse({"status": status, "message": message, "data": data})
+        from django.contrib import messages
+        messages_method = messages.success if status=="ok" else messages.error
+        messages_method(request, message)
+        return redirect("characters:character-inventory", character_id)

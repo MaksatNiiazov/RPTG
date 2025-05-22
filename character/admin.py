@@ -1,8 +1,8 @@
 # characters/admin.py
 
 from django.contrib import admin
-from .models import Character, Inventory, InventoryItem, EquippedItem
-from unfold.admin import ModelAdmin, TabularInline
+from .models import Character, InventoryItem, Equipment
+from unfold.admin import ModelAdmin, TabularInline, StackedInline
 
 
 class InventoryItemInline(TabularInline):
@@ -14,22 +14,11 @@ class InventoryItemInline(TabularInline):
     autocomplete_fields = ("item",)
 
 
-class EquippedItemInline(TabularInline):
-    model = EquippedItem
+class EquipmentInline(StackedInline):
+    model = Equipment
     extra = 0
-    verbose_name = "Надетый предмет"
-    verbose_name_plural = "Надетые предметы"
-    fields = ("slot", "item", "equipped_at")
-    readonly_fields = ("equipped_at",)
-    autocomplete_fields = ("item",)
-
-
-@admin.register(Inventory)
-class InventoryAdmin(ModelAdmin):
-    list_display = ("character",)
-    search_fields = ("character__name",)
-    inlines = (InventoryItemInline, EquippedItemInline)
-
+    verbose_name = "Экипировка"
+    verbose_name_plural = "Экипировка"
 
 @admin.register(Character)
 class CharacterAdmin(ModelAdmin):
@@ -69,7 +58,7 @@ class CharacterAdmin(ModelAdmin):
             )
         }),
     )
-    inlines = ()  # Управление инвентарём через отдельный раздел InventoryAdmin
+    inlines = (InventoryItemInline, EquipmentInline)  # Управление инвентарём через отдельный раздел InventoryAdmin
 
 # (Если нужно, можно зарегистрировать InventoryItem и EquippedItem отдельно)
 # admin.site.register(InventoryItem)

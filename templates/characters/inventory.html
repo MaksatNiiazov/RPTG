@@ -1,150 +1,300 @@
 {% extends "base.html" %}
-{% load static %}
 {% load inventory_tags %}
+
+{% block title %}Инвентарь: {{ char.name }}{% endblock %}
 
 {% block content %}
 <style>
-  .inventory-container {
+  .tabs {
     display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
+    border-bottom: 2px solid #ccc;
+    margin-top: 1rem;
   }
-
-  .block {
-    flex: 1;
-    min-width: 400px;
-  }
-
-  .rarity-box {
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: bold;
-    color: white;
-    display: inline-block;
-  }
-
-  .legendary {
-    animation: glow 1s infinite alternate;
-  }
-
-  @keyframes glow {
-    0%   { box-shadow: 0 0 5px gold; }
-    100% { box-shadow: 0 0 15px gold; }
-  }
-
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-
-  th, td {
+  .tab {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
     border: 1px solid #ccc;
+    border-bottom: none;
+    background: #f0f0f0;
+    margin-right: 0.25rem;
+    border-radius: 4px 4px 0 0;
+  }
+  .tab.active {
+    background: white;
+    font-weight: bold;
+  }
+  .tab-content {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    background: white;
+    border-radius: 0 4px 4px 4px;
+  }
+
+  .filter-input {
+    margin-bottom: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    width: 100%;
+    max-width: 300px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+  }
+
+  .item-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    font-size: 14px;
+  }
+  .item-table th, .item-table td {
+    border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
   }
-
-  .empty-slot {
-    color: #888;
-    font-style: italic;
+  .item-table th {
+    background: #f7f7f7;
+  }
+  .item-table tr:nth-child(even) {
+    background: #fcfcfc;
+  }
+  .item-table tr:hover {
+    background: #f1f7ff;
   }
 
-  form {
-    display: inline;
-  }
-
-  button {
-    margin: 0 4px;
+  .btn-inventory {
     padding: 4px 8px;
+    font-size: 13px;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
   }
+  .btn-equip { background: #0d6efd; color: white; }
+  .btn-unequip { background: #dc3545; color: white; }
+  .btn-drop { background: #6c757d; color: white; }
+
+  .empty-slot { color: #888; font-style: italic; }
 </style>
 
-<h1>{{ character.name }} — Инвентарь и Экипировка</h1>
+<h1>Инвентарь: {{ char.name }}</h1>
 
-<div class="inventory-container">
+<div class="tabs">
+  <div class="tab active" data-tab="equip">Экипировка</div>
+  <div class="tab" data-tab="stash">Инвентарь</div>
+</div>
 
-  <div class="block">
-    <h2>🎽 Экипировка</h2>
-    <table>
-      <tr>
-        <th>Слот</th>
-        <th>Предмет</th>
-        <th>Бонус</th>
-        <th>Вес</th>
-        <th>Действия</th>
-      </tr>
-      {% for slot, slot_label in character.inventory.equipped.model.SLOT_CHOICES %}
-        {% with equipped_item=equipped|get_item:slot %}
-        <tr>
-          <td>{{ slot_label }}</td>
-          {% if equipped_item %}
-            <td>
-              <span class="rarity-box {% if equipped_item.item.rarity.legendary %}legendary{% endif %}"
-                    style="background-color: {{ equipped_item.item.rarity.color }};">
-                {{ equipped_item.item.name }}
-              </span>
-            </td>
-            <td>+{{ equipped_item.item.bonus }}</td>
-            <td>{{ equipped_item.item.weight }} кг</td>
-            <td>
-              <form method="post" action="{% url 'characters:unequip-item' character.id equipped_item.slot %}">
-                {% csrf_token %}
-                <button type="submit">Снять</button>
-              </form>
-            </td>
+<div id="equip" class="tab-content">
+  <table class="item-table">
+    <tr>
+      <th>Слот</th>
+      <th>Предмет</th>
+      <th>Бонус</th>
+      <th>Вес</th>
+      <th></th>
+    </tr>
+    {% for slot_dict in slot_names %}
+      {% for slot,label in slot_dict.items %}
+        {% with item=equipment|get_attr:slot %}
+        <tr data-slot="{{ slot }}">
+          <td>{{ label }}</td>
+          {% if item %}
+          <td>{{ item.name }}</td>
+          <td>+{{ item.bonus }}</td>
+          <td>{{ item.weight }} кг</td>
+          <td>
+            <form class="unequip-form" method="post"
+                  action="{% url 'characters:unequip-slot' char.id slot %}">
+              {% csrf_token %}
+              <button type="submit" class="btn-inventory btn-unequip">Снять</button>
+            </form>
+          </td>
           {% else %}
-            <td class="empty-slot" colspan="4">Пусто</td>
+          <td colspan="4" class="empty-slot">Пусто</td>
           {% endif %}
         </tr>
         {% endwith %}
       {% endfor %}
-    </table>
-  </div>
-
-  <div class="block">
-    <h2>🎒 Инвентарь</h2>
-    <table>
-      <tr>
-        <th>Название</th>
-        <th>Кол-во</th>
-        <th>Тип</th>
-        <th>Редкость</th>
-        <th>Бонус</th>
-        <th>Вес</th>
-        <th>Действия</th>
-      </tr>
-      {% for entry in inventory_items %}
-        <tr>
-          <td>{{ entry.item.name }}</td>
-          <td>{{ entry.quantity }}</td>
-          <td>{{ entry.item.type.name }}</td>
-          <td>
-            <span class="rarity-box {% if entry.item.rarity.legendary %}legendary{% endif %}"
-                  style="background-color: {{ entry.item.rarity.color }};">
-              {{ entry.item.rarity.name }}
-            </span>
-          </td>
-          <td>+{{ entry.item.bonus }}</td>
-          <td>{{ entry.item.weight }} кг</td>
-          <td>
-            <form method="post" action="{% url 'characters:equip-item' character.id entry.item.id %}">
-              {% csrf_token %}
-              <button type="submit">Экипировать</button>
-            </form>
-            <form method="post" action="{% url 'characters:drop-item' character.id entry.item.id %}">
-              {% csrf_token %}
-              <button type="submit" onclick="return confirm('Удалить предмет из инвентаря?')">Удалить</button>
-            </form>
-          </td>
-        </tr>
-      {% empty %}
-        <tr>
-          <td colspan="7">Инвентарь пуст.</td>
-        </tr>
-      {% endfor %}
-    </table>
-  </div>
-
+    {% endfor %}
+  </table>
 </div>
+
+<div id="stash" class="tab-content" style="display:none;">
+  <input type="text" id="filter" class="filter-input" placeholder="Поиск в инвентаре…">
+
+  <table class="item-table">
+    <tr>
+      <th>Название</th>
+      <th>Кол-во</th>
+      <th>Бонус</th>
+      <th>Вес</th>
+      <th>Легенд. бонус</th>
+      <th>Действия</th>
+    </tr>
+    {% for entry in inventory_items %}
+    <tr data-name="{{ entry.item.name|lower }}" data-item-id="{{ entry.item.id }}">
+      <td>{{ entry.item.name }}</td>
+      <td class="qty-cell">{{ entry.quantity }}</td>
+      <td>+{{ entry.item.bonus }}</td>
+      <td>{{ entry.item.weight }} кг</td>
+      <td>{% if entry.item.legendary_buff %}{{ entry.item.legendary_buff }}{% else %}—{% endif %}</td>
+      <td>
+        <button class="btn-inventory btn-equip"
+                onclick="submitForm('equip-{{ entry.item.id }}')">Экипировать</button>
+        <button class="btn-inventory btn-drop"
+                onclick="confirmDrop({{ entry.item.id }}, '{{ entry.item.name }}')">Выбросить</button>
+
+        <form id="equip-{{ entry.item.id }}" method="post"
+              action="{% url 'characters:equip-item' char.id entry.item.id %}"
+              style="display:none">{% csrf_token %}</form>
+
+        <form id="drop-{{ entry.item.id }}" method="post"
+              action="{% url 'characters:drop-item' char.id entry.item.id %}"
+              style="display:none">{% csrf_token %}</form>
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="6" class="empty-slot">Инвентарь пуст.</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<script>
+  // табы
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).style.display='block';
+    });
+  });
+
+  // поиск
+  document.getElementById('filter').addEventListener('input', e=>{
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('#stash tr[data-name]').forEach(row=>{
+      row.style.display = row.dataset.name.includes(term) ? '' : 'none';
+    });
+  });
+
+  // утилита для сабмита
+  function submitForm(id){ document.getElementById(id).submit(); }
+
+  // подтверждение drop
+  function confirmDrop(itemId, itemName){
+    if(confirm(`Вы действительно хотите выбросить "${itemName}"?`)){
+      submitForm(`drop-${itemId}`);
+    }
+  }
+</script>
+{% endblock %}
+
+
+{% block js %}
+	    <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+  // Универсальный обработчик AJAX для форм equip/unequip/drop
+  function ajaxify(formSelector, onSuccess) {
+    document.querySelectorAll(formSelector).forEach(form => {
+      form.addEventListener("submit", e => {
+        e.preventDefault();
+        const url = form.getAttribute("action");
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrfToken,
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json",
+          },
+          body: new FormData(form),
+        })
+        .then(r => r.json())
+        .then(json => {
+          if (json.status === "ok") {
+            onSuccess(json.data);
+          } else {
+            alert("Ошибка: " + json.message);
+          }
+        })
+        .catch(err => console.error("AJAX ошибка:", err));
+      });
+    });
+  }
+
+  // 1) Экипировать: кнопки equip
+  ajaxify("form.equip-form", (data) => {
+    // Переместить item из inventory → equipment в DOM
+    const { slot, item } = data;
+    // Заполнить строку <tr data-slot="slot"> ...
+    const row = document.querySelector(`tr[data-slot="${slot}"]`);
+    if (row) {
+      row.innerHTML = `
+        <td>${row.dataset.label}</td>
+        <td>${item.name}</td>
+        <td>+${item.bonus}</td>
+        <td>${item.weight} кг</td>
+        <td>
+          <form method="post" action="/characters/{{ char.id }}/unequip/${slot}/" class="unequip-form">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <button type="submit" class="btn-inventory btn-unequip">Снять</button>
+          </form>
+        </td>`;
+      // Переинициализируем обработчики на новой форме
+      ajaxify("form.unequip-form", onUnequipSuccess);
+    }
+  });
+
+  // 2) Снять
+  function onUnequipSuccess(data) {
+    const { slot, item } = data;
+    // Найти таблицу инвентаря и добавить/увеличить строку
+    const invTable = document.querySelector(".inventory-section:nth-child(2) table");
+    let invRow = invTable.querySelector(`tr[data-item-id="${item.id}"]`);
+    if (invRow) {
+      const qtyCell = invRow.querySelector(".quantity-cell");
+      qtyCell.textContent = parseInt(qtyCell.textContent) + 1;
+    } else {
+      const newRow = document.createElement("tr");
+      newRow.dataset.itemId = item.id;
+      newRow.innerHTML = `
+        <td>${item.name}</td>
+        <td class="quantity-cell">1</td>
+        <td>+${item.bonus}</td>
+        <td>${item.weight} кг</td>
+        <td class="td-buttons">
+          <form method="post" action="/characters/{{ char.id }}/equip/${item.id}/" class="equip-form">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <button type="submit" class="btn-inventory btn-equip">Экипировать</button>
+          </form>
+          <form method="post" action="/characters/{{ char.id }}/drop/${item.id}/" class="drop-form">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <button type="submit" class="btn-inventory btn-drop">Выбросить</button>
+          </form>
+        </td>`;
+      invTable.tBodies[0].append(newRow);
+      ajaxify("form.equip-form", onEquipSuccess);
+      ajaxify("form.drop-form", onDropSuccess);
+    }
+  }
+  ajaxify("form.unequip-form", onUnequipSuccess);
+
+  // 3) Выбросить
+  function onDropSuccess(data) {
+    const { item_id, remaining } = data;
+    const invRow = document.querySelector(`tr[data-item-id="${item_id}"]`);
+    if (invRow) {
+      if (remaining > 0) {
+        invRow.querySelector(".quantity-cell").textContent = remaining;
+      } else {
+        invRow.remove();
+      }
+    }
+  }
+  ajaxify("form.drop-form", onDropSuccess);
+
+});
+</script>
+
 {% endblock %}

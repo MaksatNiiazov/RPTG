@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import CharacterCreateView, CharacterDetailView, ManageKnowledgeView, PickLootView, CharacterInventoryView
-import character.views as views
+from .views import CharacterCreateView, CharacterDetailView, ManageKnowledgeView, PickLootView, CharacterInventoryView, \
+    UnequipSlotView, EquipItemView, DropItemView
+
 app_name = "characters"
 
 urlpatterns = [
@@ -10,9 +11,9 @@ urlpatterns = [
     path("pick-loot/", PickLootView.as_view(), name="pick_loot_list"),
     # Обработчик выбора конкретного сундука:
     path("pick-loot/<int:loot_pk>/", PickLootView.as_view(), name="pick_loot"),
-    path('characters/<int:pk>/inventory/', CharacterInventoryView.as_view(), name='character-inventory'),
-    path("characters/<int:character_id>/equip/<int:item_id>/", views.equip_item, name="equip-item"),
-    path("characters/<int:character_id>/unequip/<str:slot>/", views.unequip_item, name="unequip-item"),
-    path("characters/<int:character_id>/drop/<int:item_id>/", views.drop_item, name="drop-item"),
+    path("characters/<int:character_id>/inventory/", CharacterInventoryView.as_view(), name="character-inventory"),
+    path("characters/<int:character_id>/equip/<int:item_id>/", EquipItemView.as_view(), name="equip-item"),
+    path("characters/<int:character_id>/unequip/<str:slot>/", UnequipSlotView.as_view(), name="unequip-slot"),
+    path("characters/<int:character_id>/drop/<int:item_id>/", DropItemView.as_view(), name="drop-item"),
 
 ]
