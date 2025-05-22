@@ -220,6 +220,11 @@ class Character(models.Model):
 
         # Экипировка в первый подходящий слот
         chosen_slot = slot_candidates[0]
+        if chosen_slot == "two_hands" and (equipment.main_hand or equipment.off_hand):
+            raise ValidationError(
+                "Нельзя надеть двуручное оружие в режиме two_hands, "
+                "пока руки заняты."
+            )
         setattr(equipment, chosen_slot, item)
         equipment.save()
 

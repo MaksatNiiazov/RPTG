@@ -164,10 +164,11 @@ class EquipItemView(LoginRequiredMixin, View):
 
         try:
             eq = character.equip_item(item)
+            print(eq)
             message = f"{item.name} экипирован."
             status = "ok"
             data = {
-                "slot": eq.slot,
+                "slot": eq,
                 "item": {"id": item.id, "name": item.name, "bonus": item.bonus, "weight": item.weight}
             }
         except Exception as e:
@@ -176,6 +177,7 @@ class EquipItemView(LoginRequiredMixin, View):
             data = {}
 
         if is_ajax:
+            print(data)
             return JsonResponse({"status": status, "message": message, "data": data})
         # fallback обычный
         messages_method = messages.success if status=="ok" else messages.error
