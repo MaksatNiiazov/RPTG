@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'items',
     'magic',
     'character',
+    'worlds',
 ]
 AUTH_USER_MODEL = "accounts.User"
 

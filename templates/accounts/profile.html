@@ -1,35 +1,34 @@
 {% extends "base.html" %}
-{% load static %}
-
 {% block title %}Профиль{% endblock %}
 
 {% block content %}
-<div class="container">
-  <h1 class="page-title">Добро пожаловать, {{ user.first_name }}!</h1>
+    <div class="container">
+        <h1>Привет, {{ user.first_name }}!</h1>
 
-  <section class="profile-section">
-    <h2>Мои персонажи</h2>
-    {% if characters %}
-      <div class="grid-2">
-        {% for char in characters %}
-          <div class="card">
-            <h3>{{ char.name }}</h3>
-            <p><strong>Раса:</strong> {{ char.race|default:"—" }}</p>
-            <p><strong>Уровень:</strong> {{ char.str_stat }} / {{ char.dex_stat }} / {{ char.int_stat }}</p>
-            <a href="{% url 'characters:character_detail' char.pk %}" class="btn">Открыть</a>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p>Персонажи отсутствуют.</p>
-    {% endif %}
-    <a href="{% url 'characters:character_create' %}" class="btn">Создать персонажа</a>
-  </section>
+        <section class="profile-section" style="margin-top:2rem;">
+            <h2>Миры, где вы можете играть</h2>
+            {% for w in worlds %}
+                <div class="card">
+                        <a href="{% url 'worlds:detail' w.pk %}">{{ w.name }}</a>
+                </div>
+            {% endfor %}
+        </section>
 
-  <section class="profile-section" style="margin-top:2rem;">
-    <h2>Мои компании</h2>
-    <p>Функционал пока не реализован.</p>
-    <a href="#" class="btn" aria-disabled="true" style="opacity:0.6;cursor:not-allowed;">Создать компанию</a>
-  </section>
-</div>
+        <section class="profile-section">
+            <h2>Миры, которые вы создали</h2>
+            {% if created_worlds %}
+                {% for w in created_worlds %}
+                    <div class="card">
+                        <a href="{% url 'worlds:detail' w.pk %}">{{ w.name }}</a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>Вы ещё не создали ни одного мира.</p>
+            {% endif %}
+        </section>
+
+        <p style="margin-top:3rem;">
+            <a href="{% url 'accounts:logout' %}" class="btn">Выйти</a>
+        </p>
+    </div>
 {% endblock %}

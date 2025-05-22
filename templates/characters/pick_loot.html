@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Забрать лут</h1>
+  {% for pl in loots %}
+    <form method="post" action="{% url 'characters:pick_loot' pl.pk %}">
+      {% csrf_token %}
+      <h2>Сундук от {{ pl.created_at|date:"d.m.Y H:i" }} для {{ pl.character.name }}</h2>
+      {% for it in pl.items.all %}
+        <label>
+          <input type="checkbox" name="item_{{ it.pk }}">
+          {{ it.name }} ({{ it.rarity.name }})
+        </label><br>
+      {% endfor %}
+      <button class="btn">Забрать отмеченные</button>
+    </form>
+  {% empty %}
+    <p>Нет ожидающих сундуков.</p>
+  {% endfor %}
+{% endblock %}

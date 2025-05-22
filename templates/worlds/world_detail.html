@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Мир: {{ world.name }}{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1>{{ world.name }}</h1>
+    <p><strong>Создатель (GM):</strong> {{ world.creator.email }}</p>
+    <p><strong>Сеттинг:</strong> {{ world.setting|default:"—" }}</p>
+    <p><strong>История:</strong> {{ world.history|default:"—" }}</p>
+
+    <h2>Персонажи</h2>
+    {% if is_gm %}
+      <p class="note">Вы — гейм-мастер, видите всех персонажей.</p>
+    {% else %}
+      <p class="note">Вы видите только своих персонажей и тех, кого вы знаете.</p>
+    {% endif %}
+
+    {% if characters %}
+      <div class="grid-2">
+        {% for char in characters %}
+          <div class="card">
+            <h4>{{ char.name }}</h4>
+            <p><strong>Раса:</strong> {{ char.race|default:"—" }}</p>
+            <a href="{% url 'characters:character_detail' char.pk %}" class="btn">Открыть</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>Персонажей не найдено.</p>
+    {% endif %}
+      <a href="{% url 'characters:character_create' world.id %}" class="btn">Создать персонажа</a>
+
+
+    <a href="{% url 'accounts:profile' %}" class="btn">← Назад в профиль</a>
+  </div>
+{% endblock %}

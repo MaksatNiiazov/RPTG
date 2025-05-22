@@ -2,6 +2,9 @@
 {% block title %}Персонаж: {{ char.name }}{% endblock %}
 {% block content %}
     <div class="container">
+        <a href="{% url 'characters:character-inventory' char.id %}">Инвентарь</a>
+    <a href="{% url 'characters:pick_loot_list' %}">Забрать лут</a>
+
         <h1>{{ char.name }}</h1>
         <p><strong>Раса:</strong> {{ char.race|default:"—" }}</p>
         <p><strong>Пол:</strong> {{ char.get_gender_display|default:"—" }}</p>
@@ -59,7 +62,6 @@
             <li><strong>Макс. вес доспехов:</strong> {{ char.max_armor_weight }} кг</li>
         </ul>
         <br>
-        <a href="{% url 'characters:character_create' %}" class="btn">Создать нового</a>
         <a href="{% url 'accounts:profile' %}" class="btn">Назад в профиль</a>
     </div>
 {% endblock %}

@@ -5,10 +5,14 @@ from django.db import models, transaction
 from django.utils import timezone
 from items.models import Item
 from accounts.models import User
+from worlds.models import World
 
 
 class Character(models.Model):
-    account = models.ForeignKey(User, on_delete=models.CASCADE, related_name="characters", blank=True, null=True)
+    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name="characters", verbose_name="Мир",
+                              blank=True, null=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="characters", verbose_name="Владелец",
+                              blank=True, null=True)
     GENDER_CHOICES = [('M', 'Мужской'), ('F', 'Женский'), ('O', 'Другой')]
 
     name = models.CharField("Имя", max_length=100)
@@ -38,6 +42,13 @@ class Character(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    knows = models.ManyToManyField(
+        'self', symmetrical=False,
+        related_name='known_by',
+        blank=True,
+        verbose_name="Знает"
+    )
+
     def save(self, *args, **kwargs):
         # HP и CP
         self.max_hp = 10 + 10 * self.con_stat
@@ -53,6 +64,12 @@ class Character(models.Model):
     def can_wield_two_h_as_one(self):
         # Сильные персонажи (STR ≥ 8) могут использовать 2H как main_hand
         return self.str_stat >= 8
+
+    def has_inventory(self):
+        return Inventory.objects.filter(character=self).exists()
+
+    def create_inventory(self):
+        return Inventory.objects.create(character=self)
 
     def __str__(self):
         return self.name
@@ -71,71 +88,89 @@ class Inventory(models.Model):
         return f"Инвентарь {self.character.name}"
 
     def equip_item(self, item):
+        # Проверка: есть ли в инвентаре
         inv_item = InventoryItem.objects.filter(inventory=self, item=item).first()
         if not inv_item or inv_item.quantity < 1:
             raise ValidationError("Предмет отсутствует в инвентаре.")
 
-        # Сопоставление equipment_type → возможные слоты
-        mapping = {
-            'HEAD': ['head'],
-            'NECK': ['neck'],
-            'CHEST': ['chest'],
-            'HAND': ['hands'],
-            'WAIST': ['waist'],
-            'LEGS': ['legs'],
-            'FEET': ['feet'],
-            'RING': ['ring_left', 'ring_right'],
-            'CLOAK': ['cloak'],
-            'SHIELD': ['off_hand'],
-            '1H': ['main_hand'],
-            'OFFH': ['off_hand'],
-            'DAG': ['main_hand', 'off_hand'],
-            'BOW': ['two_hands'],
-            'XBW': ['two_hands'],
-            'STAFF': ['two_hands'],
-            'WAND': ['main_hand'],
-            'ORB': ['off_hand'],
-            '2H': ['two_hands'],
-        }
-        et = item.equipment_type
-        slots = mapping.get(et, ['other'])
-        # если двуручник, и персонаж силён — дать возможность main_hand
-        if et == '2H' and self.character.can_wield_two_h_as_one():
-            slots = ['main_hand']
+        # Нельзя экипировать неэкипируемые предметы
+        if item.equipment_slot == 'OTR':
+            raise ValidationError(f"{item.name} нельзя экипировать.")
 
-        # Найти первый свободный слот из slots
+        # Запрет повторной экипировки
+        if EquippedItem.objects.filter(inventory=self, item=item).exists():
+            raise ValidationError(f"{item.name} уже экипирован.")
+
+        et = item.equipment_slot
+        slots = [et]
+
+        # Особые типы предметов
+        if et == '2H' and self.character.can_wield_two_h_as_one():
+            slots.append('main_hand')
+        elif et == 'RING':
+            slots = ['ring_left', 'ring_right']
+        elif et == 'DAG':
+            slots = ['main_hand', 'off_hand']
+
+        # Найти свободный слот
         chosen = None
         for slot in slots:
-            conflict = EquippedItem.objects.filter(inventory=self, slot=slot).exists()
-            if not conflict:
+            if not EquippedItem.objects.filter(inventory=self, slot=slot).exists():
                 chosen = slot
                 break
+
         if not chosen:
             raise ValidationError(f"Нет свободного слота из {slots} для {item.name}.")
 
-        # Проверки конфликтов двухручник vs руки
-        if chosen == 'two_hands':
-            if EquippedItem.objects.filter(inventory=self, slot__in=['main_hand', 'off_hand']).exists():
-                raise ValidationError("Руки заняты — снимите main или off-hand.")
+        # Конфликт: уже экипировано двуручное
         if chosen in ('main_hand', 'off_hand'):
             if EquippedItem.objects.filter(inventory=self, slot='two_hands').exists():
                 raise ValidationError("Уже экипировано двуручное оружие.")
 
-        # Вес
+        # Конфликт: экипировка 2H, но руки заняты
+        if et == '2H':
+            if chosen == 'two_hands':
+                if EquippedItem.objects.filter(inventory=self, slot__in=['main_hand', 'off_hand']).exists():
+                    raise ValidationError("Руки заняты — снимите main_hand или off_hand.")
+            elif chosen == 'main_hand':
+                if EquippedItem.objects.filter(inventory=self, slot='off_hand').exists():
+                    raise ValidationError("Левая рука занята — невозможно использовать двуручное оружие в правой руке.")
+
+        # Ограничение: нельзя надеть одинаковые кольца
+        if et == 'RING':
+            if EquippedItem.objects.filter(inventory=self, item=item, slot__in=['ring_left', 'ring_right']).exists():
+                raise ValidationError(f"{item.name} уже надето как кольцо.")
+
+        # Ограничение: только один легендарный предмет (если нужно)
+        # if item.rarity.legendary and self.equipped.filter(item__rarity__legendary=True).exists():
+        #     raise ValidationError("Можно носить только один легендарный предмет.")
+
+        # Проверка веса
         w = item.weight
         char = self.character
+
         if chosen in ('main_hand', 'off_hand', 'two_hands') and w > char.max_weapon_weight:
             raise ValidationError(f"{item.name} слишком тяжёлое для оружия (> {char.max_weapon_weight} кг).")
-        if chosen in ('head', 'neck', 'chest', 'hands', 'waist', 'legs', 'feet', 'cloak') and w > char.max_armor_weight:
+
+        if chosen in ('HEAD', 'NECK', 'CHEST', 'HAND', 'WAIST', 'LEGS', 'FEET', 'CLOAK') and w > char.max_armor_weight:
             raise ValidationError(f"{item.name} слишком тяжёлое для доспехов (> {char.max_armor_weight} кг).")
 
+        projected_weight = self.get_total_weight() + item.weight
+        if projected_weight > char.carry_capacity:
+            raise ValidationError(
+                f"Экипировка превысит грузоподъёмность персонажа ({projected_weight} > {char.carry_capacity} кг)."
+            )
+
+        # Надеваем
         with transaction.atomic():
             inv_item.quantity -= 1
             if inv_item.quantity == 0:
                 inv_item.delete()
             else:
                 inv_item.save()
+
             eq = EquippedItem.objects.create(inventory=self, item=item, slot=chosen)
+
         return eq
 
     def unequip_slot(self, slot):
@@ -178,6 +213,14 @@ class Inventory(models.Model):
                 tgt.quantity += quantity
                 tgt.save()
 
+    def get_total_weight(self):
+        """
+        Общий вес всех предметов в инвентаре и экипировке.
+        """
+        weight = sum(i.item.weight * i.quantity for i in self.items.select_related('item'))
+        weight += sum(e.item.weight for e in self.equipped.select_related('item'))
+        return weight
+
 
 class InventoryItem(models.Model):
     inventory = models.ForeignKey(
@@ -199,20 +242,26 @@ class InventoryItem(models.Model):
 
 class EquippedItem(models.Model):
     SLOT_CHOICES = [
-        ('head', 'Шлем'),
-        ('neck', 'Ожерелье'),
-        ('chest', 'Нагрудник'),
-        ('hands', 'Перчатки'),
-        ('waist', 'Пояс'),
-        ('legs', 'Поножи'),
-        ('feet', 'Ботинки'),
-        ('ring_left', 'Кольцо (левое)'),
-        ('ring_right', 'Кольцо (правое)'),
-        ('cloak', 'Плащ'),
-        ('main_hand', 'Основная рука'),
-        ('off_hand', 'Вторая рука / щит'),
-        ('two_hands', 'Двуручное'),
-        ('other', 'Прочее'),
+        ("HEAD", "Шлем / Головной убор"),
+        ("NECK", "Ожерелье / Амулет"),
+        ("CHEST", "Нагрудник / Доспех"),
+        ("HAND", "Перчатки / Наручи"),
+        ("WAIST", "Пояс"),
+        ("LEGS", "Наголенники / Поножи"),
+        ("FEET", "Ботинки / Сапоги"),
+        ("RING", "Кольцо"),
+        ("CLOAK", "Плащ / Накидка"),
+        ("SHIELD", "Щит"),
+        ("1H", "Одноручное оружие"),
+        ("2H", "Двуручное оружие"),
+        ("DAG", "Кинжал"),
+        ("BOW", "Лук"),
+        ("XBW", "Арбалет"),
+        ("STAFF", "Посох"),
+        ("WAND", "Жезл"),
+        ("ORB", "Сфера / Фокус"),
+        ("OFFH", "Доп. в руке (торговый фонарь и т.д.)"),
+        ("OTR", "Прочее"),
     ]
 
     inventory = models.ForeignKey(
@@ -230,13 +279,8 @@ class EquippedItem(models.Model):
         unique_together = ('inventory', 'slot')
 
     def clean(self):
-        # Проверяем соответствие item.equipment_type ↔ slot
-        et = self.item.equipment_slot
-        if self.slot not in et:
+        if self.slot.upper() != self.item.equipment_slot:
             raise ValidationError(f"Нельзя надеть {self.item.name} в слот {self.get_slot_display()}.")
-
-        super().clean()  # или оставить более детально, см. выше примеры
-
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)

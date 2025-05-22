@@ -89,6 +89,11 @@ class Item(models.Model):
     )
     bonus = models.PositiveIntegerField("Бонус", default=0)
     weight = models.PositiveIntegerField("Вес", default=0)
+    initial_quantity = models.PositiveIntegerField(
+        "Начальное количество в мире",
+        null=True, blank=True,
+        help_text="NULL = неограниченно, число = сколько раз может выпасть во всём мире"
+    )
     created_at = models.DateTimeField("Создано", auto_now_add=True)
     updated_at = models.DateTimeField("Обновлено", auto_now=True)
 

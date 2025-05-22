@@ -1,0 +1,20 @@
+{# templates/characters/manage_knowledge.html #}
+{% extends "base.html" %}
+{% block title %}Кто знает {{ char.name }}?{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Настроить «знание» для {{ char.name }}</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="form-group">
+      {{ form.knows.label_tag }}
+      {{ form.knows }}
+      {{ form.knows.errors }}
+    </div>
+    <button class="btn" type="submit">Сохранить</button>
+    <a href="{% url 'worlds:detail' char.world.pk %}" class="btn">Отмена</a>
+  </form>
+</div>
+{% endblock %}

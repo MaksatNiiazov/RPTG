@@ -28,3 +28,25 @@ class CharacterForm(forms.ModelForm):
         help_texts = {
             "lck_stat": "Влияет на выпадение редких предметов",
         }
+
+
+class CharacterKnowledgeForm(forms.ModelForm):
+    knows = forms.ModelMultipleChoiceField(
+        queryset=Character.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Знает персонажей"
+    )
+
+    class Meta:
+        model = Character
+        fields = ["knows"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Ограничиваем список всех других персонажей мира
+        if self.instance and self.instance.pk:
+            world_chars = Character.objects.filter(world=self.instance.world).exclude(pk=self.instance.pk)
+            self.fields["knows"].queryset = world_chars
+            # Начальные значения — текущие связи
+            self.fields["knows"].initial = self.instance.knows.all()

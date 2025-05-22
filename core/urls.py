@@ -29,6 +29,7 @@ urlpatterns = [
     path('items/', include('items.urls')),
     path('magic/', include('magic.urls')),
     path("characters/", include("character.urls")),
+    path("worlds/", include("worlds.urls")),
 
 ]
 

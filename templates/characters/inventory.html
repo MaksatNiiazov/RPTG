@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+{% load inventory_tags %}
+
+{% block content %}
+<style>
+  .inventory-container {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .block {
+    flex: 1;
+    min-width: 400px;
+  }
+
+  .rarity-box {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: white;
+    display: inline-block;
+  }
+
+  .legendary {
+    animation: glow 1s infinite alternate;
+  }
+
+  @keyframes glow {
+    0%   { box-shadow: 0 0 5px gold; }
+    100% { box-shadow: 0 0 15px gold; }
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+  }
+
+  .empty-slot {
+    color: #888;
+    font-style: italic;
+  }
+
+  form {
+    display: inline;
+  }
+
+  button {
+    margin: 0 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+</style>
+
+<h1>{{ character.name }} — Инвентарь и Экипировка</h1>
+
+<div class="inventory-container">
+
+  <div class="block">
+    <h2>🎽 Экипировка</h2>
+    <table>
+      <tr>
+        <th>Слот</th>
+        <th>Предмет</th>
+        <th>Бонус</th>
+        <th>Вес</th>
+        <th>Действия</th>
+      </tr>
+      {% for slot, slot_label in character.inventory.equipped.model.SLOT_CHOICES %}
+        {% with equipped_item=equipped|get_item:slot %}
+        <tr>
+          <td>{{ slot_label }}</td>
+          {% if equipped_item %}
+            <td>
+              <span class="rarity-box {% if equipped_item.item.rarity.legendary %}legendary{% endif %}"
+                    style="background-color: {{ equipped_item.item.rarity.color }};">
+                {{ equipped_item.item.name }}
+              </span>
+            </td>
+            <td>+{{ equipped_item.item.bonus }}</td>
+            <td>{{ equipped_item.item.weight }} кг</td>
+            <td>
+              <form method="post" action="{% url 'characters:unequip-item' character.id equipped_item.slot %}">
+                {% csrf_token %}
+                <button type="submit">Снять</button>
+              </form>
+            </td>
+          {% else %}
+            <td class="empty-slot" colspan="4">Пусто</td>
+          {% endif %}
+        </tr>
+        {% endwith %}
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="block">
+    <h2>🎒 Инвентарь</h2>
+    <table>
+      <tr>
+        <th>Название</th>
+        <th>Кол-во</th>
+        <th>Тип</th>
+        <th>Редкость</th>
+        <th>Бонус</th>
+        <th>Вес</th>
+        <th>Действия</th>
+      </tr>
+      {% for entry in inventory_items %}
+        <tr>
+          <td>{{ entry.item.name }}</td>
+          <td>{{ entry.quantity }}</td>
+          <td>{{ entry.item.type.name }}</td>
+          <td>
+            <span class="rarity-box {% if entry.item.rarity.legendary %}legendary{% endif %}"
+                  style="background-color: {{ entry.item.rarity.color }};">
+              {{ entry.item.rarity.name }}
+            </span>
+          </td>
+          <td>+{{ entry.item.bonus }}</td>
+          <td>{{ entry.item.weight }} кг</td>
+          <td>
+            <form method="post" action="{% url 'characters:equip-item' character.id entry.item.id %}">
+              {% csrf_token %}
+              <button type="submit">Экипировать</button>
+            </form>
+            <form method="post" action="{% url 'characters:drop-item' character.id entry.item.id %}">
+              {% csrf_token %}
+              <button type="submit" onclick="return confirm('Удалить предмет из инвентаря?')">Удалить</button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7">Инвентарь пуст.</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+</div>
+{% endblock %}

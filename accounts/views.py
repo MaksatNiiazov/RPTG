@@ -3,6 +3,9 @@ from django.contrib.auth import login, logout
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, FormView, RedirectView, TemplateView
+
+from character.models import Character
+from worlds.models import World
 from .forms import RegisterForm, LoginForm
 
 
@@ -59,6 +62,11 @@ class ProfileView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["user"] = self.request.user
-        ctx["characters"] = self.request.user.characters.all()
+        user = self.request.user  # <- обязательно объект User
+        print(user)
+        ctx["user"] = user
+        ctx["worlds"] = World.objects.filter(players=user)
+        ctx["created_worlds"] = World.objects.filter(creator=user)
         return ctx
+
+

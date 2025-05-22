@@ -34,19 +34,23 @@ class InventoryAdmin(ModelAdmin):
 @admin.register(Character)
 class CharacterAdmin(ModelAdmin):
     list_display = (
+        "world",
         "name", "race", "gender",
         "str_stat", "dex_stat", "con_stat", "int_stat",
         "carry_capacity", "max_weapon_weight", "max_armor_weight",
     )
+    list_display_links = ("name",)
     readonly_fields = (
         "max_hp", "concentration", "carry_capacity",
         "max_weapon_weight", "max_armor_weight",
     )
-    list_filter = ("race", "gender")
+    list_filter = ("race", "gender", "world",
+                   )
     search_fields = ("name",)
     fieldsets = (
         (None, {
-            "fields": ("name", "gender", "race")
+            "fields": ("world",
+                       "name", "gender", "race")
         }),
         ("RP-данные", {
             "fields": ("background", "notes"),
