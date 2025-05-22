@@ -8,9 +8,10 @@
 <h1>Инвентарь персонажа: {{ char.name }}</h1>
 
 <div class="inventory-layout"
+     data-char-id="{{ char.id }}"
      data-equip-base="{% url 'characters:equip-item' char.id 0 %}"
-     data-drop-base="{% url 'characters:drop-item' char.id 0 %}">
-  {# data-equip-base="…/equip/0/" и data-drop-base="…/drop/0/" #}
+     data-drop-base="{% url 'characters:drop-item' char.id 0 %}"
+     data-unequip-base="/characters/{{ char.id }}/unequip/">
 
   <!-- Экипировка -->
   <div class="inventory-section">
@@ -117,34 +118,51 @@
 {% block js %}
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const container   = document.querySelector(".inventory-layout");
-  const csrfToken   = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-  const equipBase   = container.dataset.equipBase;  // ".../equip/0/"
-  const dropBase    = container.dataset.dropBase;   // ".../drop/0/"
-  const invTableBody= document.querySelector("#inv-table tbody");
+  const container    = document.querySelector(".inventory-layout");
+  const csrfToken    = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+  const equipBase    = container.dataset.equipBase;  // пример: "/characters/characters/3/equip/0/"
+  const dropBase     = container.dataset.dropBase;   // пример: "/characters/characters/3/drop/0/"
+  const invTableBody = document.querySelector("#inv-table tbody");
+
+  // Найдём уже существующую строку, у которой есть data-unequip-url,
+  // и из неё вырежем суффикс "/<slot>/" — так получим базовый URL.
+  let unequipBase = "";
+  const sample = container.querySelector("tr.equip-row[data-unequip-url]");
+  if (sample) {
+    const full = sample.dataset.unequipUrl;           // "/characters/characters/3/unequip/main_hand/"
+    unequipBase = full.replace(/[^/]+\/$/, "");      // → "/characters/characters/3/unequip/"
+  }
 
   container.addEventListener("submit", async e => {
     const form = e.target;
     if (!form.matches("form.equip-form, form.unequip-form, form.drop-form")) return;
     e.preventDefault();
 
-    // --- URL выбора ---
+    // подтвердим выброс ДО запроса
+    if (form.matches(".drop-form")) {
+      const row = form.closest("tr.inv-row");
+      const name = row.querySelector(".name-cell").textContent;
+      if (!confirm(`Вы уверены, что хотите выбросить «${name}»?`)) return;
+    }
+
+    // вычисляем URL
     let url, tr;
     if (form.matches(".equip-form")) {
       tr  = form.closest("tr.inv-row");
-      const id = tr.dataset.itemId;
-      url = equipBase.replace(/0\/$/, id+"/");
-    } else if (form.matches(".unequip-form")) {
+      url = equipBase.replace(/0\/$/, tr.dataset.itemId + "/");
+    }
+    else if (form.matches(".unequip-form")) {
       tr  = form.closest("tr.equip-row");
-      url = tr.dataset.unequipUrl;
-    } else {
+      const slot = tr.dataset.slot;
+      url = `${unequipBase}${slot}/`;
+    }
+    else {  // .drop-form
       tr  = form.closest("tr.inv-row");
-      const id = tr.dataset.itemId;
-      url = dropBase.replace(/0\/$/, id+"/");
+      url = dropBase.replace(/0\/$/, tr.dataset.itemId + "/");
     }
 
     try {
-      const res = await fetch(url, {
+      const res  = await fetch(url, {
         method: "POST",
         headers: {
           "X-CSRFToken": csrfToken,
@@ -154,13 +172,15 @@ document.addEventListener("DOMContentLoaded", () => {
         body: new FormData(form)
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
-      const json = await res.json();
-      if (json.status !== "ok") return alert("Ошибка: "+json.message);
+      const { status, data } = await res.json();
+      if (status !== "ok") {
+        const msg = typeof data === "string" ? data : JSON.stringify(data);
+        return alert("Ошибка: " + data.message);
+      }
 
-      // ==== Экипировать ====
+      // ===== Экипировать =====
       if (form.matches(".equip-form")) {
         const { slot, item } = data;
-        // обновляем экипировку
         const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
         eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
@@ -173,51 +193,53 @@ document.addEventListener("DOMContentLoaded", () => {
               <button class="btn-inventory btn-unequip">Снять</button>
             </form>
           </td>`;
+        // Восстанавливаем правильный URL для снятия:
+        eqRow.dataset.unequipUrl = `${unequipBase}${slot}/`;
 
-        // убавляем или удаляем из инвентаря
+        // Убавляем или удаляем из инвентаря
         const invRow = container.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
         if (invRow) {
           const cell = invRow.querySelector(".quantity-cell");
-          let q = parseInt(cell.textContent,10)-1;
-          if (q>0) cell.textContent = q;
+          let q = parseInt(cell.textContent, 10) - 1;
+          if (q > 0) cell.textContent = q;
           else invRow.remove();
         }
       }
 
-      // ==== Снять ====
+      // ===== Снять =====
       else if (form.matches(".unequip-form")) {
         const { slot, item } = data;
-        // очищаем слот
+        // Очищаем карточку
         const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
         eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
           <td colspan="4" class="empty-slot">Пусто</td>`;
 
-        // добавляем в инвентарь
+        // Добавляем в инвентарь
         let invRow = invTableBody.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
         if (invRow) {
           invRow.querySelector(".quantity-cell").textContent =
-            parseInt(invRow.querySelector(".quantity-cell").textContent,10)+1;
+            parseInt(invRow.querySelector(".quantity-cell").textContent, 10) + 1;
         } else {
-          const tpl = document.getElementById("inv-row-template");
-          const clone = tpl.content.cloneNode(true);
+          const tpl    = document.getElementById("inv-row-template");
+          const clone  = tpl.content.cloneNode(true);
           const newRow = clone.querySelector("tr");
           newRow.dataset.itemId = item.id;
           newRow.querySelector(".name-cell").textContent      = item.name;
           newRow.querySelector(".quantity-cell").textContent  = 1;
-          newRow.querySelector(".bonus-cell").textContent     = "+"+item.bonus;
-          newRow.querySelector(".weight-cell").textContent    = item.weight+" кг";
-          newRow.querySelector(".legendary-cell").textContent = item.legendary_buff||"—";
+          newRow.querySelector(".bonus-cell").textContent     = "+" + item.bonus;
+          newRow.querySelector(".weight-cell").textContent    = item.weight + " кг";
+          newRow.querySelector(".legendary-cell").textContent = item.legendary_buff || "—";
           invTableBody.append(newRow);
         }
       }
 
-      // ==== Выбросить ====
+      // ===== Выбросить =====
       else {
         const { item_id, remaining } = data;
         const invRow = container.querySelector(`tr.inv-row[data-item-id="${item_id}"]`);
         if (!invRow) return;
-        if (remaining>0) {
+        if (remaining > 0) {
           invRow.querySelector(".quantity-cell").textContent = remaining;
         } else {
           invRow.remove();
@@ -226,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     catch(err) {
       console.error(err);
-      alert("Не удалось выполнить: "+err.message);
+      alert("Не удалось: " + err.message);
     }
   });
 });

@@ -174,7 +174,7 @@ class EquipItemView(LoginRequiredMixin, View):
         except Exception as e:
             message = str(e)
             status = "error"
-            data = {}
+            data = {'message': message}
 
         if is_ajax:
             print(data)
@@ -199,7 +199,7 @@ class UnequipSlotView(LoginRequiredMixin, View):
         except Exception as e:
             message = str(e)
             status = "error"
-            data = {}
+            data = {'message': message}
 
         if is_ajax:
             return JsonResponse({"status": status, "message": message, "data": data})
