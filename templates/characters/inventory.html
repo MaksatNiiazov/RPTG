@@ -171,7 +171,7 @@
 
 
 {% block content %}
-<h1>Инвентарь персонажа: {{ char.name }}</h1>
+<h1>Инвентарь: <a href="{% url 'characters:character_detail' char.id %}">{{ char.name }}</a></h1>
 
 <div class="inventory-layout"
      data-char-id="{{ char.id }}"
