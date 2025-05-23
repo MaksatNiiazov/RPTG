@@ -26,6 +26,16 @@
             <h2>Заметки</h2>
             <p>{{ char.notes|linebreaks }}</p>
         {% endif %}
+        <h2>Показатели</h2>
+        <ul>
+            <li><strong>Общая броня:</strong> {{ char.get_total_defense }}</li>
+            <li><strong>Общий урон:</strong> {{ char.get_total_attack }}</li>
+            <li><strong>HP:</strong> {{ char.current_hp }} / {{ char.max_hp }}</li>
+            <li><strong>CP:</strong> {{ char.concentration }}</li>
+            <li><strong>Грузоподъёмность:</strong> {{ char.carry_capacity }} кг</li>
+            <li><strong>Макс. вес оружия:</strong> {{ char.max_weapon_weight }} кг</li>
+            <li><strong>Макс. вес доспехов:</strong> {{ char.max_armor_weight }} кг</li>
+        </ul>
 
         <div style="display: flex; gap: 2rem; flex-wrap: wrap; margin-top: 2rem;">
             <div style="flex: 1 1 300px;">
@@ -65,28 +75,19 @@
                     </tr>
                 </table>
 
-                <h2>Показатели</h2>
-                <ul>
-                    <li><strong>Общая броня:</strong> {{ char.get_total_defense }}</li>
-                    <li><strong>Общий урон:</strong> {{ char.get_total_attack }}</li>
-                    <li><strong>HP:</strong> {{ char.current_hp }} / {{ char.max_hp }}</li>
-                    <li><strong>CP:</strong> {{ char.concentration }}</li>
-                    <li><strong>Грузоподъёмность:</strong> {{ char.carry_capacity }} кг</li>
-                    <li><strong>Макс. вес оружия:</strong> {{ char.max_weapon_weight }} кг</li>
-                    <li><strong>Макс. вес доспехов:</strong> {{ char.max_armor_weight }} кг</li>
-                </ul>
 
-{% if legendary_bonuses %}
-    <h3>Легендарные бонусы:</h3>
-    <ul>
-        {% for bonus in legendary_bonuses %}
-            <li>{{ bonus }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
+
+                {% if legendary_bonuses %}
+                    <h3>Легендарные бонусы:</h3>
+                    <ul>
+                        {% for bonus in legendary_bonuses %}
+                            <li>{{ bonus }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
 
-            <div style="flex: 1 1 500px;">
+            <div style="flex: 1 1 500px; min-width: 100%;">
                 <h2>Экипировка</h2>
                 <table class="item-table">
                     <tr>
