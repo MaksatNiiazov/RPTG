@@ -20,6 +20,7 @@ class EquipmentInline(StackedInline):
     verbose_name = "Экипировка"
     verbose_name_plural = "Экипировка"
 
+
 @admin.register(Character)
 class CharacterAdmin(ModelAdmin):
     list_display = (
@@ -47,7 +48,7 @@ class CharacterAdmin(ModelAdmin):
         }),
         ("Характеристики", {
             "fields": (
-                ("str_stat", "dex_stat", "con_stat", "int_stat"),
+                ("ability_points", "str_stat", "dex_stat", "con_stat", "int_stat"),
                 ("wis_stat", "cha_stat", "acc_stat", "lck_stat"),
             )
         }),

@@ -76,7 +76,7 @@ class Character(models.Model):
 
     def lvlup(self, stat: str, points: int):
         stats = ['str_stat', 'dex_stat', 'con_stat', 'int_stat', 'wis_stat', 'cha_stat', 'acc_stat', 'lck_stat']
-        if points < self.ability_points:
+        if self.ability_points - points < 0:
             raise ValidationError("У вас недостаточно очков прокачки.")
         if stat not in stats:
             raise ValidationError("Попытка улучшения неизвестного стата")
