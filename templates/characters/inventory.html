@@ -3,6 +3,172 @@
 {% load inventory_tags %}
 
 {% block title %}Инвентарь персонажа: {{ char.name }}{% endblock %}
+{% block css %}
+<style>
+/* === Общий контейнер === */
+.inventory-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+/* === Секции экипировки и инвентаря === */
+.inventory-section {
+  flex: 1 1 480px;
+  background: #fbf6ee;        /* светлый пергамент */
+  border: 1px solid #dac8a0;  /* бежевый кант */
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  padding: 1.25rem;
+  transition: display 0.3s;
+}
+
+/* Заголовок секции */
+.inventory-section h2 {
+  font-family: "Cinzel", serif;
+  color: #3e2f1b;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #dac8a0;
+  padding-bottom: 0.25rem;
+}
+
+/* === Таблица предметов === */
+.item-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Merriweather", serif;
+  color: #4a3723;
+}
+.item-table th,
+.item-table td {
+  border: 1px solid #dac8a0;
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+}
+.item-table th {
+  background: #e8d8b0;
+  font-weight: 600;
+}
+.item-table tbody tr:nth-child(odd) {
+  background: #f7f1e7;
+}
+.item-table tbody tr:hover {
+  background: #dbc79a;
+}
+
+/* Пустые слоты и строки */
+.empty-slot {
+  text-align: center;
+  font-style: italic;
+  color: #6c5b49;
+}
+
+/* === Кнопки управления === */
+.btn-inventory {
+  font-family: "Merriweather", serif;
+  border: 1px solid #8c7151;
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.875rem;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.btn-equip {
+  background: #d1bfa3;
+  color: #3e2f1b;
+}
+.btn-unequip {
+  background: #e8d8b0;
+  color: #3e2f1b;
+}
+.btn-drop {
+  background: #be9c79;
+  color: #3e2f1b;
+}
+.btn-inventory:hover {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Flex-кнопки в ячейке */
+.td-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* === Табы для мобильного === */
+.inventory-tabs {
+  display: none;
+  margin-bottom: 1rem;
+}
+.inventory-tabs .tab-button {
+  flex: 1;
+  padding: 0.5rem 0;
+  font-family: "Merriweather", serif;
+  background: #e8d8b0;
+  border: 1px solid #dac8a0;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: center;
+}
+.inventory-tabs .tab-button.active {
+  background: #d1bfa3;
+}
+
+/* === Адаптивность === */
+@media (max-width: 800px) {
+  /* Показываем табы */
+  .inventory-tabs {
+    display: flex;
+  }
+  /* Скрываем обе секции по умолчанию */
+  .inventory-section {
+    display: none;
+  }
+  /* Активная секция */
+  .inventory-section.active {
+    display: block;
+    max-width: 100%;
+  }
+  /* Размечаем таблицы чуть компактнее */
+  .item-table th,
+  .item-table td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .inventory-layout {
+    flex-direction: column;
+  }
+  .inventory-section {
+    padding: 1rem;
+  }
+}
+/* === Mobile-friendly table wrapper === */
+@media (max-width: 800px) {
+  .inventory-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .inventory-section .item-table {
+    min-width: 100%;
+    /* Если всё ещё великовата, можно указать конкретное значение:
+       min-width: 600px; */
+  }
+  /* Убираем лишние внутренние отступы у ячеек, чтобы поместилось по ширине */
+  .item-table th,
+  .item-table td {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+  }
+}
+
+</style>
+{% endblock %}
+
 
 {% block content %}
 <h1>Инвентарь персонажа: {{ char.name }}</h1>
@@ -11,7 +177,8 @@
      data-char-id="{{ char.id }}"
      data-equip-base="{% url 'characters:equip-item' char.id 0 %}"
      data-drop-base="{% url 'characters:drop-item' char.id 0 %}"
-     data-unequip-base="/characters/{{ char.id }}/unequip/">
+     data-unequip-base="{% url 'characters:unequip-slot' char.id 'SLOT'|slice:":-1" %}">
+
 
   <!-- Экипировка -->
   <div class="inventory-section">
@@ -120,49 +287,40 @@
 document.addEventListener("DOMContentLoaded", () => {
   const container    = document.querySelector(".inventory-layout");
   const csrfToken    = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-  const equipBase    = container.dataset.equipBase;  // пример: "/characters/characters/3/equip/0/"
-  const dropBase     = container.dataset.dropBase;   // пример: "/characters/characters/3/drop/0/"
+  const equipBase    = container.dataset.equipBase;   // e.g. "/characters/characters/3/equip/0/"
+  const dropBase     = container.dataset.dropBase;    // e.g. "/characters/characters/3/drop/0/"
+  const unequipBase  = equipBase.replace(/\/equip\/0\/$/, "/unequip/");
   const invTableBody = document.querySelector("#inv-table tbody");
-
-  // Найдём уже существующую строку, у которой есть data-unequip-url,
-  // и из неё вырежем суффикс "/<slot>/" — так получим базовый URL.
-  let unequipBase = "";
-  const sample = container.querySelector("tr.equip-row[data-unequip-url]");
-  if (sample) {
-    const full = sample.dataset.unequipUrl;           // "/characters/characters/3/unequip/main_hand/"
-    unequipBase = full.replace(/[^/]+\/$/, "");      // → "/characters/characters/3/unequip/"
-  }
 
   container.addEventListener("submit", async e => {
     const form = e.target;
-    if (!form.matches("form.equip-form, form.unequip-form, form.drop-form")) return;
+    if (!form.matches(".equip-form, .unequip-form, .drop-form")) return;
     e.preventDefault();
 
-    // подтвердим выброс ДО запроса
+    // 1) Подтверждённое удаление
     if (form.matches(".drop-form")) {
-      const row = form.closest("tr.inv-row");
-      const name = row.querySelector(".name-cell").textContent;
+      const name = form.closest("tr.inv-row").querySelector(".name-cell").textContent;
       if (!confirm(`Вы уверены, что хотите выбросить «${name}»?`)) return;
     }
 
-    // вычисляем URL
-    let url, tr;
+    // 2) Построение URL
+    let url;
     if (form.matches(".equip-form")) {
-      tr  = form.closest("tr.inv-row");
+      const tr = form.closest("tr.inv-row");
       url = equipBase.replace(/0\/$/, tr.dataset.itemId + "/");
     }
     else if (form.matches(".unequip-form")) {
-      tr  = form.closest("tr.equip-row");
-      const slot = tr.dataset.slot;
-      url = `${unequipBase}${slot}/`;
+      const slot = form.closest("tr.equip-row").dataset.slot;
+      url = unequipBase + slot + "/";
     }
     else {  // .drop-form
-      tr  = form.closest("tr.inv-row");
+      const tr = form.closest("tr.inv-row");
       url = dropBase.replace(/0\/$/, tr.dataset.itemId + "/");
     }
 
     try {
-      const res  = await fetch(url, {
+      // 3) AJAX-запрос
+      const res = await fetch(url, {
         method: "POST",
         headers: {
           "X-CSRFToken": csrfToken,
@@ -174,11 +332,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error("HTTP " + res.status);
       const { status, data } = await res.json();
       if (status !== "ok") {
-        const msg = typeof data === "string" ? data : JSON.stringify(data);
-        return alert("Ошибка: " + data.message);
+        return alert("Ошибка: " + (data.message||JSON.stringify(data)));
       }
 
-      // ===== Экипировать =====
+      // 4) Обработка ответов
       if (form.matches(".equip-form")) {
         const { slot, item } = data;
         const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
@@ -193,65 +350,121 @@ document.addEventListener("DOMContentLoaded", () => {
               <button class="btn-inventory btn-unequip">Снять</button>
             </form>
           </td>`;
-        // Восстанавливаем правильный URL для снятия:
-        eqRow.dataset.unequipUrl = `${unequipBase}${slot}/`;
-
-        // Убавляем или удаляем из инвентаря
+        // убавляем из инвентаря
         const invRow = container.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
         if (invRow) {
           const cell = invRow.querySelector(".quantity-cell");
-          let q = parseInt(cell.textContent, 10) - 1;
-          if (q > 0) cell.textContent = q;
-          else invRow.remove();
+          const q = parseInt(cell.textContent,10)-1;
+          if (q>0) cell.textContent = q; else invRow.remove();
         }
       }
-
-      // ===== Снять =====
       else if (form.matches(".unequip-form")) {
         const { slot, item } = data;
-        // Очищаем карточку
         const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
         eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
           <td colspan="4" class="empty-slot">Пусто</td>`;
-
-        // Добавляем в инвентарь
+        // добавляем в инвентарь
         let invRow = invTableBody.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
         if (invRow) {
           invRow.querySelector(".quantity-cell").textContent =
-            parseInt(invRow.querySelector(".quantity-cell").textContent, 10) + 1;
+            parseInt(invRow.querySelector(".quantity-cell").textContent,10)+1;
         } else {
-          const tpl    = document.getElementById("inv-row-template");
-          const clone  = tpl.content.cloneNode(true);
+          const tpl = document.getElementById("inv-row-template");
+          const clone = tpl.content.cloneNode(true);
           const newRow = clone.querySelector("tr");
           newRow.dataset.itemId = item.id;
           newRow.querySelector(".name-cell").textContent      = item.name;
           newRow.querySelector(".quantity-cell").textContent  = 1;
-          newRow.querySelector(".bonus-cell").textContent     = "+" + item.bonus;
-          newRow.querySelector(".weight-cell").textContent    = item.weight + " кг";
-          newRow.querySelector(".legendary-cell").textContent = item.legendary_buff || "—";
+          newRow.querySelector(".bonus-cell").textContent     = "+"+item.bonus;
+          newRow.querySelector(".weight-cell").textContent    = item.weight+" кг";
+          newRow.querySelector(".legendary-cell").textContent = item.legendary_buff||"—";
           invTableBody.append(newRow);
         }
       }
-
-      // ===== Выбросить =====
-      else {
+      else {  // drop-form
         const { item_id, remaining } = data;
         const invRow = container.querySelector(`tr.inv-row[data-item-id="${item_id}"]`);
         if (!invRow) return;
-        if (remaining > 0) {
-          invRow.querySelector(".quantity-cell").textContent = remaining;
-        } else {
-          invRow.remove();
-        }
+        if (remaining>0) invRow.querySelector(".quantity-cell").textContent = remaining;
+        else invRow.remove();
       }
-    }
-    catch(err) {
+
+    } catch(err) {
       console.error(err);
-      alert("Не удалось: " + err.message);
+      alert("Не удалось выполнить операцию: "+err.message);
     }
   });
 });
 </script>
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.querySelector(".inventory-layout");
+  if (!container) return;
+
+  // создаём таб-бар
+  const tabs = document.createElement("div");
+  tabs.className = "inventory-tabs";
+
+  const btnEquip = document.createElement("button");
+  btnEquip.type = "button";
+  btnEquip.className = "tab-button";
+  btnEquip.textContent = "Экипировка";
+
+  const btnInv = document.createElement("button");
+  btnInv.type = "button";
+  btnInv.className = "tab-button";
+  btnInv.textContent = "Инвентарь";
+
+  tabs.append(btnEquip, btnInv);
+  container.parentNode.insertBefore(tabs, container);
+
+  // находим секции
+  const equipSection = container.querySelector(".inventory-section:nth-child(1)");
+  const invSection   = container.querySelector(".inventory-section:nth-child(2)");
+  if (!equipSection || !invSection) return;
+
+  // функция переключения
+  function activate(tab) {
+    if (tab === "equip") {
+      btnEquip.classList.add("active");
+      btnInv.classList.remove("active");
+      equipSection.classList.add("active");
+      invSection.classList.remove("active");
+    } else {
+      btnInv.classList.add("active");
+      btnEquip.classList.remove("active");
+      invSection.classList.add("active");
+      equipSection.classList.remove("active");
+    }
+  }
+
+  // обработчики
+  btnEquip.addEventListener("click", () => activate("equip"));
+  btnInv.addEventListener("click", () => activate("inv"));
+
+  // при загрузке: на мобиле показываем экипировку по умолчанию
+  if (window.innerWidth <= 800) {
+    activate("equip");
+  } else {
+    // на десктопе показываем обе секции
+    equipSection.classList.add("active");
+    invSection.classList.add("active");
+  }
+
+  // при ресайзе: пересчитать
+  window.addEventListener("resize", () => {
+    if (window.innerWidth <= 800) {
+      activate("equip");
+    } else {
+      btnEquip.classList.remove("active");
+      btnInv.classList.remove("active");
+      equipSection.classList.add("active");
+      invSection.classList.add("active");
+    }
+  });
+});
+</script>
+
 {% endblock %}
 
