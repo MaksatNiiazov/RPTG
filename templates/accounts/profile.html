@@ -9,7 +9,7 @@
             <h2>Миры, где вы можете играть</h2>
             {% for w in worlds %}
                 <div class="card">
-                        <a href="{% url 'worlds:detail' w.pk %}">{{ w.name }}</a>
+                    <a href="{% url 'worlds:detail' w.pk %}">{{ w.name }}</a>
                 </div>
             {% endfor %}
         </section>
@@ -28,6 +28,9 @@
         </section>
 
         <p style="margin-top:3rem;">
+            <a href="{% url 'worlds:create' %}" class="btn">Создать новый мир</a>
+        </p>
+        <p style="margin-top:1rem;">
             <a href="{% url 'accounts:logout' %}" class="btn">Выйти</a>
         </p>
     </div>

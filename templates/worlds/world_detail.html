@@ -28,9 +28,12 @@
     {% else %}
       <p>Персонажей не найдено.</p>
     {% endif %}
-      <a href="{% url 'characters:character_create' world.id %}" class="btn">Создать персонажа</a>
+  <div><a href="{% url 'characters:character_create' world.id %}" class="btn">Создать персонажа</a></div>
+      <br>
+  <div><a href="{% url 'accounts:profile' %}" class="btn">← Назад в профиль</a></div>
 
 
-    <a href="{% url 'accounts:profile' %}" class="btn">← Назад в профиль</a>
+
+
   </div>
 {% endblock %}

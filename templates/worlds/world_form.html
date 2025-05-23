@@ -20,7 +20,8 @@
       {{ form.history }} {{ form.history.errors }}
     </div>
     <button type="submit" class="btn">Создать мир</button>
-    <a href="{% url 'worlds:list' %}" class="btn">Отмена</a>
+      <br>
+    <a href="{% url 'accounts:profile' %}" class="btn">Отмена</a>
   </form>
 </div>
 {% endblock %}
