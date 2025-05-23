@@ -42,14 +42,14 @@ class Character(models.Model):
     notes = models.TextField("Заметки (RP)", blank=True)
 
     # Статы 1–10
-    str_stat = models.PositiveSmallIntegerField("Сила", default=1)
-    dex_stat = models.PositiveSmallIntegerField("Ловкость", default=1)
-    con_stat = models.PositiveSmallIntegerField("Телосложение", default=1)
-    int_stat = models.PositiveSmallIntegerField("Интеллект", default=1)
-    wis_stat = models.PositiveSmallIntegerField("Мудрость", default=1)
-    cha_stat = models.PositiveSmallIntegerField("Харизма", default=1)
-    acc_stat = models.PositiveSmallIntegerField("Меткость", default=1)
-    lck_stat = models.PositiveSmallIntegerField("Удача", default=1)
+    str_stat = models.PositiveSmallIntegerField("Сила", default=0)
+    dex_stat = models.PositiveSmallIntegerField("Ловкость", default=0)
+    con_stat = models.PositiveSmallIntegerField("Телосложение", default=0)
+    int_stat = models.PositiveSmallIntegerField("Интеллект", default=0)
+    wis_stat = models.PositiveSmallIntegerField("Мудрость", default=0)
+    cha_stat = models.PositiveSmallIntegerField("Харизма", default=0)
+    acc_stat = models.PositiveSmallIntegerField("Меткость", default=0)
+    lck_stat = models.PositiveSmallIntegerField("Удача", default=0)
 
     max_hp = models.PositiveIntegerField("Макс. HP", editable=False)
     current_hp = models.PositiveIntegerField("Текущие HP", default=0)
@@ -61,6 +61,8 @@ class Character(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    ability_points = models.PositiveSmallIntegerField(verbose_name='Доступные очки прокачки', default=0)
+
     knows = models.ManyToManyField('self', symmetrical=False, related_name='known_by', blank=True, verbose_name="Знает")
 
     def save(self, *args, **kwargs):
@@ -71,6 +73,31 @@ class Character(models.Model):
         self.max_weapon_weight = round(self.carry_capacity * 0.2, 1)
         self.max_armor_weight = round(self.carry_capacity * 0.5, 1)
         super().save(*args, **kwargs)
+
+    def lvlup(self, stat: str, points: int):
+        stats = ['str_stat', 'dex_stat', 'con_stat', 'int_stat', 'wis_stat', 'cha_stat', 'acc_stat', 'lck_stat']
+        if points < self.ability_points:
+            raise ValidationError("У вас недостаточно очков прокачки.")
+        if stat not in stats:
+            raise ValidationError("Попытка улучшения неизвестного стата")
+        if stat == 'str_stat':
+            self.str_stat += points
+        elif stat == 'dex_stat':
+            self.dex_stat += points
+        elif stat == 'con_stat':
+            self.con_stat += points
+        elif stat == 'int_stat':
+            self.int_stat += points
+        elif stat == 'wis_stat':
+            self.wis_stat += points
+        elif stat == 'cha_stat':
+            self.cha_stat += points
+        elif stat == 'acc_stat':
+            self.acc_stat += points
+        elif stat == 'lck_stat':
+            self.lck_stat += points
+        self.ability_points -= points
+        return True
 
     def can_wield_two_h_as_one(self):
         return self.str_stat >= 8

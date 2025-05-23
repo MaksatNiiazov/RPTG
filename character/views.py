@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
@@ -11,7 +11,7 @@ from django.views.generic import CreateView, DetailView
 
 from items.models import Item
 from worlds.models import PendingLoot, World
-from .forms import CharacterForm, CharacterKnowledgeForm
+from .forms import CharacterForm, CharacterKnowledgeForm, LevelUpForm
 from .models import Character, InventoryItem, Equipment
 
 
@@ -237,3 +237,37 @@ class DropItemView(LoginRequiredMixin, View):
         messages_method = messages.success if status=="ok" else messages.error
         messages_method(request, message)
         return redirect("characters:character-inventory", character_id)
+
+
+class LevelUpView(View):
+    template_name = "characters/level_up.html"
+
+    def get(self, request, character_id):
+        character = get_object_or_404(Character, id=character_id, owner=request.user)
+        form = LevelUpForm()
+        return render(request, self.template_name, {
+            "char": character,
+            "form": form,
+        })
+
+    def post(self, request, character_id):
+        if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+            return HttpResponseBadRequest("Только AJAX")
+
+        char = get_object_or_404(Character, id=character_id, owner=request.user)
+        stat = request.POST.get('stat')
+        # всегда тратим ровно 1 очко
+        try:
+            char.lvlup(stat, 1)
+            char.save()
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': e.message})
+
+        # отдаем новые значения
+        data = {
+            'status': 'ok',
+            'stat': stat,
+            'new_value': getattr(char, stat),
+            'remaining': char.ability_points,
+        }
+        return JsonResponse(data)

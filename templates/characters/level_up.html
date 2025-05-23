@@ -1,0 +1,66 @@
+
+{% extends "base.html" %}
+{% load inventory_tags %}
+{% block content %}
+  <h1>Прокачка {{ char.name }}</h1>
+  <p>Осталось очков: <span id="remaining-points">{{ char.ability_points }}</span></p>
+  <table class="item-table">
+    <tr><th>Характеристика</th><th>Значение</th><th>Действие</th></tr>
+    {% for key, label in form.fields.stat.choices %}
+      <tr data-stat="{{ key }}">
+        <td>{{ label }}</td>
+        <td class="value-cell">{{ char|get_attr:key }}</td>
+        <td>
+          <button class="btn-levelup" data-stat="{{ key }}" {% if char.ability_points < 1 %}disabled{% endif %}>
+            +1
+          </button>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const charId = "{{ char.id }}";
+  let remainingEl = document.getElementById("remaining-points");
+
+  document.querySelectorAll(".btn-levelup").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const stat = btn.dataset.stat;
+      // подтверждение
+      if (!confirm(`Потратить 1 очко на повышение ${stat.toUpperCase()}?`)) {
+        return;
+      }
+      // AJAX-запрос
+      const response = await fetch(
+        `/characters/ajax/level-up/${charId}/`,
+        {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: new URLSearchParams({ stat })
+        }
+      );
+      const json = await response.json();
+      if (json.status !== "ok") {
+        alert("Ошибка: " + json.message);
+        return;
+      }
+      // обновляем DOM
+      const row = document.querySelector(`tr[data-stat="${stat}"]`);
+      row.querySelector(".value-cell").textContent = json.new_value;
+      remainingEl.textContent = json.remaining;
+
+      // если очков больше нет, дизейблим все кнопки
+      if (json.remaining < 1) {
+        document.querySelectorAll(".btn-levelup").forEach(b => b.disabled = true);
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

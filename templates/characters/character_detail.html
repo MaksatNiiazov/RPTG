@@ -94,13 +94,13 @@
 
         .tab-pane {
             display: none;
-              overflow-x: auto;
+            overflow-x: auto;
 
         }
 
         .tab-pane.active {
             display: block;
-              overflow-x: auto;
+            overflow-x: auto;
 
         }
 
@@ -187,6 +187,9 @@
         <div class="tab-content">
             <!-- Вкладка «Характеристики» -->
             <div id="pane-stats" class="tab-pane active">
+                <br>
+                <a href="{% url 'characters:level-up' char.id %}" class="btn">Повысить уровень</a>
+                <span><strong>Доступные очки:</strong> {{ char.ability_points }}</span>
                 <table class="item-table">
                     <tr>
                         <th>Сила</th>
@@ -221,6 +224,7 @@
                         <td>{{ char.lck_stat }}</td>
                     </tr>
                 </table>
+
                 {% if legendary_bonuses %}
                     <h3>Легендарные бонусы</h3>
                     <ul style="padding: 5px">

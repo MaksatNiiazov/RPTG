@@ -50,3 +50,18 @@ class CharacterKnowledgeForm(forms.ModelForm):
             self.fields["knows"].queryset = world_chars
             # Начальные значения — текущие связи
             self.fields["knows"].initial = self.instance.knows.all()
+
+
+class LevelUpForm(forms.Form):
+    STAT_CHOICES = [
+        ('str_stat', 'Сила'),
+        ('dex_stat', 'Ловкость'),
+        ('con_stat', 'Телосложение'),
+        ('int_stat', 'Интеллект'),
+        ('wis_stat', 'Мудрость'),
+        ('cha_stat', 'Харизма'),
+        ('acc_stat', 'Меткость'),
+        ('lck_stat', 'Удача'),
+    ]
+    stat = forms.ChoiceField(choices=STAT_CHOICES, label="Характеристика")
+    points = forms.IntegerField(min_value=1, label="Очков для прокачки")

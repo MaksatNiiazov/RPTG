@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import CharacterCreateView, CharacterDetailView, ManageKnowledgeView, PickLootView, CharacterInventoryView, \
-    UnequipSlotView, EquipItemView, DropItemView
+    UnequipSlotView, EquipItemView, DropItemView, LevelUpView
 
 app_name = "characters"
 
@@ -15,5 +15,6 @@ urlpatterns = [
     path("characters/<int:character_id>/equip/<int:item_id>/", EquipItemView.as_view(), name="equip-item"),
     path("characters/<int:character_id>/unequip/<str:slot>/", UnequipSlotView.as_view(), name="unequip-slot"),
     path("characters/<int:character_id>/drop/<int:item_id>/", DropItemView.as_view(), name="drop-item"),
+    path('level-up/<int:character_id>/', LevelUpView.as_view(), name='level-up'),
 
 ]
