@@ -1,69 +1,96 @@
 {% extends "base.html" %}
 {% block title %}Создать персонажа{% endblock %}
+
 {% block content %}
-    <div class="container">
-        <h1>Создать персонажа</h1>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.non_field_errors }}
+<div class="container">
+  <h1>Создать персонажа</h1>
+  <form method="post" enctype="multipart/form-data" id="create-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
 
-            <div class="grid-2">
-                <!-- Левая колонка: основные поля -->
-                <div>
-                    <h2>Основные RP поля</h2>
+    <div class="grid-2">
+      <!-- Левая колонка: RP-поля -->
+      <div>
+        <h2>Основные RP-поля</h2>
+        <label>{{ form.image.label }}</label><br>
+        {{ form.image }} {{ form.image.errors }}<br><br>
 
+        <label>{{ form.name.label }}{% if form.name.field.required %}*{% endif %}</label><br>
+        {{ form.name }} {{ form.name.errors }}<br>
 
-                    <label>{{ form.name.label }}{% if form.name.field.required %}*{% endif %}</label>
-                    {{ form.name }} {{ form.name.errors }}
+        <label>{{ form.race.label }}</label><br>
+        {{ form.race }}<br>
 
-                    <label>{{ form.race.label }}</label>
-                    {{ form.race }}
+        <label>{{ form.gender.label }}</label><br>
+        {{ form.gender }}<br>
 
-                    <label>{{ form.gender.label }}</label>
-                    {{ form.gender }}
+        <label>{{ form.background.label }}</label><br>
+        {{ form.background }}<br>
 
-                    <label>{{ form.background.label }}</label>
-                    {{ form.background }}
+        <label>{{ form.notes.label }}</label><br>
+        {{ form.notes }}<br>
+      </div>
 
-                    <label>{{ form.notes.label }}</label>
-                    {{ form.notes }}
-                </div>
-
-                <!-- Правая колонка: характеристики -->
-                <div>
-                    <h2>Характеристики</h2>
-
-                    <label>{{ form.str_stat.label }}</label>
-                    {{ form.str_stat }} {{ form.str_stat.errors }}
-
-                    <label>{{ form.dex_stat.label }}</label>
-                    {{ form.dex_stat }} {{ form.dex_stat.errors }}
-
-                    <label>{{ form.con_stat.label }}</label>
-                    {{ form.con_stat }} {{ form.con_stat.errors }}
-
-                    <label>{{ form.int_stat.label }}</label>
-                    {{ form.int_stat }} {{ form.int_stat.errors }}
-
-                    <label>{{ form.wis_stat.label }}</label>
-                    {{ form.wis_stat }} {{ form.wis_stat.errors }}
-
-                    <label>{{ form.cha_stat.label }}</label>
-                    {{ form.cha_stat }} {{ form.cha_stat.errors }}
-
-                    <label>{{ form.acc_stat.label }}</label>
-                    {{ form.acc_stat }} {{ form.acc_stat.errors }}
-
-                    <label>{{ form.lck_stat.label }}</label>
-                    {{ form.lck_stat }} {{ form.lck_stat.errors }}
-                </div>
-            </div>
-
-            <button type="submit" class="btn">Сохранить</button>
-            <a href="{% url 'accounts:profile' %}">
-                <button type="button" class="btn">Назад</button>
-            </a>
-
-        </form>
+      <!-- Правая колонка: статы -->
+      <div>
+        <h2>Распределение очков</h2>
+        <p>Осталось очков: <strong id="points-left">{{ initial_points }}</strong></p>
+        <table class="item-table">
+          <tr><th>Стат</th><th>Значение</th><th>+</th></tr>
+          {% for field in form.visible_fields %}
+            {# отбираем только *_stat поля #}
+            {% if field.name|slice:"-5:" == "_stat" %}
+              <tr data-stat="{{ field.name }}">
+                <td>{{ field.label }}</td>
+                <td><span class="stat-value">0</span></td>
+                <td>
+                  <button type="button"
+                          class="btn btn-small btn-add"
+                          {% if initial_points == 0 %}disabled{% endif %}>
+                    +1
+                  </button>
+                  {{ field.as_hidden }}
+                </td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </table>
+      </div>
     </div>
+
+    <button type="submit" class="btn">Сохранить</button>
+    <a href="{% url 'worlds:detail' world %}" class="btn">Назад</a>
+  </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  let pointsLeft = parseInt(document.getElementById("points-left").textContent, 10);
+
+  document.querySelectorAll(".btn-add").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (pointsLeft <= 0) return;
+      const row = btn.closest("tr[data-stat]");
+      const hiddenInput = row.querySelector("input[type=hidden]");
+      const valueSpan   = row.querySelector(".stat-value");
+
+      // Прибавляем +1 к полю и к спану
+      let val = parseInt(hiddenInput.value, 10) + 1;
+      hiddenInput.value = val;
+      valueSpan.textContent = val;
+
+      // Уменьшаем счётчик очков
+      pointsLeft -= 1;
+      document.getElementById("points-left").textContent = pointsLeft;
+
+      // Если очки кончились — дизейблим все кнопки
+      if (pointsLeft === 0) {
+        document.querySelectorAll(".btn-add").forEach(b => b.disabled = true);
+      }
+    });
+  });
+});
+</script>
 {% endblock %}

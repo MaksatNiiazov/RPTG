@@ -38,6 +38,7 @@ class Character(models.Model):
     image = models.ImageField("Изображение", upload_to="characters/", blank=True, null=True)
     name = models.CharField("Имя", max_length=100)
     gender = models.CharField("Пол", max_length=1, choices=GENDER_CHOICES, blank=True)
+    age = models.PositiveSmallIntegerField("Возраст", default=20)
     race = models.CharField("Раса", max_length=50, blank=True)
     background = models.TextField("Предыстория", blank=True)
     notes = models.TextField("Заметки (RP)", blank=True)
@@ -64,7 +65,18 @@ class Character(models.Model):
 
     ability_points = models.PositiveSmallIntegerField(verbose_name='Доступные очки прокачки', default=0)
 
-    knows = models.ManyToManyField('self', symmetrical=False, related_name='known_by', blank=True, verbose_name="Знает")
+    is_npc = models.BooleanField("NPC", default=False)
+    visible_to_players = models.BooleanField(
+        "NPC видим всем игрокам", default=False,
+        help_text="Если включено, NPC появится в списке у всех игроков"
+    )
+
+    # Глобальные флаги «знания» об NPC:
+    known_name = models.BooleanField("Игроки знают имя", default=False)
+    known_background = models.BooleanField("Игроки знают предысторию", default=False)
+    known_stats = models.BooleanField("Игроки знают статы", default=False)
+    known_equipment = models.BooleanField("Игроки знают экипировку", default=False)
+    known_notes = models.BooleanField("Игроки знают заметки", default=False)
 
     def save(self, *args, **kwargs):
         self.max_hp = 10 + 10 * self.con_stat

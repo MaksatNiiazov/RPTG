@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load inventory_tags %}
-{% block title %}Персонаж: {{ char.name }}{% endblock %}
+{% block title %}Персонаж{% if show_name %}: {{ char.name }}{% endif %}{% endblock %}
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/character_detail.css' %}">
@@ -11,139 +11,171 @@
     <div class="container">
 
         <div class="page-actions">
-            <div>
-                <a href="{% url 'characters:character-inventory' char.id %}" class="btn">Инвентарь</a>
-                <a href="{% url 'characters:pick_loot_list' %}" class="btn">Забрать лут</a>
-            </div>
-            <a href="{% url 'accounts:profile' %}" class="btn">⬅ Профиль</a>
+            {% if is_owner %}
+                <div>
+                    <a href="{% url 'characters:character-inventory' char.id %}" class="btn">Инвентарь</a>
+                    <a href="{% url 'characters:pick_loot_list' %}" class="btn">Забрать лут</a>
+                </div>
+            {% endif %}
+            <a href="{% url 'worlds:detail' world %}" class="btn">⬅ Мир</a>
         </div>
-        <div class="page-title">
-            <div class="image"><img src="
-                    {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
-                                    alt=""></div>
-            <h1>{{ char.name }}</h1>
-        </div>
-        <ul class="stats-list">
-            <li><strong>Раса:</strong> {{ char.race|default:"—" }}</li>
-            <li><strong>Пол:</strong> {{ char.get_gender_display|default:"—" }}</li>
-            <li><strong>HP:</strong> {{ char.current_hp }} / {{ char.max_hp }}</li>
-            <li><strong>CP:</strong> {{ char.concentration }}</li>
-            <li><strong>Общая броня:</strong> {{ char.get_total_defense }}</li>
-            <li><strong>Общий урон:</strong> {{ char.get_total_attack }}</li>
-            <li><strong>Грузоподъёмность:</strong> {{ char.carry_capacity }} кг</li>
-            <li><strong>Макс. вес оружия:</strong> {{ char.max_weapon_weight }} кг</li>
-            <li><strong>Макс. вес доспехов:</strong> {{ char.max_armor_weight }} кг</li>
 
+        <div class="page-title">
+            <div class="image">
+                <img src="
+                    {% if char.image %}{{ char.image.url }}
+                    {% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
+                     alt="">
+            </div>
+            {% if show_name %}
+                <h1>{{ char.name }}</h1>
+            {% else %}
+                <h1><em>Имя неизвестно</em></h1>
+            {% endif %}
+        </div>
+
+        <ul class="stats-list">
+            {% if show_stats %}
+                <li><strong>Раса:</strong> {{ char.race|default:"—" }}</li>
+                <li><strong>Пол:</strong> {{ char.get_gender_display|default:"—" }}</li>
+                <li><strong>HP:</strong> {{ char.current_hp }} / {{ char.max_hp }}</li>
+                <li><strong>CP:</strong> {{ char.concentration }}</li>
+                <li><strong>Общая броня:</strong> {{ char.get_total_defense }}</li>
+                <li><strong>Общий урон:</strong> {{ char.get_total_attack }}</li>
+                <li><strong>Грузоподъёмность:</strong> {{ char.carry_capacity }} кг</li>
+                <li><strong>Макс. вес оружия:</strong> {{ char.max_weapon_weight }} кг</li>
+                <li><strong>Макс. вес доспехов:</strong> {{ char.max_armor_weight }} кг</li>
+            {% else %}
+                <li><em>Характеристики скрыты</em></li>
+            {% endif %}
         </ul>
-        <a href="{% url 'characters:character_update' char.id %}">Редактировать</a>
+
+        {% if is_owner or is_gm %}
+            <a href="{% url 'characters:character_update' char.id %}" class="btn">Редактировать</a>
+        {% endif %}
 
         <div class="tabs">
             <div class="tab active" data-tab="pane-stats">Характеристики</div>
-            <div class="tab" data-tab="pane-equip">Экипировка</div>
-            <div class="tab" data-tab="pane-story">История</div>
-
+            {% if show_equipment %}
+                <div class="tab" data-tab="pane-equip">Экипировка</div>{% endif %}
+            {% if show_background or show_notes %}
+                <div class="tab" data-tab="pane-story">История</div>{% endif %}
         </div>
 
         <div class="tab-content">
             <!-- Вкладка «Характеристики» -->
             <div id="pane-stats" class="tab-pane active">
-                <br>
-                <span><strong>Доступные очки:</strong> {{ char.ability_points }}</span>
-                <br>
-                <br>
-                <a href="{% url 'characters:level-up' char.id %}" class="btn">Повысить уровень</a>
-                <br>
-                <br>
-                <table class="item-table">
-                    <tr>
-                        <th>Сила</th>
-                        <td>{{ char.str_stat }}</td>
-                    </tr>
-                    <tr>
-                        <th>Ловкость</th>
-                        <td>{{ char.dex_stat }}</td>
-                    </tr>
-                    <tr>
-                        <th>Телосложение</th>
-                        <td>{{ char.con_stat }}</td>
-                    </tr>
-                    <tr>
-                        <th>Интеллект</th>
-                        <td>{{ char.int_stat }}</td>
-                    </tr>
-                    <tr>
-                        <th>Мудрость</th>
-                        <td>{{ char.wis_stat }}</td>
-                    </tr>
-                    <tr>
-                        <th>Харизма</th>
-                        <td>{{ char.cha_stat }}</td>
-                    </tr>
-                    <tr>
-                        <th>Меткость</th>
-                        <td>{{ char.acc_stat }}</td>
-                    </tr>
-                    <tr>
-                        <th>Удача</th>
-                        <td>{{ char.lck_stat }}</td>
-                    </tr>
-                </table>
+                {% if show_stats %}
+                    {% if is_owner or is_gm %}
+                        <br>
+                        <span><strong>Доступные очки:</strong> {{ char.ability_points }}</span>
+                        <br>
+                        <br>
+                        <a href="{% url 'characters:level-up' char.id %}" class="btn">Повысить уровень</a>
+                        <br>
+                        <br>
+                    {% endif %}
 
-                {% if legendary_bonuses %}
-                    <h3>Легендарные бонусы</h3>
-                    <ul style="padding: 5px">
-                        {% for bonus in legendary_bonuses %}
-                            <li>{{ bonus }}</li>
-                        {% endfor %}
-                    </ul>
+                    <table class="item-table">
+                        <tr>
+                            <th>Сила</th>
+                            <td>{{ char.str_stat }}</td>
+                        </tr>
+                        <tr>
+                            <th>Ловкость</th>
+                            <td>{{ char.dex_stat }}</td>
+                        </tr>
+                        <tr>
+                            <th>Телосложение</th>
+                            <td>{{ char.con_stat }}</td>
+                        </tr>
+                        <tr>
+                            <th>Интеллект</th>
+                            <td>{{ char.int_stat }}</td>
+                        </tr>
+                        <tr>
+                            <th>Мудрость</th>
+                            <td>{{ char.wis_stat }}</td>
+                        </tr>
+                        <tr>
+                            <th>Харизма</th>
+                            <td>{{ char.cha_stat }}</td>
+                        </tr>
+                        <tr>
+                            <th>Меткость</th>
+                            <td>{{ char.acc_stat }}</td>
+                        </tr>
+                        <tr>
+                            <th>Удача</th>
+                            <td>{{ char.lck_stat }}</td>
+                        </tr>
+                    </table>
+
+                    {% if legendary_bonuses %}
+                        <h3>Легендарные бонусы</h3>
+                        <ul style="padding:5px">
+                            {% for bonus in legendary_bonuses %}
+                                <li>{{ bonus }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% else %}
+                    <p><em>Данные характеристик недоступны.</em></p>
                 {% endif %}
             </div>
 
-            <!-- Вкладка «Экипировка» -->
-            <div id="pane-equip" class="tab-pane">
-                <table class="item-table">
-                    <tr>
-                        <th>Слот</th>
-                        <th>Предмет</th>
-                        <th>Бонус</th>
-                        <th>Вес</th>
-                    </tr>
-                    {% for slot_dict in slot_names %}
-                        {% for slot,label in slot_dict.items %}
-                            {% with item=equipment|get_attr:slot %}
-                                <tr>
-                                    <td>{{ label }}</td>
-                                    {% if item %}
-                                        <td>{{ item.name }}</td>
-                                        <td>+{{ item.bonus }}</td>
-                                        <td>{{ item.weight }} кг</td>
-                                    {% else %}
-                                        <td colspan="3"><em>Пусто</em></td>
-                                    {% endif %}
-                                </tr>
-                            {% endwith %}
+            {% if show_equipment %}
+                <!-- Вкладка «Экипировка» -->
+                <div id="pane-equip" class="tab-pane">
+                    <table class="item-table">
+                        <tr>
+                            <th>Слот</th>
+                            <th>Предмет</th>
+                            <th>Бонус</th>
+                            <th>Вес</th>
+                        </tr>
+                        {% for slot_dict in slot_names %}
+                            {% for slot,label in slot_dict.items %}
+                                {% with item=equipment|get_attr:slot %}
+                                    <tr>
+                                        <td>{{ label }}</td>
+                                        {% if item %}
+                                            <td>{{ item.name }}</td>
+                                            <td>+{{ item.bonus }}</td>
+                                            <td>{{ item.weight }} кг</td>
+                                        {% else %}
+                                            <td colspan="3"><em>Пусто</em></td>
+                                        {% endif %}
+                                    </tr>
+                                {% endwith %}
+                            {% endfor %}
                         {% endfor %}
-                    {% endfor %}
-                </table>
-            </div>
-            <div id="pane-story" class="tab-pane">
-                {% if char.background %}
-                    <h2>Предыстория</h2>
-                    <div class="story-block">
-                        {{ char.background|linebreaks }}
-                    </div>
-                {% endif %}
-                {% if char.notes %}
-                    <h2>Заметки</h2>
-                    <div class="notes-block">
-                        {{ char.notes|linebreaks }}
-                    </div>
-                {% endif %}
-                {% if not char.background and not char.notes %}
-                    <p><em>Предыстория и заметки отсутствуют.</em></p>
-                {% endif %}
-            </div>
+                    </table>
+                </div>
+            {% endif %}
+
+            {% if show_background or show_notes %}
+                <div id="pane-story" class="tab-pane">
+                    {% if show_background %}
+                        <h2>Предыстория</h2>
+                        {% if char.background %}
+                            <div class="story-block">{{ char.background|linebreaks }}</div>
+                        {% else %}
+                            <p><em>Предыстория отсутствует.</em></p>
+                        {% endif %}
+                    {% endif %}
+                    {% if show_notes %}
+                        <h2>Заметки</h2>
+                        {% if char.notes %}
+                            <div class="notes-block">{{ char.notes|linebreaks }}</div>
+                        {% else %}
+                            <p><em>Заметки отсутствуют.</em></p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
+
     </div>
 {% endblock %}
 
@@ -152,13 +184,11 @@
         document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll(".tab").forEach(tab => {
                 tab.addEventListener("click", () => {
-                    // активируем сам таб
                     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
                     tab.classList.add("active");
-                    // переключаем контент
-                    const target = tab.dataset.tab;
+                    const pane = tab.dataset.tab;
                     document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
-                    document.getElementById(target).classList.add("active");
+                    document.getElementById(pane).classList.add("active");
                 });
             });
         });

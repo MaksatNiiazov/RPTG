@@ -1,17 +1,15 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DetailView, UpdateView
 
 from items.models import Item
 from worlds.models import PendingLoot, World
-from .forms import CharacterForm, CharacterKnowledgeForm, LevelUpForm, CharacterUpdateForm
+from .forms import CharacterForm, LevelUpForm, CharacterUpdateForm
 from .models import Character, InventoryItem, Equipment
 
 
@@ -27,6 +25,12 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
 
         return super().form_valid(form)
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['initial_points'] = 10
+        ctx['world'] = World.objects.get(pk=self.kwargs["world_pk"]).pk
+        return ctx
+
     def get_success_url(self):
         return reverse_lazy("characters:character_detail", kwargs={"pk": self.object.pk})
 
@@ -37,6 +41,11 @@ class CharacterUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "characters/character_update_form.html"
     login_url = reverse_lazy("accounts:login")
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['world'] = World.objects.get(pk=self.kwargs["world_pk"]).pk
+        return ctx
+
     def get_success_url(self):
         return reverse_lazy("characters:character_detail", kwargs={"pk": self.object.pk})
 
@@ -45,25 +54,35 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
     model = Character
     template_name = "characters/character_detail.html"
     context_object_name = "char"
-    login_url = reverse_lazy("accounts:login")
-
-    def get_queryset(self):
-        # Смотрим только своих персонажей
-        return Character.objects.filter(owner=self.request.user)
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        character = self.object
+        ctx = super().get_context_data(**kwargs)
+        c = self.object
+        user = self.request.user
 
-        # если нет связанной экипировки — создаём
-        if not hasattr(character, "equipment"):
-            Equipment.objects.create(character=character)
+        # Если ещё нет записи Equipment
+        if not hasattr(c, "equipment"):
+            Equipment.objects.create(character=c)
 
-        context["equipment"] = character.equipment
-        context["legendary_bonuses"] = character.get_legendary_bonuses()
+        ctx["equipment"] = c.equipment
+        ctx["legendary_bonuses"] = c.get_legendary_bonuses()
+        ctx["slot_names"] = SLOT_NAMES
 
-        context["slot_names"] = SLOT_NAMES
-        return context
+        # Кто смотрит?
+        is_gm = (c.owner == user) or (c.world and c.world.creator == user)
+        is_owner = (c.owner == user)
+        ctx["is_gm"] = is_gm
+        ctx["is_owner"] = is_owner
+
+        # Если NPC и смотрит не GM/владелец — скрываем неподозволенные поля
+        ctx["show_name"] = (not c.is_npc) or is_gm or c.known_name
+        ctx["show_background"] = (not c.is_npc) or is_gm or c.known_background
+        ctx["show_stats"] = (not c.is_npc) or is_gm or c.known_stats
+        ctx["show_equipment"] = (not c.is_npc) or is_gm or c.known_equipment
+        ctx["show_notes"] = (not c.is_npc) or is_gm or c.known_notes
+        ctx["world"] = c.world.pk
+
+        return ctx
 
 
 class PickLootView(LoginRequiredMixin, View):
@@ -94,37 +113,6 @@ class PickLootView(LoginRequiredMixin, View):
         return redirect("characters:character_detail", pk=pl.character.pk)
 
 
-class ManageKnowledgeView(LoginRequiredMixin, View):
-    """
-    ГМ отмечает, кого знает конкретный персонаж.
-    """
-    template_name = "characters/manage_knowledge.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        self.char = get_object_or_404(Character, pk=kwargs["char_pk"])
-        # Проверяем, что пользователь — гейммастер этого мира
-        if request.user != self.char.world.creator:
-            return redirect("worlds:detail", pk=self.char.world.pk)
-        return super().dispatch(request, *args, **kwargs)
-
-    def get(self, request, char_pk):
-        form = CharacterKnowledgeForm(instance=self.char)
-        return render(request, self.template_name, {
-            "char": self.char,
-            "form": form,
-        })
-
-    def post(self, request, char_pk):
-        form = CharacterKnowledgeForm(request.POST, instance=self.char)
-        if form.is_valid():
-            form.save()
-            return redirect("worlds:detail", pk=self.char.world.pk)
-        return render(request, self.template_name, {
-            "char": self.char,
-            "form": form,
-        })
-
-
 SLOT_NAMES = [
     {"head": 'Голова'},
     {"neck": 'Шея'},
@@ -147,6 +135,17 @@ class CharacterInventoryView(LoginRequiredMixin, DetailView):
     template_name = "characters/inventory.html"
     context_object_name = "char"
     pk_url_kwarg = "character_id"
+
+    def get(self, request, *args, **kwargs):
+        if self.get_object().owner != request.user:
+            messages.error(request, "Нет доступа")
+            return redirect("characters:character_detail", pk=self.object.pk)
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect("accounts:login")
+
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         return Character.objects.filter(owner=self.request.user)

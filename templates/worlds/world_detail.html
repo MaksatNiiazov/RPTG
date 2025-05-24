@@ -1,39 +1,66 @@
+{# templates/worlds/world_detail.html #}
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Мир: {{ world.name }}{% endblock %}
 
 {% block content %}
-  <div class="container">
-    <h1>{{ world.name }}</h1>
-    <p><strong>Создатель (GM):</strong> {{ world.creator.email }}</p>
-    <p><strong>Сеттинг:</strong> {{ world.setting|default:"—" }}</p>
-    <p><strong>История:</strong> {{ world.history|default:"—" }}</p>
+    <div class="container">
+        <h1>{{ world.name }}</h1>
+        <p><strong>GM:</strong> {{ world.creator.email }}</p>
+        <p><strong>Сеттинг:</strong> {{ world.setting|default:"—" }}</p>
+        <p><strong>История:</strong> {{ world.history|default:"—" }}</p>
 
-    <h2>Персонажи</h2>
-    {% if is_gm %}
-      <p class="note">Вы — гейм-мастер, видите всех персонажей.</p>
-    {% else %}
-      <p class="note">Вы видите только своих персонажей и тех, кого вы знаете.</p>
-    {% endif %}
+        <h2>Персонажи</h2>
+        {% if player_chars %}
+            <div class="cards">
+                {% for c in player_chars %}
+                    <div class="card">
+                        <h3>{{ c.name }}</h3>
+                        <p><strong>Владелец:</strong> {{ c.owner.email }}</p>
+                        <a href="{% url 'characters:character_detail' c.pk %}" class="btn">Открыть</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p><em>Игровых персонажей нет.</em></p>
+        {% endif %}
 
-    {% if characters %}
-      <div class="grid-2">
-        {% for char in characters %}
-          <div class="card">
-            <h4>{{ char.name }}</h4>
-            <p><strong>Раса:</strong> {{ char.race|default:"—" }}</p>
-            <a href="{% url 'characters:character_detail' char.pk %}" class="btn">Открыть</a>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p>Персонажей не найдено.</p>
-    {% endif %}
-  <div><a href="{% url 'characters:character_create' world.id %}" class="btn">Создать персонажа</a></div>
-      <br>
-  <div><a href="{% url 'accounts:profile' %}" class="btn">← Назад в профиль</a></div>
+        <h2>NPC</h2>
+        {% if npc_chars %}
+            <div class="cards">
+                {% for c in npc_chars %}
+                    <div class="card">
+                        <h3>
+                            {% if is_gm or c.known_name %}
+                                {{ c.name }}
+                            {% else %}
+                                <em>Имя неизвестно</em>
+                            {% endif %}
+                        </h3>
 
+                        {% if is_gm or c.known_background %}
+                            <p><strong>Предыстория:</strong> {{ c.background|truncatechars:80|default:"—" }}</p>
+                        {% endif %}
 
+                        {% if is_gm or c.known_notes %}
+                            <p><strong>Заметки:</strong> {{ c.notes|truncatechars:60|default:"—" }}</p>
+                        {% endif %}
 
+                        <a href="{% url 'characters:character_detail' c.pk %}" class="btn">Открыть</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p><em>NPC нет.</em></p>
+        {% endif %}
 
-  </div>
+        <div class="actions">
+            <a href="{% url 'characters:character_create' world.pk %}" class="btn">Создать персонажа</a>
+            <a href="{% url 'accounts:profile' %}" class="btn">← Назад</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/world_detail.css' %}">
 {% endblock %}

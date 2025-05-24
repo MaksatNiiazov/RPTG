@@ -12,4 +12,5 @@ urlpatterns = [
         GMLootView.as_view(),
         name="gm_open_chest"
     ),
+
 ]

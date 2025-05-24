@@ -24,8 +24,11 @@ class EquipmentInline(StackedInline):
 @admin.register(Character)
 class CharacterAdmin(ModelAdmin):
     list_display = (
+
         "world",
-        "name", "race", "gender",
+        "name",
+        "is_npc",
+        "race", "gender",
         "str_stat", "dex_stat", "con_stat", "int_stat",
         "carry_capacity", "max_weapon_weight", "max_armor_weight",
     )
@@ -34,12 +37,14 @@ class CharacterAdmin(ModelAdmin):
         "max_hp", "concentration", "carry_capacity",
         "max_weapon_weight", "max_armor_weight",
     )
-    list_filter = ("race", "gender", "world",
+    list_filter = ("race", "gender", "world", "is_npc", "world",
+
                    )
     search_fields = ("name",)
     fieldsets = (
         (None, {
-            "fields": ("world",
+            "fields": ("owner", "world",
+                       'image',
                        "name", "gender", "race")
         }),
         ("RP-данные", {
@@ -58,9 +63,11 @@ class CharacterAdmin(ModelAdmin):
                 "carry_capacity", "max_weapon_weight", "max_armor_weight",
             )
         }),
+        ("Поля для НПС", {
+            "fields": (
+                "is_npc", "visible_to_players", "known_name", "known_background", "known_notes", "known_equipment", "known_stats"
+            )
+        }),
+
     )
     inlines = (InventoryItemInline, EquipmentInline)  # Управление инвентарём через отдельный раздел InventoryAdmin
-
-# (Если нужно, можно зарегистрировать InventoryItem и EquippedItem отдельно)
-# admin.site.register(InventoryItem)
-# admin.site.register(EquippedItem)

@@ -4,36 +4,31 @@ from django.views import View
 from django.views.generic import ListView, DetailView, CreateView
 from django.shortcuts import get_object_or_404, redirect, render
 
+from character.models import Character
 from items.forms import LootConfigForm
 from .forms import WorldForm
 from .loot import open_chest_in_world
 from .models import World, PendingLoot
 
 
-class WorldDetailView(
-    LoginRequiredMixin,
-    DetailView
-):
+class WorldDetailView(LoginRequiredMixin, DetailView):
     model = World
     template_name = "worlds/world_detail.html"
     context_object_name = "world"
 
     def get_context_data(self, **kwargs):
-
         ctx = super().get_context_data(**kwargs)
         world = self.object
-        user = self.request.user
+        user  = self.request.user
 
-        # GM видит всех персонажей
-        if world.creator == user:
-            ctx["characters"] = world.characters.all()
-            ctx["is_gm"] = True
-        else:
-            # игрок видит только своих и тех, кого он знает
-            my_chars = world.characters.filter(owner=user)
-            known = world.characters.filter(pk__in=my_chars.values_list("knows", flat=True))
-            ctx["characters"] = (my_chars | known).distinct()
+        # Все игровые персонажи (не-NPC)
+        players = world.characters.filter(is_npc=False)
+        # NPC, отмеченные как видимые игрокам
+        npcs    = world.characters.filter(is_npc=True, visible_to_players=True)
 
+        ctx["is_gm"]        = (world.creator == user)
+        ctx["player_chars"]= players
+        ctx["npc_chars"]   = npcs
         return ctx
 
 
