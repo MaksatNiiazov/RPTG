@@ -1,11 +1,12 @@
 from django.urls import path
 from .views import CharacterCreateView, CharacterDetailView, ManageKnowledgeView, PickLootView, CharacterInventoryView, \
-    UnequipSlotView, EquipItemView, DropItemView, LevelUpView
+    UnequipSlotView, EquipItemView, DropItemView, LevelUpView, CharacterUpdateView
 
 app_name = "characters"
 
 urlpatterns = [
     path("create/<int:world_pk>/", CharacterCreateView.as_view(), name="character_create"),
+    path("update/<int:pk>/", CharacterUpdateView.as_view(), name='character_update'),
     path("<int:pk>/", CharacterDetailView.as_view(), name="character_detail"),
     path("<int:char_pk>/manage_knowledge/", ManageKnowledgeView.as_view(), name="manage_knowledge"),
     path("pick-loot/", PickLootView.as_view(), name="pick_loot_list"),

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Создать персонажа{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>Редактировать персонажа</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="grid-2">
+                <!-- Левая колонка: основные поля -->
+                <div>
+                    <label>{{ form.name.label }}{% if form.name.field.required %}*{% endif %}</label>
+                    {{ form.name }} {{ form.name.errors }}
+
+                    <label>{{ form.race.label }}</label>
+                    {{ form.race }}
+
+                    <label>{{ form.gender.label }}</label>
+                    {{ form.gender }}
+
+                    <label>{{ form.background.label }}</label>
+                    {{ form.background }}
+
+                    <label>{{ form.notes.label }}</label>
+                    {{ form.notes }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn">Сохранить</button>
+            <a href="{% url 'accounts:profile' %}">
+                <button type="button" class="btn">Назад</button>
+            </a>
+
+        </form>
+    </div>
+{% endblock %}

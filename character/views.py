@@ -7,11 +7,11 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.decorators.http import require_POST
-from django.views.generic import CreateView, DetailView
+from django.views.generic import CreateView, DetailView, UpdateView
 
 from items.models import Item
 from worlds.models import PendingLoot, World
-from .forms import CharacterForm, CharacterKnowledgeForm, LevelUpForm
+from .forms import CharacterForm, CharacterKnowledgeForm, LevelUpForm, CharacterUpdateForm
 from .models import Character, InventoryItem, Equipment
 
 
@@ -26,6 +26,16 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
         form.instance.world = World.objects.get(pk=self.kwargs["world_pk"])
 
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("characters:character_detail", kwargs={"pk": self.object.pk})
+
+
+class CharacterUpdateView(LoginRequiredMixin, UpdateView):
+    model = Character
+    form_class = CharacterUpdateForm
+    template_name = "characters/character_update_form.html"
+    login_url = reverse_lazy("accounts:login")
 
     def get_success_url(self):
         return reverse_lazy("characters:character_detail", kwargs={"pk": self.object.pk})
@@ -180,7 +190,7 @@ class EquipItemView(LoginRequiredMixin, View):
             print(data)
             return JsonResponse({"status": status, "message": message, "data": data})
         # fallback обычный
-        messages_method = messages.success if status=="ok" else messages.error
+        messages_method = messages.success if status == "ok" else messages.error
         messages_method(request, message)
         return redirect("characters:character-inventory", character_id)
 
@@ -203,7 +213,7 @@ class UnequipSlotView(LoginRequiredMixin, View):
 
         if is_ajax:
             return JsonResponse({"status": status, "message": message, "data": data})
-        messages_method = messages.success if status=="ok" else messages.error
+        messages_method = messages.success if status == "ok" else messages.error
         messages_method(request, message)
         return redirect("characters:character-inventory", character_id)
 
@@ -234,7 +244,7 @@ class DropItemView(LoginRequiredMixin, View):
         if is_ajax:
             return JsonResponse({"status": status, "message": message, "data": data})
         from django.contrib import messages
-        messages_method = messages.success if status=="ok" else messages.error
+        messages_method = messages.success if status == "ok" else messages.error
         messages_method(request, message)
         return redirect("characters:character-inventory", character_id)
 

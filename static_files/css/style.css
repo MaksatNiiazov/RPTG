@@ -255,6 +255,7 @@ textarea {
 .item-table th,
 .type-table th,
 .rarity-table th {
+    padding: .4rem;
     background: #e8d8b0;
     color: #3e2f1b;
 }
@@ -389,4 +390,14 @@ footer {
 
 .card .btn {
     font-size: 0.9rem;
+}
+/* Ограничиваем ширину и включаем скролл на мобилке */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* плавный скролл на iOS */
+  margin-bottom: 1rem;              /* небольшой отступ снизу */
+}
+.table-responsive .item-table {
+  min-width: 600px; /* минимальная ширина таблицы, при которой начинает скроллиться */
 }

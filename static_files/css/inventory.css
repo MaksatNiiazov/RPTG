@@ -1,0 +1,161 @@
+/* === Общий контейнер === */
+.inventory-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+/* === Секции экипировки и инвентаря === */
+.inventory-section {
+  flex: 1 1 480px;
+  background: #fbf6ee;        /* светлый пергамент */
+  border: 1px solid #dac8a0;  /* бежевый кант */
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  padding: 1.25rem;
+  transition: display 0.3s;
+}
+
+/* Заголовок секции */
+.inventory-section h2 {
+  font-family: "Cinzel", serif;
+  color: #3e2f1b;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #dac8a0;
+  padding-bottom: 0.25rem;
+}
+
+/* === Таблица предметов === */
+.item-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Merriweather", serif;
+  color: #4a3723;
+}
+.item-table th,
+.item-table td {
+  border: 1px solid #dac8a0;
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+}
+.item-table th {
+  background: #e8d8b0;
+  font-weight: 600;
+}
+.item-table tbody tr:nth-child(odd) {
+  background: #f7f1e7;
+}
+.item-table tbody tr:hover {
+  background: #dbc79a;
+}
+
+/* Пустые слоты и строки */
+.empty-slot {
+  text-align: center;
+  font-style: italic;
+  color: #6c5b49;
+}
+
+/* === Кнопки управления === */
+.btn-inventory {
+  font-family: "Merriweather", serif;
+  border: 1px solid #8c7151;
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.875rem;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.btn-equip {
+  background: #d1bfa3;
+  color: #3e2f1b;
+}
+.btn-unequip {
+  background: #e8d8b0;
+  color: #3e2f1b;
+}
+.btn-drop {
+  background: #be9c79;
+  color: #3e2f1b;
+}
+.btn-inventory:hover {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Flex-кнопки в ячейке */
+.td-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* === Табы для мобильного === */
+.inventory-tabs {
+  display: none;
+  margin-bottom: 1rem;
+}
+.inventory-tabs .tab-button {
+  flex: 1;
+  padding: 0.5rem 0;
+  font-family: "Merriweather", serif;
+  background: #e8d8b0;
+  border: 1px solid #dac8a0;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: center;
+}
+.inventory-tabs .tab-button.active {
+  background: #d1bfa3;
+}
+
+/* === Адаптивность === */
+@media (max-width: 800px) {
+  /* Показываем табы */
+  .inventory-tabs {
+    display: flex;
+  }
+  /* Скрываем обе секции по умолчанию */
+  .inventory-section {
+    display: none;
+  }
+  /* Активная секция */
+  .inventory-section.active {
+    display: block;
+    max-width: 100%;
+  }
+  /* Размечаем таблицы чуть компактнее */
+  .item-table th,
+  .item-table td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .inventory-layout {
+    flex-direction: column;
+  }
+  .inventory-section {
+    padding: 1rem;
+  }
+}
+/* === Mobile-friendly table wrapper === */
+@media (max-width: 800px) {
+  .inventory-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .inventory-section .item-table {
+    min-width: 100%;
+    /* Если всё ещё великовата, можно указать конкретное значение:
+       min-width: 600px; */
+  }
+  /* Убираем лишние внутренние отступы у ячеек, чтобы поместилось по ширине */
+  .item-table th,
+  .item-table td {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+  }
+}
+

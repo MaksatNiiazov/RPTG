@@ -1,0 +1,162 @@
+/* ========== Общий контейнер ========== */
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0;
+    font-family: "Merriweather", serif;
+    color: #4a3723;
+}
+
+/* ========== Заголовок страницы и навигация ========== */
+.page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: 1rem;
+}
+
+.page-actions .btn {
+    background: #e8d8b0;
+    border: 1px solid #dac8a0;
+    border-radius: 4px;
+    padding: .5rem 1rem;
+    text-decoration: none;
+    color: #3e2f1b;
+    transition: background .2s;
+}
+
+.page-actions .btn:hover {
+    background: #d1bfa3;
+}
+
+/* ========== Основной заголовок ========== */
+.page-title {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+h1 {
+    display: inline-block;
+    font-family: "Cinzel", serif;
+    font-size: 2.5rem;
+    margin: 1rem;
+    color: #3e2f1b;
+}
+
+.page-title img {
+    height: 10.5rem;
+    margin-left: .5rem;
+    border: #514128 5px solid;
+    border-radius: 10px;
+    box-shadow: black 0 0 4px;
+}
+
+/* ========== Показатели списка ========== */
+.stats-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.stats-list li {
+    padding: .3rem 0;
+    border-bottom: 1px solid #f0e6d2;
+}
+
+/* ========== Вкладки ========== */
+.tabs {
+    display: flex;
+    border-bottom: 2px solid #dac8a0;
+    margin-top: 1.5rem;
+}
+
+.tab {
+    flex: 1;
+    text-align: center;
+    padding: .75rem 0;
+    cursor: pointer;
+    background: #fbf6ee;
+    border: 1px solid #dac8a0;
+    border-bottom: none;
+    font-weight: 600;
+    transition: background .2s;
+}
+
+.tab:not(.active):hover {
+    background: #f7f1e7;
+}
+
+.tab.active {
+    background: #fff;
+    border-top: 3px solid #8c7151;
+    color: #3e2f1b;
+}
+
+/* ========== Контент вкладок ========== */
+.tab-content {
+    border: 1px solid #dac8a0;
+    padding: 1rem;
+    background: #fff;
+}
+
+.tab-pane {
+    display: none;
+    overflow-x: auto;
+
+}
+
+.tab-pane.active {
+    display: block;
+    overflow-x: auto;
+
+}
+
+/* ========== Таблицы всего ========== */
+.item-table {
+    border-collapse: collapse;
+    margin-top: .5rem;
+}
+
+.item-table th,
+.item-table td {
+    border: 1px solid #dac8a0;
+    padding: .5rem;
+    text-align: left;
+}
+
+.item-table th {
+    background: #e8d8b0;
+    font-weight: 600;
+    padding: .5rem;
+;
+}
+
+.item-table tbody tr:nth-child(odd) {
+    background: #f7f1e7;
+}
+
+/* ========== Мобильная адаптация ========== */
+@media (max-width: 600px) {
+    .tabs {
+        flex-direction: column;
+    }
+
+    .tab {
+        border-bottom: 1px solid #dac8a0;
+        border-right: none;
+    }
+
+    .tab.active {
+        border-top: none;
+        border-left: 3px solid #8c7151;
+    }
+
+    .item-table th,
+    .item-table td {
+        font-size: .9rem;
+        padding: .4rem;
+    }
+}

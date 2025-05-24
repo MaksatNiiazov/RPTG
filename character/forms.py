@@ -30,6 +30,19 @@ class CharacterForm(forms.ModelForm):
         }
 
 
+class CharacterUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Character
+        fields = [
+            "name", "race", "gender", "background", "notes",
+        ]
+        widgets = {
+            "background": forms.Textarea(attrs={"rows": 3}),
+            "notes": forms.Textarea(attrs={"rows": 3}),
+            "gender": forms.Select(),
+        }
+
+
 class CharacterKnowledgeForm(forms.ModelForm):
     knows = forms.ModelMultipleChoiceField(
         queryset=Character.objects.none(),

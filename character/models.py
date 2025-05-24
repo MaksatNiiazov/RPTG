@@ -35,6 +35,7 @@ class Character(models.Model):
                               blank=True, null=True)
     GENDER_CHOICES = [('M', 'Мужской'), ('F', 'Женский'), ('O', 'Другой')]
 
+    image = models.ImageField("Изображение", upload_to="characters/", blank=True, null=True)
     name = models.CharField("Имя", max_length=100)
     gender = models.CharField("Пол", max_length=1, choices=GENDER_CHOICES, blank=True)
     race = models.CharField("Раса", max_length=50, blank=True)

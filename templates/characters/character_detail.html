@@ -1,154 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
 {% load inventory_tags %}
 {% block title %}Персонаж: {{ char.name }}{% endblock %}
 
 {% block css %}
-    <style>
-        /* ========== Общий контейнер ========== */
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 1rem;
-            font-family: "Merriweather", serif;
-            color: #4a3723;
-        }
-
-        /* ========== Заголовок страницы и навигация ========== */
-        .page-actions {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: .5rem;
-            margin-bottom: 1rem;
-        }
-
-        .page-actions .btn {
-            background: #e8d8b0;
-            border: 1px solid #dac8a0;
-            border-radius: 4px;
-            padding: .5rem 1rem;
-            text-decoration: none;
-            color: #3e2f1b;
-            transition: background .2s;
-        }
-
-        .page-actions .btn:hover {
-            background: #d1bfa3;
-        }
-
-        /* ========== Основной заголовок ========== */
-        h1 {
-            font-family: "Cinzel", serif;
-            font-size: 2.5rem;
-            margin-bottom: .5rem;
-            color: #3e2f1b;
-        }
-
-        /* ========== Показатели списка ========== */
-        .stats-list {
-            list-style: none;
-            padding: 0;
-            margin: 1rem 0;
-        }
-
-        .stats-list li {
-            padding: .3rem 0;
-            border-bottom: 1px solid #f0e6d2;
-        }
-
-        /* ========== Вкладки ========== */
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid #dac8a0;
-            margin-top: 1.5rem;
-        }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: .75rem 0;
-            cursor: pointer;
-            background: #fbf6ee;
-            border: 1px solid #dac8a0;
-            border-bottom: none;
-            font-weight: 600;
-            transition: background .2s;
-        }
-
-        .tab:not(.active):hover {
-            background: #f7f1e7;
-        }
-
-        .tab.active {
-            background: #fff;
-            border-top: 3px solid #8c7151;
-            color: #3e2f1b;
-        }
-
-        /* ========== Контент вкладок ========== */
-        .tab-content {
-            border: 1px solid #dac8a0;
-            padding: 1rem;
-            background: #fff;
-        }
-
-        .tab-pane {
-            display: none;
-            overflow-x: auto;
-
-        }
-
-        .tab-pane.active {
-            display: block;
-            overflow-x: auto;
-
-        }
-
-        /* ========== Таблицы всего ========== */
-        .item-table {
-            border-collapse: collapse;
-            margin-top: .5rem;
-        }
-
-        .item-table th,
-        .item-table td {
-            border: 1px solid #dac8a0;
-            padding: .5rem;
-            text-align: left;
-        }
-
-        .item-table th {
-            background: #e8d8b0;
-            font-weight: 600;
-        }
-
-        .item-table tbody tr:nth-child(odd) {
-            background: #f7f1e7;
-        }
-
-        /* ========== Мобильная адаптация ========== */
-        @media (max-width: 600px) {
-            .tabs {
-                flex-direction: column;
-            }
-
-            .tab {
-                border-bottom: 1px solid #dac8a0;
-                border-right: none;
-            }
-
-            .tab.active {
-                border-top: none;
-                border-left: 3px solid #8c7151;
-            }
-
-            .item-table th,
-            .item-table td {
-                font-size: .9rem;
-                padding: .4rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/character_detail.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -161,21 +17,25 @@
             </div>
             <a href="{% url 'accounts:profile' %}" class="btn">⬅ Профиль</a>
         </div>
-
-        <h1>{{ char.name }}</h1>
-
+        <div class="page-title">
+            <div class="image"><img src="
+                    {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
+                                    alt=""></div>
+            <h1>{{ char.name }}</h1>
+        </div>
         <ul class="stats-list">
             <li><strong>Раса:</strong> {{ char.race|default:"—" }}</li>
             <li><strong>Пол:</strong> {{ char.get_gender_display|default:"—" }}</li>
             <li><strong>HP:</strong> {{ char.current_hp }} / {{ char.max_hp }}</li>
             <li><strong>CP:</strong> {{ char.concentration }}</li>
-            <li><strong>Общая броня:</strong> {{ char.get_total_defense }} кг</li>
-            <li><strong>Общий урон:</strong> {{ char.get_total_attack }} кг</li>
+            <li><strong>Общая броня:</strong> {{ char.get_total_defense }}</li>
+            <li><strong>Общий урон:</strong> {{ char.get_total_attack }}</li>
             <li><strong>Грузоподъёмность:</strong> {{ char.carry_capacity }} кг</li>
             <li><strong>Макс. вес оружия:</strong> {{ char.max_weapon_weight }} кг</li>
             <li><strong>Макс. вес доспехов:</strong> {{ char.max_armor_weight }} кг</li>
 
         </ul>
+        <a href="{% url 'characters:character_update' char.id %}">Редактировать</a>
 
         <div class="tabs">
             <div class="tab active" data-tab="pane-stats">Характеристики</div>
@@ -188,8 +48,12 @@
             <!-- Вкладка «Характеристики» -->
             <div id="pane-stats" class="tab-pane active">
                 <br>
-                <a href="{% url 'characters:level-up' char.id %}" class="btn">Повысить уровень</a>
                 <span><strong>Доступные очки:</strong> {{ char.ability_points }}</span>
+                <br>
+                <br>
+                <a href="{% url 'characters:level-up' char.id %}" class="btn">Повысить уровень</a>
+                <br>
+                <br>
                 <table class="item-table">
                     <tr>
                         <th>Сила</th>
