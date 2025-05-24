@@ -19,16 +19,16 @@ class WorldDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         world = self.object
-        user  = self.request.user
+        user = self.request.user
 
         # Все игровые персонажи (не-NPC)
         players = world.characters.filter(is_npc=False)
         # NPC, отмеченные как видимые игрокам
-        npcs    = world.characters.filter(is_npc=True, visible_to_players=True)
+        npcs = world.characters.filter(is_npc=True, visible_to_players=True)
 
-        ctx["is_gm"]        = (world.creator == user)
-        ctx["player_chars"]= players
-        ctx["npc_chars"]   = npcs
+        ctx["is_gm"] = (world.creator == user)
+        ctx["player_chars"] = players
+        ctx["npc_chars"] = npcs
         return ctx
 
 

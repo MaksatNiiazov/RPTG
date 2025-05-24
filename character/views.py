@@ -26,9 +26,13 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
+        world = World.objects.get(pk=self.kwargs["world_pk"])
+        user = self.request.user
         ctx = super().get_context_data(**kwargs)
         ctx['initial_points'] = 10
-        ctx['world'] = World.objects.get(pk=self.kwargs["world_pk"]).pk
+        ctx['world'] = world.pk
+        ctx["is_gm"] = (world.creator == user)
+
         return ctx
 
     def get_success_url(self):

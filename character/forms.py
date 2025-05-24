@@ -10,6 +10,7 @@ class CharacterForm(forms.ModelForm):
             "name", "race", "gender", "background", "notes",
             "str_stat", "dex_stat", "con_stat", "int_stat",
             "wis_stat", "cha_stat", "acc_stat", "lck_stat",
+            "is_npc", "visible_to_players"
         ]
         widgets = {
             "image": forms.ClearableFileInput(),

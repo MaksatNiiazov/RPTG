@@ -29,6 +29,14 @@
 
         <label>{{ form.notes.label }}</label><br>
         {{ form.notes }}<br>
+      {% if is_gm %}
+
+      <label>{{ form.is_npc.label }}</label><br>
+      {{ form.is_npc }}
+      <label>{{ form.visible_to_players.label }}</label><br>
+      {{ form.visible_to_players }}
+      {% endif %}
+
       </div>
 
       <!-- Правая колонка: статы -->
