@@ -89,7 +89,7 @@ class QuickChestForm(forms.Form):
     def __init__(self, world, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # показываем только персонажей этого мира
-        self.fields['character'].queryset = world.characters.all()
+        self.fields['character'].queryset = world.characters.all().exclude(is_npc=True)
         # rare_rarity имеет смысл только если rare_count > 0
         self.fields['rare_rarity'].widget.attrs['disabled'] = True
         self.fields['rare_count'].widget.attrs['class'] = 'js-rare-count'
