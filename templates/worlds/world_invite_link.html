@@ -3,18 +3,18 @@
 
 {% block title %}Приглашение в мир «{{ view.world.name }}»{% endblock %}
 {% block content %}
-<div class="container">
-  <h1>Приглашение в мир «{{ view.world.name }}»</h1>
-  <p>Скопируйте и отправьте эту ссылку игрокам:</p>
-  <div style="margin:1em 0;">
-    <input type="text" readonly
-           value="{{ invite_link }}"
-           onclick="this.select()"
-           style="width:100%; padding:.5em; font-family:monospace;">
-  </div>
-  {% if accepted %}
-    <p><em>Кто-то уже принял приглашение по этой ссылке.</em></p>
-  {% endif %}
-  <p><a href="{% url 'worlds:detail' view.world.pk %}" class="btn">← Назад к миру</a></p>
-</div>
+    <div class="container">
+        <h1>Приглашение в мир «{{ view.world.name }}»</h1>
+        <p>Скопируйте и отправьте эту ссылку игрокам:</p>
+        <div style="margin:1em 0;">
+            <input type="text" readonly
+                   value="{{ invite_link }}"
+                   onclick="this.select()"
+                   style="width:100%; padding:.5em; font-family:monospace;">
+        </div>
+        {% if accepted %}
+            <p><em>Кто-то уже принял приглашение по этой ссылке.</em></p>
+        {% endif %}
+        <p><a href="{% url 'worlds:detail' view.world.pk %}" class="btn">← Назад к миру</a></p>
+    </div>
 {% endblock %}

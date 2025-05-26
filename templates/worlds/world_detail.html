@@ -55,25 +55,39 @@
         {% if npc_chars %}
             <div class="cards">
                 {% for c in npc_chars %}
-                    <div class="card">
-                        <h3>
-                            {% if is_gm or c.known_name %}
-                                {{ c.name }}
-                            {% else %}
-                                <em>Имя неизвестно</em>
+                    {% if is_gm or c.visible_to_players %}
+                        <div class="card">
+                            <h3>
+                                {% if is_gm or c.known_name %}
+                                    {{ c.name }}
+                                {% else %}
+                                    <em>Имя неизвестно</em>
+                                {% endif %}
+                            </h3>
+
+                            {% if is_gm or c.known_background %}
+                                <p><strong>Предыстория:</strong> {{ c.background|truncatechars:80|default:"—" }}</p>
                             {% endif %}
-                        </h3>
 
-                        {% if is_gm or c.known_background %}
-                            <p><strong>Предыстория:</strong> {{ c.background|truncatechars:80|default:"—" }}</p>
-                        {% endif %}
+                            {% if is_gm or c.known_notes %}
+                                <p><strong>Заметки:</strong> {{ c.notes|truncatechars:60|default:"—" }}</p>
+                            {% endif %}
 
-                        {% if is_gm or c.known_notes %}
-                            <p><strong>Заметки:</strong> {{ c.notes|truncatechars:60|default:"—" }}</p>
-                        {% endif %}
+                            <a href="{% url 'characters:character_detail' c.pk %}" class="btn">Открыть</a>
+                            {% if world.creator == request.user %}
+                                <a href="{% url 'worlds:world-grant-points' world.pk c.pk %}"
+                                   class="btn btn-sm">
+                                    Выдать очки
+                                </a>
+                                <a href="{% url 'worlds:world-grant-item' world.pk c.pk %}" class="btn btn-sm">
+                                    Выдать предмет
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p><em>Вы не знаете ничего об этом NPC.</em></p>
 
-                        <a href="{% url 'characters:character_detail' c.pk %}" class="btn">Открыть</a>
-                    </div>
+                    {% endif %}
                 {% endfor %}
             </div>
         {% else %}

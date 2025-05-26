@@ -1,10 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DetailView, UpdateView
 
 from items.models import Item
@@ -85,9 +87,14 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
         ctx["show_equipment"] = (not c.is_npc) or is_gm or c.known_equipment
         ctx["show_notes"] = (not c.is_npc) or is_gm or c.known_notes
         ctx["world"] = c.world.pk
-
+        ctx["npc_flags"] = {
+            'known_name': c.known_name,
+            'known_background': c.known_background,
+            'known_stats': c.known_stats,
+            'known_equipment': c.known_equipment,
+            'known_notes': c.known_notes,
+        }
         return ctx
-
 
 
 SLOT_NAMES = [
@@ -299,3 +306,38 @@ class ChestDetailView(LoginRequiredMixin, View):
 
         messages.success(request, f"Вы забрали {len(selected_ids)} предмет(ов). Сундук исчез.")
         return redirect('characters:character-inventory', character_id=chest.character.pk)
+
+
+@method_decorator(require_POST, name="dispatch")
+class ToggleNpcFlagView(LoginRequiredMixin, View):
+    def post(self, request, char_id):
+        if request.headers.get("X-Requested-With") != "XMLHttpRequest":
+            return HttpResponseBadRequest("Только AJAX")
+
+        c = get_object_or_404(Character, pk=char_id)
+        user = request.user
+        if not (user == c.owner or (c.world and user == c.world.creator)):
+            return HttpResponseForbidden("Нет прав")
+
+        flag = request.POST.get("flag")
+        # Добавляем visible_to_players
+        valid = {
+            'known_name',
+            'known_background',
+            'known_stats',
+            'known_equipment',
+            'known_notes',
+            'visible_to_players',
+        }
+        if flag not in valid:
+            return JsonResponse({'status': 'error', 'message': 'Неверный флаг'}, status=400)
+
+        current = getattr(c, flag)
+        setattr(c, flag, not current)
+        c.save()
+
+        return JsonResponse({
+            'status': 'ok',
+            'flag': flag,
+            'newValue': not current
+        })

@@ -27,7 +27,7 @@ class WorldDetailView(LoginRequiredMixin, DetailView):
         # Все игровые персонажи (не-NPC)
         players = world.characters.filter(is_npc=False)
         # NPC, отмеченные как видимые игрокам
-        npcs = world.characters.filter(is_npc=True, visible_to_players=True)
+        npcs = world.characters.filter(is_npc=True)
         is_gm = (world.creator == user)
 
         ctx["is_gm"] = is_gm
@@ -169,9 +169,6 @@ class QuickGiveChestView(LoginRequiredMixin, View):
         messages.success(request, f"Сундук выдан {cd['character'].name}.")
         return redirect("worlds:detail", pk=world_pk)
 
-
-
-# worlds/views.py
 
 class AcceptInviteView(View):
     def get(self, request, token):

@@ -49,7 +49,7 @@
             {% endif %}
         </ul>
 
-        {% if is_owner or is_gm %}
+        {% if is_owner %}
             <a href="{% url 'characters:character_update' char.id %}" class="btn">Редактировать</a>
         {% endif %}
 
@@ -65,7 +65,7 @@
             <!-- Вкладка «Характеристики» -->
             <div id="pane-stats" class="tab-pane active">
                 {% if show_stats %}
-                    {% if is_owner or is_gm %}
+                    {% if is_owner %}
                         <br>
                         <span><strong>Доступные очки:</strong> {{ char.ability_points }}</span>
                         <br>
@@ -175,6 +175,47 @@
             {% endif %}
         </div>
 
+{# Только ГМ для NPC #}
+  {% if is_gm and char.is_npc %}
+    <div class="npc-settings">
+      <h2>Настройки NPC</h2>
+      <ul class="npc-flags">
+        {# 1) Разовый переключатель видимости #}
+        <li>
+          <label>
+            <input type="checkbox"
+                   class="npc-flag-toggle"
+                   data-flag="visible_to_players"
+                   {% if char.visible_to_players %}checked{% endif %}>
+            Виден всем игрокам
+          </label>
+        </li>
+
+        {# 2) Цикл по known_* флагам #}
+        {% for fld, val in npc_flags.items %}
+          <li>
+            <label>
+              <input type="checkbox"
+                     class="npc-flag-toggle"
+                     data-flag="{{ fld }}"
+                     {% if val %}checked{% endif %}>
+              {% comment %}Выводим понятное название{% endcomment %}
+              {% if fld == 'known_name'         %}Знают имя{% endif %}
+              {% if fld == 'known_background'   %}Знают предысторию{% endif %}
+              {% if fld == 'known_stats'        %}Знают характеристики{% endif %}
+              {% if fld == 'known_equipment'    %}Знают экипировку{% endif %}
+              {% if fld == 'known_notes'        %}Знают заметки{% endif %}
+            </label>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {# чтобы получить CSRF-токен без полей формы #}
+    <form id="csrf-form">{% csrf_token %}</form>
+  {% endif %}
+
+
     </div>
 {% endblock %}
 
@@ -192,4 +233,40 @@
             });
         });
     </script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const charId    = "{{ char.id }}";
+  const csrfToken = document
+    .getElementById("csrf-form")
+    .querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+  document.querySelectorAll(".npc-flag-toggle").forEach(cb => {
+    cb.addEventListener("change", async () => {
+      const flag = cb.dataset.flag;
+      const url  = "{% url 'characters:toggle-npc-flag' char.id %}";
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrfToken,
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: new URLSearchParams({ flag })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (json.status !== "ok") throw new Error(json.message);
+        // успешно переключено — ничего не делаем, чекбокс уже в нужном состоянии
+      } catch (err) {
+        // при ошибке откатываем чекбокс
+        cb.checked = !cb.checked;
+        alert("Не удалось сохранить настройку:\n" + err.message);
+      }
+    });
+  });
+});
+</script>
+
 {% endblock %}
