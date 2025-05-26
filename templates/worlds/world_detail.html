@@ -18,7 +18,17 @@
                         <h3>{{ c.name }}</h3>
                         <p><strong>Владелец:</strong> {{ c.owner.email }}</p>
                         <a href="{% url 'characters:character_detail' c.pk %}" class="btn">Открыть</a>
+                        {% if world.creator == request.user %}
+                            <a href="{% url 'worlds:world-grant-points' world.pk c.pk %}"
+                               class="btn btn-sm">
+                                Выдать очки
+                            </a>
+                            <a href="{% url 'worlds:world-grant-item' world.pk c.pk %}" class="btn btn-sm">
+                                Выдать предмет
+                            </a>
+                        {% endif %}
                     </div>
+
                 {% endfor %}
             </div>
         {% else %}

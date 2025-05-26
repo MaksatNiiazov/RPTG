@@ -1,0 +1,51 @@
+{# templates/worlds/grant_item.html #}
+{% extends "base.html" %}
+{% block title %}Выдать предмет{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:480px; margin-top:1rem;">
+  <h1>Выдать предмет</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div style="margin-bottom:1rem;">
+      <label for="item-search">Поиск по названию:</label>
+      <input type="text" id="item-search" class="form-control" placeholder="Начните вводить…">
+    </div>
+    <div style="margin-bottom:1rem;">
+      {{ form.item.label_tag }}<br>
+      {{ form.item }}
+      {{ form.item.errors }}
+    </div>
+    <div style="margin-bottom:1rem;">
+      {{ form.quantity.label_tag }}<br>
+      {{ form.quantity }}
+      {{ form.quantity.errors }}
+    </div>
+    <button type="submit" class="btn">Выдать</button>
+    <a href="{% url 'worlds:detail' world.pk %}" class="btn">Отмена</a>
+  </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("item-search");
+  const select = document.getElementById("id_item_select");
+  input.addEventListener("input", () => {
+    const term = input.value.trim().toLowerCase();
+    // каждую optgroup мы прячем/показываем, а каждую option внутри — тоже
+    Array.from(select.querySelectorAll("optgroup")).forEach(group => {
+      let anyVisible = false;
+      Array.from(group.querySelectorAll("option")).forEach(opt => {
+        const ok = !term || opt.text.toLowerCase().includes(term);
+        opt.style.display = ok ? "" : "none";
+        if (ok) anyVisible = true;
+      });
+      group.style.display = anyVisible ? "" : "none";
+    });
+  });
+});
+</script>
+{% endblock %}

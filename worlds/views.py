@@ -1,14 +1,16 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView
 from django.shortcuts import get_object_or_404, redirect, render
 
-from character.models import Character
+from character.models import Character, InventoryItem
 from items.forms import LootConfigForm
-from .forms import WorldForm
+from items.models import Item
+from .forms import WorldForm, GrantAbilityPointsForm, GrantItemForm
 from .loot import open_chest_in_world
-from .models import World, PendingLoot
+from .models import World, PendingLoot, WorldItemPool
 
 
 class WorldDetailView(LoginRequiredMixin, DetailView):
@@ -82,3 +84,81 @@ class WorldCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy("worlds:detail", kwargs={"pk": self.object.pk})
+
+
+class GrantAbilityPointsView(LoginRequiredMixin, View):
+    def get(self, request, world_pk, char_pk):
+        world = get_object_or_404(World, pk=world_pk)
+        if world.creator != request.user:
+            return redirect("worlds:detail", pk=world_pk)
+        char = get_object_or_404(Character, pk=char_pk, world=world)
+        form = GrantAbilityPointsForm()
+        return render(request, "worlds/grant_points.html", {
+            "world": world,
+            "char": char,
+            "form": form,
+        })
+
+    def post(self, request, world_pk, char_pk):
+        world = get_object_or_404(World, pk=world_pk)
+        if world.creator != request.user:
+            return redirect("worlds:detail", pk=world_pk)
+        char = get_object_or_404(Character, pk=char_pk, world=world)
+        form = GrantAbilityPointsForm(request.POST)
+        if form.is_valid():
+            pts = form.cleaned_data["points"]
+            char.ability_points += pts
+            char.save()
+            messages.success(request, f"Выдано {pts} очков {char.name}.")
+            return redirect("worlds:detail", pk=world_pk)
+        return render(request, "worlds/grant_points.html", {
+            "world": world,
+            "char": char,
+            "form": form,
+        })
+
+
+class GrantItemView(LoginRequiredMixin, View):
+    def get(self, request, world_pk, char_pk):
+        world = get_object_or_404(World, pk=world_pk)
+        if world.creator != request.user:
+            return redirect("worlds:detail", pk=world_pk)
+        char = get_object_or_404(Character, pk=char_pk, world=world)
+        form = GrantItemForm()
+        return render(request, "worlds/grant_item.html", {
+            "world": world, "char": char, "form": form
+        })
+
+    def post(self, request, world_pk, char_pk):
+        world = get_object_or_404(World, pk=world_pk)
+        if world.creator != request.user:
+            return redirect("worlds:detail", pk=world_pk)
+        char = get_object_or_404(Character, pk=char_pk, world=world)
+        form = GrantItemForm(request.POST)
+        if not form.is_valid():
+            return render(request, "worlds/grant_item.html", {
+                "world": world, "char": char, "form": form
+            })
+        item = Item.objects.get(pk=form.cleaned_data["item"])
+        qty = form.cleaned_data["quantity"]
+
+        # Проверим наличие в пуле мира
+        pool = WorldItemPool.objects.filter(world=world, item=item).first()
+        if pool and pool.remaining is not None:
+            if pool.remaining < qty:
+                messages.error(request, "В мире осталось меньше предметов, чем вы запросили.")
+                return redirect("worlds:grant-item", world_pk=world.pk, char_pk=char.pk)
+            pool.remaining -= qty
+            pool.save()
+
+        # Добавляем в инвентарь персонажа
+        inv_entry, created = InventoryItem.objects.get_or_create(
+            character=char, item=item,
+            defaults={"quantity": qty}
+        )
+        if not created:
+            inv_entry.quantity += qty
+            inv_entry.save()
+
+        messages.success(request, f"{char.name} получил {qty}× «{item.name}»")
+        return redirect("worlds:detail", pk=world_pk)

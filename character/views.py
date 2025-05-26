@@ -47,7 +47,7 @@ class CharacterUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['world'] = World.objects.get(pk=self.kwargs["world_pk"]).pk
+        ctx['world'] = self.kwargs["pk"]
         return ctx
 
     def get_success_url(self):
@@ -140,19 +140,19 @@ class CharacterInventoryView(LoginRequiredMixin, DetailView):
     context_object_name = "char"
     pk_url_kwarg = "character_id"
 
+    #
     def get(self, request, *args, **kwargs):
-        if self.get_object().owner != request.user:
+        obj = self.get_object()
+        if obj.owner != request.user:
             messages.error(request, "Нет доступа")
-            return redirect("characters:character_detail", pk=self.object.pk)
+            return redirect("characters:character_detail", pk=obj.pk)
+        return super().get(request, *args, **kwargs)
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect("accounts:login")
 
         return super().dispatch(request, *args, **kwargs)
-
-    def get_queryset(self):
-        return Character.objects.filter(owner=self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

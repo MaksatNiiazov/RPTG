@@ -1,0 +1,22 @@
+{# templates/worlds/grant_points.html #}
+{% extends "base.html" %}
+{% block title %}Выдать очки: {{ char.name }}{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1>Выдать очки персонажу «{{ char.name }}»</h1>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div>
+        {{ form.points.label_tag }}<br>
+        {{ form.points }}<br>
+        {% for err in form.points.errors %}
+          <p class="error">{{ err }}</p>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn">Выдать</button>
+      <a href="{% url 'worlds:detail' world.pk %}" class="btn">Отмена</a>
+    </form>
+  </div>
+{% endblock %}
