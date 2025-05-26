@@ -5,12 +5,13 @@ from django.views import View
 from django.views.generic import ListView, DetailView, CreateView
 from django.shortcuts import get_object_or_404, redirect, render
 
-from character.models import Character, InventoryItem
+from character.models import Character, InventoryItem, ChestInstance
 from items.forms import LootConfigForm
+from items.loot import generate_loot_items
 from items.models import Item
-from .forms import WorldForm, GrantAbilityPointsForm, GrantItemForm
+from .forms import WorldForm, GrantAbilityPointsForm, GrantItemForm, QuickChestForm
 from .loot import open_chest_in_world
-from .models import World, PendingLoot, WorldItemPool
+from .models import World, WorldItemPool
 
 
 class WorldDetailView(LoginRequiredMixin, DetailView):
@@ -32,43 +33,6 @@ class WorldDetailView(LoginRequiredMixin, DetailView):
         ctx["player_chars"] = players
         ctx["npc_chars"] = npcs
         return ctx
-
-
-class GMLootView(LoginRequiredMixin, View):
-    """
-    GM открывает сундук для выбранного персонажа.
-    """
-
-    def get(self, request, world_pk, char_pk):
-        world = get_object_or_404(World, pk=world_pk)
-        if world.creator != request.user:
-            return redirect("worlds:detail", pk=world_pk)
-        form = LootConfigForm()
-        return render(request, "worlds/gm_open_chest.html", {"world": world, "form": form})
-
-    def post(self, request, world_pk, char_pk):
-        world = get_object_or_404(World, pk=world_pk)
-        if world.creator != request.user:
-            return redirect("worlds:detail", pk=world_pk)
-        from character.models import Character
-        char = get_object_or_404(Character, pk=char_pk, world=world)
-        form = LootConfigForm(request.POST)
-        if not form.is_valid():
-            return render(request, "worlds/gm_open_chest.html", {"world": world, "form": form})
-        cd = form.cleaned_data
-        loot_items = open_chest_in_world(
-            world=world,
-            luck=cd["luck"],
-            chest_rarity=cd["chest_rarity"].lvl,
-            count=cd["count"],
-            rare_count=cd.get("rare_count") or 0,
-            rare_rarity=cd.get("rare_rarity"),
-            type_bias=cd.get("type_bias"),
-            type_bias_count=cd.get("type_bias_count") or 0,
-        )
-        pl = PendingLoot.objects.create(world=world, character=char)
-        pl.items.set(loot_items)
-        return redirect("worlds:detail", pk=world_pk)
 
 
 class WorldCreateView(LoginRequiredMixin, CreateView):
@@ -161,4 +125,38 @@ class GrantItemView(LoginRequiredMixin, View):
             inv_entry.save()
 
         messages.success(request, f"{char.name} получил {qty}× «{item.name}»")
+        return redirect("worlds:detail", pk=world_pk)
+
+
+# worlds/views.py
+
+class QuickGiveChestView(LoginRequiredMixin, View):
+    template_name = "worlds/quick_give_chest.html"
+
+    def get(self, request, world_pk):
+        world = get_object_or_404(World, pk=world_pk, creator=request.user)
+        form = QuickChestForm(world=world)
+
+        return render(request, self.template_name, {"world": world, "form": form})
+
+    def post(self, request, world_pk):
+        world = get_object_or_404(World, pk=world_pk, creator=request.user)
+        form = QuickChestForm(world, request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {"world": world, "form": form})
+
+        cd = form.cleaned_data
+        char = Character.objects.get(pk=cd["character"].pk, world=world)
+        # сразу создаём сундук для персонажа
+        ChestInstance.create_for_character(
+            character=cd["character"],
+            luck=char.lck_stat,
+            chest_rarity=cd["chest_rarity"].lvl,
+            count=cd["count"],
+            rare_count=cd.get("rare_count") or 0,
+            rare_rarity=cd.get("rare_rarity"),
+            type_bias=cd.get("type_bias"),
+            type_bias_count=cd.get("type_bias_count") or 0,
+        )
+        messages.success(request, f"Сундук выдан {cd['character'].name}.")
         return redirect("worlds:detail", pk=world_pk)

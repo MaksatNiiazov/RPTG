@@ -129,6 +129,18 @@
             </td>
         </tr>
     </template>
+    <h2>Сундуки</h2>
+{% if char.chests.exists %}
+  {% for chest in char.chests.all %}
+    <div class="card">
+      <h4>{{ chest.config.name }} <small>от {{ chest.created_at|date:"SHORT_DATETIME_FORMAT" }}</small></h4>
+        <a href="{% url 'characters:chest-detail' chest.id %}" class="btn">Подробнее <img src="{% static 'img/arrow-right.svg' %}"></a>
+    </div>
+  {% endfor %}
+{% else %}
+  <p>У вас нет текущих сундуков.</p>
+{% endif %}
+
 {% endblock %}
 
 {% block js %}

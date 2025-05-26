@@ -1,7 +1,9 @@
 # worlds/models.py
 
 from django.db import models
-from items.models import Item
+
+from items.loot import generate_loot_items
+from items.models import Item, Rarity, Type
 
 from accounts.models import User
 
@@ -75,22 +77,4 @@ class WorldItemPool(models.Model):
         return f"{self.world.name}: {self.item.name} ({qty})"
 
 
-class PendingLoot(models.Model):
-    """
-    Лут, открытый ГМом для конкретного персонажа, ждущий выбора.
-    """
-    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name="pending_loots")
-    character = models.ForeignKey(
-        'character.Character',
-        on_delete=models.CASCADE, related_name="pending_loots"
-    )
-    items = models.ManyToManyField(Item, verbose_name="Сгенерированные предметы")
-    created_at = models.DateTimeField(auto_now_add=True)
-    picked_up = models.BooleanField("Забран игроком", default=False)
 
-    class Meta:
-        verbose_name = "Ожидаемый лут"
-        verbose_name_plural = "Ожидаемые луты"
-
-    def __str__(self):
-        return f"Loot {self.pk} → {self.character.name}"

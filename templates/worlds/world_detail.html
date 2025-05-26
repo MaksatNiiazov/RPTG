@@ -11,6 +11,11 @@
         <p><strong>История:</strong> {{ world.history|default:"—" }}</p>
 
         <h2>Персонажи</h2>
+        {% if world.creator == request.user %}
+            <a href="{% url 'worlds:quick-give-chest' world.pk %}" class="btn btn-sm">
+                Выдать сундук
+            </a>
+        {% endif %}
         {% if player_chars %}
             <div class="cards">
                 {% for c in player_chars %}
@@ -26,6 +31,7 @@
                             <a href="{% url 'worlds:world-grant-item' world.pk c.pk %}" class="btn btn-sm">
                                 Выдать предмет
                             </a>
+
                         {% endif %}
                     </div>
 

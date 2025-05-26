@@ -1,19 +1,31 @@
 {% extends "base.html" %}
+{% block title %}Ваши сундуки{% endblock %}
 {% block content %}
-  <h1>Забрать лут</h1>
-  {% for pl in loots %}
-    <form method="post" action="{% url 'characters:pick_loot' pl.pk %}">
-      {% csrf_token %}
-      <h2>Сундук от {{ pl.created_at|date:"d.m.Y H:i" }} для {{ pl.character.name }}</h2>
-      {% for it in pl.items.all %}
-        <label>
-          <input type="checkbox" name="item_{{ it.pk }}">
-          {{ it.name }} ({{ it.rarity.name }})
-        </label><br>
+  <h1>Ваши сундуки</h1>
+  {% if loots %}
+    <ul>
+      {% for pl in loots %}
+        <li>
+          <strong>Мир:</strong> {{ pl.world.name }},
+          <strong>Персонаж:</strong> {{ pl.character.name }}
+          <ul>
+            {% for itm in pl.items.all %}
+              <li>
+                {{ itm.name }} (+{{ itm.bonus }}) —
+                <form style="display:inline" method="post"
+                      action="{% url 'pick-loot-item' pl.pk itm.pk %}">
+                  {% csrf_token %}
+                  <button class="btn btn-sm">Взять</button>
+                </form>
+              </li>
+            {% empty %}
+              <li>Сундук пуст.</li>
+            {% endfor %}
+          </ul>
+        </li>
       {% endfor %}
-      <button class="btn">Забрать отмеченные</button>
-    </form>
-  {% empty %}
-    <p>Нет ожидающих сундуков.</p>
-  {% endfor %}
+    </ul>
+  {% else %}
+    <p>Сундуков нет.</p>
+  {% endif %}
 {% endblock %}

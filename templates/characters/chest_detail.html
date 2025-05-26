@@ -1,0 +1,41 @@
+{# templates/worlds/chest_detail.html #}
+{% extends "base.html" %}
+{% block title %}Сундук: {{ chest.config.name }}{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>Сундук «{{ chest.config.name }}»</h1>
+        <p>Выберите предметы, которые хотите забрать:</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <table class="item-table">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Название</th>
+                    <th>Бонус</th>
+                    <th>Вес</th>
+                    <th>Легендарный бонус</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="items" value="{{ item.id }}">
+                        </td>
+                        <td>{{ item.name }}</td>
+                        <td>+{{ item.bonus }}</td>
+                        <td>{{ item.weight }} кг</td>
+                        <td>{{ item.legendary_buff }}</td>
+
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <button type="submit" class="btn">Забрать выбранное</button>
+            <a href="{% url 'characters:character-inventory' user.pk %}" class="btn">Отмена</a>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Выдать сундук в {{ world.name }}{% endblock %}
+{% block content %}
+  <div class="container">
+    <h1>Выдать сундук в «{{ world.name }}»</h1>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="grid-2">
+        <div>
+          {{ form.character.label_tag }} {{ form.character }}
+          {{ form.chest_rarity.label_tag }} {{ form.chest_rarity }}
+          {{ form.count.label_tag }}     {{ form.count }}
+          {{ form.rare_count.label_tag }}    {{ form.rare_count }}
+          {{ form.rare_rarity.label_tag }}   {{ form.rare_rarity }}
+        </div>
+      </div>
+
+      <button type="submit" class="btn">Создать и выдать</button>
+      <a href="{% url 'worlds:detail' world.pk %}" class="btn">Отмена</a>
+    </form>
+  </div>
+
+  <script>
+    // простая логика: включаем/выключаем rare_rarity
+    document.addEventListener("DOMContentLoaded", () => {
+      const rc = document.querySelector(".js-rare-count");
+      const rr = document.querySelector(".js-rare-rarity");
+      function toggleRare() {
+        rr.disabled = ! (parseInt(rc.value,10) > 0);
+      }
+      rc.addEventListener("input", toggleRare);
+      toggleRare();
+    });
+  </script>
+{% endblock %}

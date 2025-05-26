@@ -14,7 +14,6 @@
             {% if is_owner %}
                 <div>
                     <a href="{% url 'characters:character-inventory' char.id %}" class="btn">Инвентарь</a>
-                    <a href="{% url 'characters:pick_loot_list' %}" class="btn">Забрать лут</a>
                 </div>
             {% endif %}
             <a href="{% url 'worlds:detail' world %}" class="btn">⬅ Мир</a>

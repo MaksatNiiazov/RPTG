@@ -8,9 +8,9 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, UpdateView
 
 from items.models import Item
-from worlds.models import PendingLoot, World
+from worlds.models import World
 from .forms import CharacterForm, LevelUpForm, CharacterUpdateForm
-from .models import Character, InventoryItem, Equipment
+from .models import Character, InventoryItem, Equipment, ChestInstance
 
 
 class CharacterCreateView(LoginRequiredMixin, CreateView):
@@ -29,7 +29,7 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
         world = World.objects.get(pk=self.kwargs["world_pk"])
         user = self.request.user
         ctx = super().get_context_data(**kwargs)
-        ctx['initial_points'] = 10
+        ctx['initial_points'] = 16 if world.creator != user else 80
         ctx['world'] = world.pk
         ctx["is_gm"] = (world.creator == user)
 
@@ -88,33 +88,6 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
 
         return ctx
 
-
-class PickLootView(LoginRequiredMixin, View):
-    """
-    Персонаж видит свои pending_loots и выбирает, какие предметы положить в инвентарь.
-    """
-    template_name = "characters/pick_loot.html"
-
-    def get(self, request):
-        chars = request.user.characters.all()
-        # агрегируем все незабранные луты
-        loots = PendingLoot.objects.filter(character__in=chars, picked_up=False)
-        return render(request, self.template_name, {"loots": loots})
-
-    def post(self, request, loot_pk):
-        pl = get_object_or_404(PendingLoot, pk=loot_pk, character__owner=request.user, picked_up=False)
-        # в POST придут id выбранных items: loot_item_1, loot_item_2...
-        chosen_ids = [int(v.split("_")[-1]) for k, v in request.POST.items() if k.startswith("item_")]
-        items = pl.items.filter(pk__in=chosen_ids)
-        # переносим в инвентарь
-        inv = pl.character.inventory
-        for it in items:
-            inv_item, _ = inv.items.get_or_create(item=it)
-            inv_item.quantity += 1
-            inv_item.save()
-        pl.picked_up = True
-        pl.save()
-        return redirect("characters:character_detail", pk=pl.character.pk)
 
 
 SLOT_NAMES = [
@@ -284,3 +257,45 @@ class LevelUpView(View):
             'remaining': char.ability_points,
         }
         return JsonResponse(data)
+
+
+class ChestDetailView(LoginRequiredMixin, View):
+    """
+    Показывает сундук: игрок выбирает предметы и подтверждает.
+    После подтверждения переносит выбранные в инвентарь и удаляет сам сундук.
+    """
+    template_name = 'characters/chest_detail.html'
+
+    def get(self, request, instance_pk):
+        chest = get_object_or_404(ChestInstance, pk=instance_pk,
+                                  character__owner=request.user)
+        return render(request, self.template_name, {
+            'chest': chest,
+            'items': chest.items.all(),
+            'user': request.user
+        })
+
+    def post(self, request, instance_pk):
+        chest = get_object_or_404(ChestInstance, pk=instance_pk,
+                                  character__owner=request.user)
+        selected_ids = request.POST.getlist('items')
+        if not selected_ids:
+            messages.error(request, "Выберите хотя бы один предмет.")
+            return redirect('worlds:chest-detail', instance_pk=instance_pk)
+
+        # переносим выбранные предметы
+        for item in chest.items.filter(pk__in=selected_ids):
+            inv_entry, created = InventoryItem.objects.get_or_create(
+                character=chest.character,
+                item=item,
+                defaults={'quantity': 1}
+            )
+            if not created:
+                inv_entry.quantity += 1
+                inv_entry.save()
+
+        # удаляем сундук целиком (и все его связи)
+        chest.delete()
+
+        messages.success(request, f"Вы забрали {len(selected_ids)} предмет(ов). Сундук исчез.")
+        return redirect('characters:character-inventory', character_id=chest.character.pk)

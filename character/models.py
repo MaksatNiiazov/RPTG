@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from accounts.models import User
+from items.loot import generate_loot_items
 from items.models import Item
 from worlds.models import World
 
@@ -387,3 +388,42 @@ class Equipment(models.Model):
                 if item:
                     equipped[field.name] = item
         return equipped
+
+
+
+
+class ChestInstance(models.Model):
+    """
+    Живой сундук, выданный ГМом конкретному персонажу.
+    После того как игрок забрал всё — запись удаляется.
+    """
+    # config = models.ForeignKey(ChestConfig, ...)  -- убрал
+    character = models.ForeignKey(
+        Character,
+        on_delete=models.CASCADE,
+        related_name='chests',
+        verbose_name="Персонаж",
+    )
+    items = models.ManyToManyField(
+        'items.Item',
+        verbose_name="Содержимое сундука",
+    )
+    created_at = models.DateTimeField("Создан", auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Сундук → {self.character.name} ({self.created_at:%Y-%m-%d %H:%M})"
+
+    @classmethod
+    def create_for_character(cls, *, character, **loot_kwargs):
+        """
+        На лету генерим лут и создаём инстанс.
+        Все аргументы передаются дальше в generate_loot_items.
+        """
+        from items.loot import generate_loot_items
+        loot = generate_loot_items(**loot_kwargs)
+        inst = cls.objects.create(character=character)
+        inst.items.set(loot)
+        return inst
