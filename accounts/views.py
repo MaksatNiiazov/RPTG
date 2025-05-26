@@ -62,10 +62,10 @@ class ProfileView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        user = self.request.user  # <- обязательно объект User
+        user = self.request.user
         print(user)
         ctx["user"] = user
-        ctx["worlds"] = World.objects.filter(players=user)
+        ctx["worlds"] = World.objects.filter(players=user).exclude(creator=user)
         ctx["created_worlds"] = World.objects.filter(creator=user)
         return ctx
 

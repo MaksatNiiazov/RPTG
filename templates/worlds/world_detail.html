@@ -10,6 +10,10 @@
         <p><strong>Сеттинг:</strong> {{ world.setting|default:"—" }}</p>
         <p><strong>История:</strong> {{ world.history|default:"—" }}</p>
 
+        {% if world.creator == request.user %}
+            <a href="{% url 'worlds:world-invite' world.pk %}" class="btn">Пригласить</a>
+        {% endif %}
+
         <h2>Персонажи</h2>
         {% if world.creator == request.user %}
             <a href="{% url 'worlds:quick-give-chest' world.pk %}" class="btn btn-sm">

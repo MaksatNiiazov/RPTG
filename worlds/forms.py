@@ -2,7 +2,7 @@ from django import forms
 
 from character.models import Character
 from items.models import Item, Type, Rarity
-from .models import World
+from .models import World, WorldInvitation
 
 
 class WorldForm(forms.ModelForm):
@@ -94,3 +94,13 @@ class QuickChestForm(forms.Form):
         self.fields['rare_rarity'].widget.attrs['disabled'] = True
         self.fields['rare_count'].widget.attrs['class'] = 'js-rare-count'
         self.fields['rare_rarity'].widget.attrs['class'] = 'js-rare-rarity'
+
+
+
+class WorldInvitationForm(forms.ModelForm):
+    class Meta:
+        model = WorldInvitation
+        fields = ("email",)
+        widgets = {
+            "email": forms.EmailInput(attrs={"placeholder": "email@example.com"}),
+        }

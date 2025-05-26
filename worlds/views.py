@@ -2,16 +2,16 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, FormView
 from django.shortcuts import get_object_or_404, redirect, render
 
 from character.models import Character, InventoryItem, ChestInstance
 from items.forms import LootConfigForm
 from items.loot import generate_loot_items
 from items.models import Item
-from .forms import WorldForm, GrantAbilityPointsForm, GrantItemForm, QuickChestForm
+from .forms import WorldForm, GrantAbilityPointsForm, GrantItemForm, QuickChestForm, WorldInvitationForm
 from .loot import open_chest_in_world
-from .models import World, WorldItemPool
+from .models import World, WorldItemPool, WorldInvitation
 
 
 class WorldDetailView(LoginRequiredMixin, DetailView):
@@ -160,3 +160,50 @@ class QuickGiveChestView(LoginRequiredMixin, View):
         )
         messages.success(request, f"Сундук выдан {cd['character'].name}.")
         return redirect("worlds:detail", pk=world_pk)
+
+
+class WorldInviteView(LoginRequiredMixin, FormView):
+    form_class = WorldInvitationForm
+    template_name = "worlds/world_invite.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.world = get_object_or_404(World, pk=kwargs["pk"], creator=request.user)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse_lazy("worlds:invite", kwargs={"pk": self.world.pk})
+
+    def form_valid(self, form):
+        inv = form.save(commit=False)
+        inv.world = self.world
+        inv.invited_by = self.request.user
+        inv.save()
+        # TODO: отправить email с ссылкой приглашения
+        invite_link = self.request.build_absolute_uri(
+            reverse_lazy("worlds:accept-invite", kwargs={"token": str(inv.token)})
+        )
+        print(f"[Invite link for {inv.email}]: {invite_link}")
+        messages.success(self.request, f"Приглашение отправлено на {inv.email}")
+        return super().form_valid(form)
+
+    def get_context_data(self, **ctx):
+        ctx = super().get_context_data(**ctx)
+        ctx["world"] = self.world
+        ctx["invitations"] = self.world.invitations.all()
+        return ctx
+
+
+# worlds/views.py
+
+class AcceptInviteView(View):
+    def get(self, request, token):
+        inv = get_object_or_404(WorldInvitation, token=token, accepted=False)
+        # если пользователь не залогинен — перенаправляем на логин, с next на эту страницу
+        if not request.user.is_authenticated:
+            return redirect(f"{reverse_lazy('accounts:login')}?next={request.path}")
+        # связываем пользователя с миром
+        inv.world.players.add(request.user)
+        inv.accepted = True
+        inv.save()
+        messages.success(request, f"Вы присоединились к миру «{inv.world.name}»")
+        return redirect("worlds:detail", pk=inv.world.pk)
