@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import WorldDetailView, WorldCreateView, GrantAbilityPointsView, GrantItemView, QuickGiveChestView, \
-    WorldInviteView, AcceptInviteView
+     AcceptInviteView, WorldInviteLinkView
 
 app_name = "worlds"
 
@@ -11,7 +11,9 @@ urlpatterns = [
          name="world-grant-points"),
     path("world/<int:world_pk>/character/<int:char_pk>/grant-item/", GrantItemView.as_view(), name="world-grant-item"),
     path('worlds/<int:world_pk>/give/', QuickGiveChestView.as_view(), name='quick-give-chest'),
-    path('worlds/<int:pk>/invite/', WorldInviteView.as_view(), name='world-invite'),
     path('invite/<uuid:token>/', AcceptInviteView.as_view(), name='accept-invite'),
+    path('worlds/<int:pk>/invite/', WorldInviteLinkView.as_view(), name='world-invite'),
+    path('invite/<uuid:token>/', AcceptInviteView.as_view(), name='accept-invite'),
+
 ]
 

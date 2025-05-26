@@ -10,8 +10,14 @@
         <p><strong>Сеттинг:</strong> {{ world.setting|default:"—" }}</p>
         <p><strong>История:</strong> {{ world.history|default:"—" }}</p>
 
-        {% if world.creator == request.user %}
-            <a href="{% url 'worlds:world-invite' world.pk %}" class="btn">Пригласить</a>
+        {% if is_gm %}
+            <div class="invite-block" style="margin:1em 0;">
+                <label>Приглашение (копируйте и отправляйте игрокам):</label>
+                <input type="text" readonly
+                       value="{{ invite_link }}"
+                       onclick="this.select()"
+                       style="width:100%;padding:.5em;font-family:monospace;">
+            </div>
         {% endif %}
 
         <h2>Персонажи</h2>

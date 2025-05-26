@@ -1,9 +1,14 @@
 from django.contrib import admin
-from .models import World
+from .models import World, WorldInvitation
 from unfold.admin import ModelAdmin
-# Register your models here.
+
+
 
 @admin.register(World)
 class WorldAdmin(ModelAdmin):
     filter_horizontal = ("players",)
 
+
+@admin.register(WorldInvitation)
+class WorldInvitationAdmin(ModelAdmin):
+    pass

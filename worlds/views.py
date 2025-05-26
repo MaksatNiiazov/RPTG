@@ -1,15 +1,15 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views import View
-from django.views.generic import ListView, DetailView, CreateView, FormView
+from django.views.generic import ListView, DetailView, CreateView, FormView, TemplateView
 from django.shortcuts import get_object_or_404, redirect, render
 
 from character.models import Character, InventoryItem, ChestInstance
 from items.forms import LootConfigForm
 from items.loot import generate_loot_items
 from items.models import Item
-from .forms import WorldForm, GrantAbilityPointsForm, GrantItemForm, QuickChestForm, WorldInvitationForm
+from .forms import WorldForm, GrantAbilityPointsForm, GrantItemForm, QuickChestForm
 from .loot import open_chest_in_world
 from .models import World, WorldItemPool, WorldInvitation
 
@@ -28,8 +28,18 @@ class WorldDetailView(LoginRequiredMixin, DetailView):
         players = world.characters.filter(is_npc=False)
         # NPC, отмеченные как видимые игрокам
         npcs = world.characters.filter(is_npc=True, visible_to_players=True)
+        is_gm = (world.creator == user)
 
-        ctx["is_gm"] = (world.creator == user)
+        ctx["is_gm"] = is_gm
+
+        if is_gm:
+            inv, _ = WorldInvitation.objects.get_or_create(
+                world=world, invited_by=user
+            )
+            ctx["invite_link"] = self.request.build_absolute_uri(
+                reverse("worlds:accept-invite", kwargs={"token": str(inv.token)})
+            )
+
         ctx["player_chars"] = players
         ctx["npc_chars"] = npcs
         return ctx
@@ -128,8 +138,6 @@ class GrantItemView(LoginRequiredMixin, View):
         return redirect("worlds:detail", pk=world_pk)
 
 
-# worlds/views.py
-
 class QuickGiveChestView(LoginRequiredMixin, View):
     template_name = "worlds/quick_give_chest.html"
 
@@ -162,36 +170,6 @@ class QuickGiveChestView(LoginRequiredMixin, View):
         return redirect("worlds:detail", pk=world_pk)
 
 
-class WorldInviteView(LoginRequiredMixin, FormView):
-    form_class = WorldInvitationForm
-    template_name = "worlds/world_invite.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        self.world = get_object_or_404(World, pk=kwargs["pk"], creator=request.user)
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        return reverse_lazy("worlds:invite", kwargs={"pk": self.world.pk})
-
-    def form_valid(self, form):
-        inv = form.save(commit=False)
-        inv.world = self.world
-        inv.invited_by = self.request.user
-        inv.save()
-        # TODO: отправить email с ссылкой приглашения
-        invite_link = self.request.build_absolute_uri(
-            reverse_lazy("worlds:accept-invite", kwargs={"token": str(inv.token)})
-        )
-        print(f"[Invite link for {inv.email}]: {invite_link}")
-        messages.success(self.request, f"Приглашение отправлено на {inv.email}")
-        return super().form_valid(form)
-
-    def get_context_data(self, **ctx):
-        ctx = super().get_context_data(**ctx)
-        ctx["world"] = self.world
-        ctx["invitations"] = self.world.invitations.all()
-        return ctx
-
 
 # worlds/views.py
 
@@ -207,3 +185,28 @@ class AcceptInviteView(View):
         inv.save()
         messages.success(request, f"Вы присоединились к миру «{inv.world.name}»")
         return redirect("worlds:detail", pk=inv.world.pk)
+
+
+class WorldInviteLinkView(LoginRequiredMixin, TemplateView):
+    template_name = "worlds/world_invite_link.html"
+    login_url = "accounts:login"
+
+    def dispatch(self, request, *args, **kwargs):
+        # только ГМ
+        self.world = get_object_or_404(World, pk=kwargs["pk"], creator=request.user)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **ctx):
+        ctx = super().get_context_data(**ctx)
+        # либо существующее, либо создаём новое приглашение
+        inv, created = WorldInvitation.objects.get_or_create(
+            world=self.world,
+            invited_by=self.request.user,
+        )
+        # URL для копирования
+        link = self.request.build_absolute_uri(
+            reverse_lazy("worlds:accept-invite", kwargs={"token": str(inv.token)})
+        )
+        ctx["invite_link"] = link
+        ctx["accepted"] = inv.accepted
+        return ctx

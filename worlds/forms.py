@@ -97,10 +97,3 @@ class QuickChestForm(forms.Form):
 
 
 
-class WorldInvitationForm(forms.ModelForm):
-    class Meta:
-        model = WorldInvitation
-        fields = ("email",)
-        widgets = {
-            "email": forms.EmailInput(attrs={"placeholder": "email@example.com"}),
-        }

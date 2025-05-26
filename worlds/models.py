@@ -81,14 +81,12 @@ class WorldItemPool(models.Model):
 class WorldInvitation(models.Model):
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name="invitations")
     invited_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_invitations")
-    email = models.EmailField("Email приглашённого")
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField("Создано", auto_now_add=True)
     accepted = models.BooleanField("Принято", default=False)
 
     class Meta:
-        unique_together = ("world", "email")
         ordering = ("-created_at",)
 
     def __str__(self):
-        return f"Приглашение {self.email} → {self.world.name}"
+        return f"Приглашение → {self.world.name}"
