@@ -84,6 +84,8 @@ class Character(models.Model):
         self.max_hp = 10 + 10 * self.con_stat
         self.current_hp = self.current_hp or self.max_hp
         self.concentration = self.int_stat - 5
+
+        self.current_concentration = self.current_concentration or 0
         self.carry_capacity = self.str_stat * 10
         self.max_weapon_weight = round(self.carry_capacity * 0.2, 1)
         self.max_armor_weight = round(self.carry_capacity * 0.5, 1)
