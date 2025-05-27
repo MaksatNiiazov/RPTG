@@ -84,16 +84,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const hiddenInput = row.querySelector("input[type=hidden]");
       const valueSpan   = row.querySelector(".stat-value");
 
-      // Прибавляем +1 к полю и к спану
-      let val = parseInt(hiddenInput.value, 10) + 1;
-      hiddenInput.value = val;
-      valueSpan.textContent = val;
+      let currentVal = parseInt(hiddenInput.value, 10);
+      // Проверка: не больше 10
+      if (currentVal >= 10) return;
 
-      // Уменьшаем счётчик очков
+      // Прибавляем +1 к значению
+      let newVal = currentVal + 1;
+      hiddenInput.value = newVal;
+      valueSpan.textContent = newVal;
+
+      // Уменьшаем количество оставшихся очков
       pointsLeft -= 1;
       document.getElementById("points-left").textContent = pointsLeft;
 
-      // Если очки кончились — дизейблим все кнопки
+      // Если очки закончились — дизейблим все кнопки
       if (pointsLeft === 0) {
         document.querySelectorAll(".btn-add").forEach(b => b.disabled = true);
       }
