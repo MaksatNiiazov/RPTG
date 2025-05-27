@@ -42,8 +42,6 @@
                     <button id="hp-delta-btn" class="btn-small">Применить</button>
 
                 </div>
-
-
                 <!-- Управление CP -->
                 <div class="cp-control">
                     <strong>CP:</strong>
@@ -61,7 +59,6 @@
                         <li><strong>Пол:</strong> {{ char.get_gender_display|default:"—" }}</li>
                         <li><strong>Max HP:</strong> {{ char.max_hp }}</li>
                         <li><strong>Максимальная концентрация:</strong> {{ char.concentration }}</li>
-                        <li><strong>Текущая концентрация:</strong> {{ char.current_concentration }}</li>
 
                         <li><strong>Общая броня:</strong> {{ char.get_total_defense }}</li>
                         <li><strong>Общий урон:</strong> {{ char.get_total_attack }}</li>
