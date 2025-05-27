@@ -1,6 +1,9 @@
 from django.contrib import admin
 from .models import Rarity, Type, Item
 from unfold.admin import ModelAdmin
+from import_export.admin import ImportExportModelAdmin
+
+from unfold.contrib.import_export.forms import ExportForm, ImportForm, SelectableFieldsExportForm
 
 
 @admin.register(Rarity)
@@ -18,7 +21,9 @@ class TypeAdmin(ModelAdmin):
 
 
 @admin.register(Item)
-class ItemAdmin(ModelAdmin):
+class ItemAdmin(ModelAdmin, ImportExportModelAdmin):
+    import_form_class = ImportForm
+    export_form_class = ExportForm
     list_display = ("name", "type", "rarity", "bonus", "weight", "legendary_buff")
     list_filter = ("type", "rarity")
     list_editable = ("bonus", "weight","legendary_buff")

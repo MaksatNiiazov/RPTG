@@ -32,6 +32,8 @@ INSTALLED_APPS = [
     "unfold",
     "unfold.contrib.forms",
     "unfold.contrib.inlines",
+    "unfold.contrib.import_export",  # optional, if django-import-export package is used
+
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mptt',
     'django.contrib.admin',
+    'import_export',
 
     "ckeditor",
     "ckeditor_uploader",
