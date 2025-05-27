@@ -341,3 +341,40 @@ class ToggleNpcFlagView(LoginRequiredMixin, View):
             'flag': flag,
             'newValue': not current
         })
+
+
+@method_decorator(require_POST, name="dispatch")
+class AjaxAdjustHpView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+            return HttpResponseBadRequest("Только AJAX")
+        char = get_object_or_404(Character, pk=pk)
+        user = request.user
+        if not (char.owner == user or (char.world and char.world.creator == user)):
+            return HttpResponseForbidden("Нет прав")
+        try:
+            delta = int(request.POST.get('delta'))
+        except (TypeError, ValueError):
+            return JsonResponse({'status': 'error', 'message': 'Неверная дельта'})
+        try:
+            new_hp = char.adjust_hp(delta)
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+        return JsonResponse({'status': 'ok', 'current_hp': new_hp})
+
+
+@method_decorator(require_POST, name="dispatch")
+class AjaxAdjustCpView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+            return HttpResponseBadRequest("Только AJAX")
+        char = get_object_or_404(Character, pk=pk)
+        user = request.user
+        if not (char.owner == user or (char.world and char.world.creator == user)):
+            return HttpResponseForbidden("Нет прав")
+        action = request.POST.get('action')
+        try:
+            new_cp = char.adjust_cp(action)
+        except ValidationError as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+        return JsonResponse({'status': 'ok', 'current_concentration': new_cp})

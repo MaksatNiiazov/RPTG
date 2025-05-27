@@ -1,7 +1,8 @@
 from django.urls import path
 
 from .views import CharacterCreateView, CharacterDetailView, CharacterInventoryView, \
-    UnequipSlotView, EquipItemView, DropItemView, LevelUpView, CharacterUpdateView, ChestDetailView, ToggleNpcFlagView
+    UnequipSlotView, EquipItemView, DropItemView, LevelUpView, CharacterUpdateView, ChestDetailView, ToggleNpcFlagView, \
+    AjaxAdjustHpView, AjaxAdjustCpView
 
 app_name = "characters"
 
@@ -17,6 +18,7 @@ urlpatterns = [
 
     path('chest/<int:instance_pk>/', ChestDetailView.as_view(), name='chest-detail'),
     path('npc-settings/<int:char_id>/', ToggleNpcFlagView.as_view(), name='toggle-npc-flag'),
-
+    path('characters/<int:pk>/adjust-hp/', AjaxAdjustHpView.as_view(), name='ajax_adjust_hp'),
+    path('characters/<int:pk>/adjust-cp/', AjaxAdjustCpView.as_view(), name='ajax_adjust_cp'),
 
 ]

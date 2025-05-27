@@ -32,25 +32,53 @@
                 <h1><em>Имя неизвестно</em></h1>
             {% endif %}
         </div>
+        <div class="main_info">
+                    <div class="control">
+                <!-- Управление HP -->
+                <div class="hp-control">
+                    <span class="hp-current">Текущие HP: <strong
+                            id="hp-current">{{ char.current_hp }}</strong> / {{ char.max_hp }}</span>
+                    <input type="number" id="hp-delta" value="0" step="1">
+                    <button id="hp-delta-btn" class="btn-small">Применить</button>
 
-        <ul class="stats-list">
-            {% if show_stats %}
-                <li><strong>Раса:</strong> {{ char.race|default:"—" }}</li>
-                <li><strong>Пол:</strong> {{ char.get_gender_display|default:"—" }}</li>
-                <li><strong>HP:</strong> {{ char.current_hp }} / {{ char.max_hp }}</li>
-                <li><strong>CP:</strong> {{ char.concentration }}</li>
-                <li><strong>Общая броня:</strong> {{ char.get_total_defense }}</li>
-                <li><strong>Общий урон:</strong> {{ char.get_total_attack }}</li>
-                <li><strong>Грузоподъёмность:</strong> {{ char.carry_capacity }} кг</li>
-                <li><strong>Макс. вес оружия:</strong> {{ char.max_weapon_weight }} кг</li>
-                <li><strong>Макс. вес доспехов:</strong> {{ char.max_armor_weight }} кг</li>
-            {% else %}
-                <li><em>Характеристики скрыты</em></li>
-            {% endif %}
-        </ul>
+                </div>
 
+
+                <!-- Управление CP -->
+                <div class="cp-control">
+                    <strong>CP:</strong>
+                    <button class="cp-btn" data-action="dec">–</button>
+                    <span id="cp-value">{{ char.current_concentration }}</span>
+                    <button class="cp-btn" data-action="inc">+</button>
+                    <span class="cp-note">(макс {{ char.concentration }})</span>
+                </div>
+            </div>
+            <br>
+            <div class="stats">
+                <ul class="stats-list">
+                    {% if show_stats %}
+                        <li><strong>Раса:</strong> {{ char.race|default:"—" }}</li>
+                        <li><strong>Пол:</strong> {{ char.get_gender_display|default:"—" }}</li>
+                        <li><strong>Max HP:</strong> {{ char.max_hp }}</li>
+                        <li><strong>Максимальная концентрация:</strong> {{ char.concentration }}</li>
+                        <li><strong>Текущая концентрация:</strong> {{ char.current_concentration }}</li>
+
+                        <li><strong>Общая броня:</strong> {{ char.get_total_defense }}</li>
+                        <li><strong>Общий урон:</strong> {{ char.get_total_attack }}</li>
+                        <li><strong>Крит урон:</strong> {{ char.get_critical_hit }}</li>
+
+                        <li><strong>Грузоподъёмность:</strong> {{ char.carry_capacity }} кг</li>
+                        <li><strong>Макс. вес оружия:</strong> {{ char.max_weapon_weight }} кг</li>
+                        <li><strong>Макс. вес доспехов:</strong> {{ char.max_armor_weight }} кг</li>
+                    {% else %}
+                        <li><em>Характеристики скрыты</em></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+        </div>
         {% if is_owner %}
-            <a href="{% url 'characters:character_update' char.id %}" class="btn">Редактировать</a>
+            <a href="{% url 'characters:character_update' char.id %}">Редактировать</a>
         {% endif %}
 
         <div class="tabs">
@@ -175,48 +203,49 @@
             {% endif %}
         </div>
 
-{# Только ГМ для NPC #}
-  {% if is_gm and char.is_npc %}
-    <div class="npc-settings">
-      <h2>Настройки NPC</h2>
-      <ul class="npc-flags">
-        {# 1) Разовый переключатель видимости #}
-        <li>
-          <label>
-            <input type="checkbox"
-                   class="npc-flag-toggle"
-                   data-flag="visible_to_players"
-                   {% if char.visible_to_players %}checked{% endif %}>
-            Виден всем игрокам
-          </label>
-        </li>
+        {# Только ГМ для NPC #}
+        {% if is_gm and char.is_npc %}
+            <div class="npc-settings">
+                <h2>Настройки NPC</h2>
+                <ul class="npc-flags">
+                    {# 1) Разовый переключатель видимости #}
+                    <li>
+                        <label>
+                            <input type="checkbox"
+                                   class="npc-flag-toggle"
+                                   data-flag="visible_to_players"
+                                   {% if char.visible_to_players %}checked{% endif %}>
+                            Виден всем игрокам
+                        </label>
+                    </li>
 
-        {# 2) Цикл по known_* флагам #}
-        {% for fld, val in npc_flags.items %}
-          <li>
-            <label>
-              <input type="checkbox"
-                     class="npc-flag-toggle"
-                     data-flag="{{ fld }}"
-                     {% if val %}checked{% endif %}>
-              {% comment %}Выводим понятное название{% endcomment %}
-              {% if fld == 'known_name'         %}Знают имя{% endif %}
-              {% if fld == 'known_background'   %}Знают предысторию{% endif %}
-              {% if fld == 'known_stats'        %}Знают характеристики{% endif %}
-              {% if fld == 'known_equipment'    %}Знают экипировку{% endif %}
-              {% if fld == 'known_notes'        %}Знают заметки{% endif %}
-            </label>
-          </li>
-        {% endfor %}
-      </ul>
+                    {# 2) Цикл по known_* флагам #}
+                    {% for fld, val in npc_flags.items %}
+                        <li>
+                            <label>
+                                <input type="checkbox"
+                                       class="npc-flag-toggle"
+                                       data-flag="{{ fld }}"
+                                       {% if val %}checked{% endif %}>
+                                {% comment %}Выводим понятное название{% endcomment %}
+                                {% if fld == 'known_name' %}Знают имя{% endif %}
+                                {% if fld == 'known_background' %}Знают предысторию{% endif %}
+                                {% if fld == 'known_stats' %}Знают характеристики{% endif %}
+                                {% if fld == 'known_equipment' %}Знают экипировку{% endif %}
+                                {% if fld == 'known_notes' %}Знают заметки{% endif %}
+                            </label>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            {# чтобы получить CSRF-токен без полей формы #}
+        {% endif %}
+
+
     </div>
-
-    {# чтобы получить CSRF-токен без полей формы #}
     <form id="csrf-form">{% csrf_token %}</form>
-  {% endif %}
 
-
-    </div>
 {% endblock %}
 
 {% block js %}
@@ -233,40 +262,128 @@
             });
         });
     </script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const charId    = "{{ char.id }}";
-  const csrfToken = document
-    .getElementById("csrf-form")
-    .querySelector('input[name="csrfmiddlewaretoken"]').value;
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const charId = "{{ char.id }}";
+            const csrfToken = document
+                .getElementById("csrf-form")
+                .querySelector('input[name="csrfmiddlewaretoken"]').value;
 
-  document.querySelectorAll(".npc-flag-toggle").forEach(cb => {
-    cb.addEventListener("change", async () => {
-      const flag = cb.dataset.flag;
-      const url  = "{% url 'characters:toggle-npc-flag' char.id %}";
+            document.querySelectorAll(".npc-flag-toggle").forEach(cb => {
+                cb.addEventListener("change", async () => {
+                    const flag = cb.dataset.flag;
+                    const url = "{% url 'characters:toggle-npc-flag' char.id %}";
 
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "X-CSRFToken": csrfToken,
-            "X-Requested-With": "XMLHttpRequest",
-            "Content-Type": "application/x-www-form-urlencoded"
-          },
-          body: new URLSearchParams({ flag })
+                    try {
+                        const res = await fetch(url, {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": csrfToken,
+                                "X-Requested-With": "XMLHttpRequest",
+                                "Content-Type": "application/x-www-form-urlencoded"
+                            },
+                            body: new URLSearchParams({flag})
+                        });
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const json = await res.json();
+                        if (json.status !== "ok") throw new Error(json.message);
+                        // успешно переключено — ничего не делаем, чекбокс уже в нужном состоянии
+                    } catch (err) {
+                        // при ошибке откатываем чекбокс
+                        cb.checked = !cb.checked;
+                        alert("Не удалось сохранить настройку:\n" + err.message);
+                    }
+                });
+            });
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        if (json.status !== "ok") throw new Error(json.message);
-        // успешно переключено — ничего не делаем, чекбокс уже в нужном состоянии
-      } catch (err) {
-        // при ошибке откатываем чекбокс
-        cb.checked = !cb.checked;
-        alert("Не удалось сохранить настройку:\n" + err.message);
-      }
-    });
-  });
-});
-</script>
+    </script>
+    <script>
+        // простой хелпер для чтения CSRF из cookie
+        function getCookie(name) {
+            const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return match ? match.pop() : '';
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const cpValueEl = document.getElementById("cp-value");
+            // подставляем сюда правильный URL из Django
+            const cpUrl = "{% url 'characters:ajax_adjust_cp' char.id %}";
+            const csrfToken = getCookie('csrftoken');
+
+            document.querySelectorAll(".cp-btn").forEach(btn => {
+                btn.addEventListener("click", async () => {
+                    const action = btn.dataset.action;  // "inc" или "dec"
+                    try {
+                        const res = await fetch(cpUrl, {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": csrfToken,
+                                "X-Requested-With": "XMLHttpRequest",
+                                "Content-Type": "application/x-www-form-urlencoded"
+                            },
+                            body: new URLSearchParams({action})
+                        });
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const json = await res.json();
+                        if (json.status === "ok") {
+                            // обновляем значение на странице
+                            cpValueEl.textContent = json.current_concentration;
+                        } else {
+                            alert("Ошибка: " + json.message);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert("Не удалось изменить CP");
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const url = "{% url 'characters:ajax_adjust_hp' char.id %}";
+
+            // берём CSRF из куки
+            function getCookie(name) {
+                let v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+                return v ? v.pop() : '';
+            }
+
+            const csrfToken = getCookie('csrftoken');
+
+            const deltaInput = document.getElementById("hp-delta");
+            const applyBtn = document.getElementById("hp-delta-btn");
+            const currentEl = document.getElementById("hp-current");
+
+            applyBtn.addEventListener("click", async () => {
+                const delta = deltaInput.value;
+                try {
+                    const res = await fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrfToken,
+                            "X-Requested-With": "XMLHttpRequest",
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        body: new URLSearchParams({delta})
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json();
+                    if (json.status === "ok") {
+                        currentEl.textContent = json.current_hp;
+                        deltaInput.value = 0;
+                    } else {
+                        alert("Ошибка: " + json.message);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Не удалось применить изменение HP");
+                }
+            });
+        });
+    </script>
+
+
 
 {% endblock %}

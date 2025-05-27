@@ -56,7 +56,8 @@ class Character(models.Model):
 
     max_hp = models.PositiveIntegerField("Макс. HP", editable=False)
     current_hp = models.PositiveIntegerField("Текущие HP", default=0)
-    concentration = models.PositiveSmallIntegerField("CP", editable=False)
+    concentration = models.IntegerField("CP", editable=False)
+    current_concentration = models.IntegerField("Текущие CP", default=0)
     carry_capacity = models.PositiveIntegerField("Грузоподъёмность (кг)", editable=False)
     max_weapon_weight = models.FloatField("Макс. вес оружия", editable=False)
     max_armor_weight = models.FloatField("Макс. вес доспехов", editable=False)
@@ -82,7 +83,7 @@ class Character(models.Model):
     def save(self, *args, **kwargs):
         self.max_hp = 10 + 10 * self.con_stat
         self.current_hp = self.current_hp or self.max_hp
-        self.concentration = self.int_stat
+        self.concentration = self.int_stat - 5
         self.carry_capacity = self.str_stat * 10
         self.max_weapon_weight = round(self.carry_capacity * 0.2, 1)
         self.max_armor_weight = round(self.carry_capacity * 0.5, 1)
@@ -112,6 +113,30 @@ class Character(models.Model):
             self.lck_stat += points
         self.ability_points -= points
         return True
+
+    def adjust_hp(self, delta: int) -> int:
+        """
+        Прибавляет delta (положительное или отрицательное) к current_hp,
+        не выходя за границы [0…max_hp], сохраняет и возвращает новое current_hp.
+        """
+        if not isinstance(delta, int):
+            raise ValidationError("Delta must be integer")
+        self.current_hp = max(0, min(self.current_hp + delta, self.max_hp))
+        # сохраняем только поле current_hp
+        self.save(update_fields=['current_hp'])
+        return self.current_hp
+
+    def adjust_cp(self, action: str) -> int:
+        """
+        Инкремент ('inc') или декремент ('dec') current_concentration на 1,
+        не выходя за границы [0…concentration], сохраняет и возвращает новое значение.
+        """
+        if action not in ('inc', 'dec'):
+            raise ValidationError("Action must be 'inc' or 'dec'")
+        delta = 1 if action == 'inc' else -1
+        self.current_concentration += delta
+        self.save(update_fields=['current_concentration'])
+        return self.current_concentration
 
     def can_wield_two_h_as_one(self):
         return self.str_stat >= 8
@@ -150,7 +175,13 @@ class Character(models.Model):
                 item = getattr(self.equipment, slot, None)
                 if item:
                     total += item.bonus
+        total += self.str_stat
         return total
+
+    def get_critical_hit(self):
+        base_damage = self.get_total_attack()
+        multiplier = 1 + self.str_stat / 5  # плавный рост урона
+        return int(base_damage * multiplier)
 
     def get_legendary_bonuses(self):
         """
@@ -388,8 +419,6 @@ class Equipment(models.Model):
                 if item:
                     equipped[field.name] = item
         return equipped
-
-
 
 
 class ChestInstance(models.Model):

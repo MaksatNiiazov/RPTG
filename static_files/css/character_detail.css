@@ -55,6 +55,17 @@ h1 {
 }
 
 /* ========== Показатели списка ========== */
+
+.main_info{
+}
+.stats{
+    margin-left: 1rem;
+}
+.control{
+    box-shadow: #3e2f1b 0 0 4px;
+    padding: 1rem;
+    border-radius: 5px;
+}
 .stats-list {
     list-style: none;
     padding: 0;
@@ -205,4 +216,41 @@ h1 {
   font-size: 0.95rem;
   color: #4a3723;
   cursor: pointer;
+}
+
+
+.hp-control,
+.cp-control {
+  margin: 0.5rem 0;
+  align-items: center;
+    box-shadow: #3e2f1b 0 0 4px;
+    padding: 1rem;
+    border-radius: 5px;
+}
+
+.hp-control input[type="number"] {
+  width: 5rem;
+  margin: 0 0.5rem;
+}
+
+.btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+  margin-right: 0.5rem;
+}
+
+.cp-control .cp-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 1rem;
+  margin: 0 0.3rem;
+padding: 1rem;
+    text-align: center;
+
+}
+
+.hp-note, .cp-note {
+  font-size: 0.85rem;
+  color: #555;
+  margin-left: 0.5rem;
 }
