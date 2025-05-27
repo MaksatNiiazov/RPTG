@@ -73,6 +73,7 @@ class Item(models.Model):
     ]
 
     name = models.CharField("Название предмета", max_length=50)
+    description = models.TextField("Описание", blank=True, null=True)
     slug = models.SlugField("URL-имя", max_length=60, unique=True, blank=True)
     equipment_slot = models.CharField(
         "Тип экипировки", max_length=6,
