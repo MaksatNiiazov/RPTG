@@ -57,7 +57,7 @@ class Character(models.Model):
     max_hp = models.PositiveIntegerField("Макс. HP", editable=False)
     current_hp = models.PositiveIntegerField("Текущие HP", default=0)
     concentration = models.IntegerField("CP", editable=False)
-    current_concentration = models.IntegerField("Текущие CP", default=0)
+    current_concentration = models.IntegerField("Текущие CP", null=True, default=None)
     carry_capacity = models.PositiveIntegerField("Грузоподъёмность (кг)", editable=False)
     max_weapon_weight = models.FloatField("Макс. вес оружия", editable=False)
     max_armor_weight = models.FloatField("Макс. вес доспехов", editable=False)
@@ -85,7 +85,8 @@ class Character(models.Model):
         self.current_hp = self.current_hp or self.max_hp
         self.concentration = self.int_stat - 5
 
-        self.current_concentration = self.current_concentration or 0
+        if self.current_concentration is None:
+            self.current_concentration = self.concentration
         self.carry_capacity = self.str_stat * 10
         self.max_weapon_weight = round(self.carry_capacity * 0.2, 1)
         self.max_armor_weight = round(self.carry_capacity * 0.5, 1)
