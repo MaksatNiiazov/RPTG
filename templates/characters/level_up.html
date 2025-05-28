@@ -26,7 +26,7 @@
                                 type="button"
                                 class="btn btn-levelup"
                                 data-stat="{{ key }}"
-                                {% if char.ability_points < 1 %}disabled{% endif %}>
+                                {% if char.ability_points < 1 or char|get_attr:key >= 10 %}disabled{% endif %}>
                             +1
                         </button>
                     </td>
