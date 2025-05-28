@@ -81,7 +81,7 @@
                 {% for entry in inventory_items %}
                     <tr class="inv-row"
                         data-item-id="{{ entry.item.id }}">
-                        <td class="name-cell" style="border-left: 6px solid {{ entry.item.rarity.color }};">{{ entry.item.name }}</td>
+                        <td class="name-cell"><span style="border-left: 6px solid {{ entry.item.rarity.color }};">{{ entry.item.name }}</span></td>
                         <td class="quantity-cell">{{ entry.quantity }}</td>
                         <td class="bonus-cell">+{{ entry.item.bonus }}</td>
                         <td class="weight-cell">{{ entry.item.weight }} кг</td>
