@@ -1,6 +1,9 @@
 from django.contrib import admin
-from .models import School, SpellCategory, Spell
+from import_export.admin import ImportExportModelAdmin
 from unfold.admin import ModelAdmin
+from unfold.contrib.import_export.forms import ExportForm, ImportForm
+
+from .models import School, SpellCategory, Spell
 
 
 @admin.register(School)
@@ -16,7 +19,9 @@ class SpellCategoryAdmin(ModelAdmin):
 
 
 @admin.register(Spell)
-class SpellAdmin(ModelAdmin):
+class SpellAdmin(ModelAdmin, ImportExportModelAdmin):
+    import_form_class = ImportForm
+    export_form_class = ExportForm
     list_display = ("name", "level", "school", "category", "action_cost", "requires_check")
     list_filter = ("level", "school", "category", "action_cost")
     search_fields = ("name",)
