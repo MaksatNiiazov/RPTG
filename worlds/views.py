@@ -9,6 +9,7 @@ from character.models import Character, InventoryItem, ChestInstance
 from items.forms import LootConfigForm
 from items.loot import generate_loot_items
 from items.models import Item
+from magic.models import Spell
 from .forms import WorldForm, GrantAbilityPointsForm, GrantItemForm, QuickChestForm
 from .loot import open_chest_in_world
 from .models import World, WorldItemPool, WorldInvitation
@@ -207,3 +208,33 @@ class WorldInviteLinkView(LoginRequiredMixin, TemplateView):
         ctx["invite_link"] = link
         ctx["accepted"] = inv.accepted
         return ctx
+
+
+class GMGrantSpellView(LoginRequiredMixin, View):
+    """
+    ГМ выдаёт одно заклинание выбранному персонажу
+    """
+
+    def get(self, request, world_pk, char_pk):
+        world = get_object_or_404(World, pk=world_pk)
+        if world.creator != request.user:
+            return redirect("worlds:detail", pk=world_pk)
+        char = get_object_or_404(Character, pk=char_pk, world=world)
+        spells = Spell.objects.order_by("level", "school__name", "name")
+        return render(request, "worlds/gm_grant_spell.html", {
+            "world": world,
+            "char": char,
+            "spells": spells,
+        })
+
+    def post(self, request, world_pk, char_pk):
+        world = get_object_or_404(World, pk=world_pk)
+        if world.creator != request.user:
+            return redirect("worlds:detail", pk=world_pk)
+        char = get_object_or_404(Character, pk=char_pk, world=world)
+        spell_id = request.POST.get("spell_id")
+        spell = get_object_or_404(Spell, pk=spell_id)
+        # выдаём, если ещё не выдано
+        char.spells.add(spell)
+        messages.success(request, f"«{spell.name}» выдано {char.name}.")
+        return redirect("characters:character_detail", pk=char_pk)

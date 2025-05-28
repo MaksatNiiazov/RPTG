@@ -5,6 +5,7 @@ from django.db import models
 from accounts.models import User
 from items.loot import generate_loot_items
 from items.models import Item
+from magic.models import Spell
 from worlds.models import World
 
 EQUIPMENT_SLOT_MAP = {
@@ -88,6 +89,13 @@ class Character(models.Model):
     known_stats = models.BooleanField("Игроки знают статы", default=False)
     known_equipment = models.BooleanField("Игроки знают экипировку", default=False)
     known_notes = models.BooleanField("Игроки знают заметки", default=False)
+
+    spells = models.ManyToManyField(
+        Spell,
+        verbose_name="Выученные заклинания",
+        blank=True,
+        related_name="casters"
+    )
 
     def save(self, *args, **kwargs):
         self.max_hp = 10 + 10 * self.con_stat

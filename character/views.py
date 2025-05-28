@@ -72,6 +72,8 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
 
         ctx["equipment"] = c.equipment
         ctx["legendary_bonuses"] = c.get_legendary_bonuses()
+        ctx["spells"] = c.spells.select_related("school", "category").order_by("level", "school__name", "name")
+
         ctx["slot_names"] = SLOT_NAMES
 
         # Кто смотрит?

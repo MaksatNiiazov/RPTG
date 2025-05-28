@@ -11,11 +11,16 @@
     <div class="container">
 
         <div class="page-actions">
-            {% if is_owner %}
+            {% if is_owner or is_gm %}
                 <div>
                     <a href="{% url 'characters:character-inventory' char.id %}" class="btn">Инвентарь</a>
                 </div>
             {% endif %}
+        {% if is_gm %}
+        	<div>
+                    <a href="{% url 'worlds:gm-grant-spell' world char.id %}" class="btn">Выдать заклинание</a>
+                </div>
+        {% endif %}
             <a href="{% url 'worlds:detail' world %}" class="btn">⬅ Мир</a>
         </div>
 
@@ -33,7 +38,7 @@
             {% endif %}
         </div>
         <div class="main_info">
-                    <div class="control">
+            <div class="control">
                 <!-- Управление HP -->
                 <div class="hp-control">
                     <span class="hp-current">Текущие HP: <strong
@@ -84,6 +89,9 @@
                 <div class="tab" data-tab="pane-equip">Экипировка</div>{% endif %}
             {% if show_background or show_notes %}
                 <div class="tab" data-tab="pane-story">История</div>{% endif %}
+            {% if is_owner or is_gm %}
+                <div class="tab" data-tab="pane-spells">Заклинания</div>
+            {% endif %}
         </div>
 
         <div class="tab-content">
@@ -195,6 +203,36 @@
                         {% else %}
                             <p><em>Заметки отсутствуют.</em></p>
                         {% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
+            {% if is_owner or is_gm %}
+                <div id="pane-spells" class="tab-pane">
+                    {% if spells %}
+                        <table class="item-table">
+                            <thead>
+                            <tr>
+                                <th>Уровень</th>
+                                <th>Название</th>
+                                <th>Школа</th>
+                                <th>Тип</th>
+                                <th>Concentration</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for spell in spells %}
+                                <tr>
+                                    <td>{{ spell.level }}</td>
+                                    <td>{{ spell.name }}</td>
+                                    <td>{{ spell.school.name }}</td>
+                                    <td>{{ spell.get_action_cost_display }}</td>
+                                    <td>{% if spell.requires_check %}Да{% else %}Нет{% endif %}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p><em>Заклинания не выучены.</em></p>
                     {% endif %}
                 </div>
             {% endif %}

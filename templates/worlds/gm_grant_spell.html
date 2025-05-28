@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Выдать заклинание: {{ char.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-actions">
+    <a href="{% url 'worlds:detail' world.pk %}" class="btn">← Назад в мир</a>
+    <a href="{% url 'characters:character_detail' char.pk %}" class="btn">← К персонажу</a>
+  </div>
+
+  <h1>Выдать заклинание: {{ char.name }}</h1>
+  <form method="post">
+    {% csrf_token %}
+    <label for="spell">Заклинание:</label>
+    <select name="spell_id" id="spell" required>
+      <option value="">— выберите —</option>
+      {% for sp in spells %}
+        <option value="{{ sp.id }}">[{{ sp.level }}] {{ sp.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn">Выдать</button>
+  </form>
+
+  {% if char.spells.exists %}
+    <h2>Уже выученные:</h2>
+    <ul>
+      {% for sp in char.spells.all %}
+        <li>[{{ sp.level }}] {{ sp.name }} ({{ sp.school }}, {{ sp.get_action_cost_display }})</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}
