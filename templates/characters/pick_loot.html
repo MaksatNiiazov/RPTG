@@ -10,7 +10,7 @@
           <strong>Персонаж:</strong> {{ pl.character.name }}
           <ul>
             {% for itm in pl.items.all %}
-              <li>
+              <li style="border-left: 6px solid {{ itm.rarity.color }};">
                 {{ itm.name }} (+{{ itm.bonus }}) —
                 <form style="display:inline" method="post"
                       action="{% url 'pick-loot-item' pl.pk itm.pk %}">
