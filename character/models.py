@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 from accounts.models import User
@@ -45,14 +46,22 @@ class Character(models.Model):
     notes = models.TextField("Заметки (RP)", blank=True)
 
     # Статы 1–10
-    str_stat = models.PositiveSmallIntegerField("Сила", default=0)
-    dex_stat = models.PositiveSmallIntegerField("Ловкость", default=0)
-    con_stat = models.PositiveSmallIntegerField("Телосложение", default=0)
-    int_stat = models.PositiveSmallIntegerField("Интеллект", default=0)
-    wis_stat = models.PositiveSmallIntegerField("Мудрость", default=0)
-    cha_stat = models.PositiveSmallIntegerField("Харизма", default=0)
-    acc_stat = models.PositiveSmallIntegerField("Меткость", default=0)
-    lck_stat = models.PositiveSmallIntegerField("Удача", default=0)
+    str_stat = models.PositiveSmallIntegerField("Сила", default=0,
+                                                validators=[MinValueValidator(0), MaxValueValidator(10)])
+    dex_stat = models.PositiveSmallIntegerField("Ловкость", default=0,
+                                                validators=[MinValueValidator(0), MaxValueValidator(10)])
+    con_stat = models.PositiveSmallIntegerField("Телосложение", default=0,
+                                                validators=[MinValueValidator(0), MaxValueValidator(10)])
+    int_stat = models.PositiveSmallIntegerField("Интеллект", default=0,
+                                                validators=[MinValueValidator(0), MaxValueValidator(10)])
+    wis_stat = models.PositiveSmallIntegerField("Мудрость", default=0,
+                                                validators=[MinValueValidator(0), MaxValueValidator(10)])
+    cha_stat = models.PositiveSmallIntegerField("Харизма", default=0,
+                                                validators=[MinValueValidator(0), MaxValueValidator(10)])
+    acc_stat = models.PositiveSmallIntegerField("Меткость", default=0,
+                                                validators=[MinValueValidator(0), MaxValueValidator(10)])
+    lck_stat = models.PositiveSmallIntegerField("Удача", default=0,
+                                                validators=[MinValueValidator(0), MaxValueValidator(10)])
 
     max_hp = models.PositiveIntegerField("Макс. HP", editable=False)
     current_hp = models.PositiveIntegerField("Текущие HP", default=0)
