@@ -5,6 +5,7 @@ from unidecode import unidecode
 
 class School(models.Model):
     name = models.CharField("Название школы", max_length=50, unique=True)
+    description = models.TextField("Описание", blank=True, null=True)
     slug = models.SlugField("URL-имя", max_length=50, unique=True, blank=True)
 
     class Meta:
@@ -26,6 +27,7 @@ class SpellCategory(models.Model):
     Категория заклинания: Урон, Лечение, Контроль и т.д.
     """
     name = models.CharField("Категория", max_length=50, unique=True)
+    description = models.TextField("Описание", blank=True, null=True)
     slug = models.SlugField("URL-имя", max_length=50, unique=True, blank=True)
 
     class Meta:
