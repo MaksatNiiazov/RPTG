@@ -47,6 +47,7 @@
                 <th>Название</th>
                 <th>Школа</th>
                 <th>Категория</th>
+                <th>Стоимость</th>
                 <th>Действие</th>
             </tr>
             </thead>
@@ -58,6 +59,7 @@
                     <td>{{ spell.school.name }}</td>
                     <td>{{ spell.category.name }}</td>
                     <td>{{ spell.get_action_cost_display }}</td>
+                    <td>{{ spell.description }}</td>
                 </tr>
             {% empty %}
                 <tr>
