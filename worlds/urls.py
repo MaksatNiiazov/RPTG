@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import WorldDetailView, WorldCreateView, GrantAbilityPointsView, GrantItemView, QuickGiveChestView, \
-    AcceptInviteView, WorldInviteLinkView, GMGrantSpellView
+    AcceptInviteView, WorldInviteLinkView, GMGrantSpellView, get_characters_hp
 
 app_name = "worlds"
 
@@ -19,5 +19,7 @@ urlpatterns = [
         GMGrantSpellView.as_view(),
         name='gm-grant-spell'
     ),
+    path('<int:world_id>/character-hp/', get_characters_hp, name='worlds:get_characters_hp'),
+
 ]
 

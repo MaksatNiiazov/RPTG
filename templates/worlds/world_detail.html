@@ -30,8 +30,10 @@
             <div class="cards">
                 {% for c in player_chars %}
                     <div class="card">
-                        <h3>{{ c.name }}</h3>
-                        <p><strong>Владелец:</strong> {{ c.owner.email }}</p>
+<h3>{{ c.name }}</h3>
+    <p><strong>HP:</strong> <span class="char-hp" data-char-id="{{ c.id }}">
+        {{ c.current_hp }} / {{ c.max_hp }}
+    </span></p>                        <p><strong>Владелец:</strong> {{ c.owner.first_name }} {{ c.owner.last_name }}</p>
                         <a href="{% url 'characters:character_detail' c.pk %}" class="btn">Открыть</a>
                         {% if world.creator == request.user %}
                             <a href="{% url 'worlds:world-grant-points' world.pk c.pk %}"
@@ -103,4 +105,36 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/world_detail.css' %}">
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const worldId = "{{ world.id }}";
+    const pollUrl = `/worlds/${worldId}/character-hp/`;
+
+    function updateHP() {
+        fetch(pollUrl, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status !== "ok") return;
+            for (const [id, info] of Object.entries(data.characters)) {
+                const el = document.querySelector(`.char-hp[data-char-id="${id}"]`);
+                if (el) {
+                    el.textContent = `${info.current_hp} / ${info.max_hp}`;
+                }
+            }
+        })
+        .catch(err => console.error("Ошибка при обновлении HP:", err));
+    }
+
+    // Запускем раз в 10 секунд
+    setInterval(updateHP, 10000);
+    updateHP(); // сразу при загрузке
+});
+</script>
 {% endblock %}

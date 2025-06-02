@@ -1,5 +1,7 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import JsonResponse
 from django.urls import reverse_lazy, reverse
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, FormView, TemplateView
@@ -238,3 +240,17 @@ class GMGrantSpellView(LoginRequiredMixin, View):
         char.spells.add(spell)
         messages.success(request, f"«{spell.name}» выдано {char.name}.")
         return redirect("characters:character_detail", pk=char_pk)
+
+
+@login_required
+def get_characters_hp(request, world_id):
+    characters = Character.objects.filter(world_id=world_id)
+    data = {
+        char.id: {
+            "name": char.name,
+            "current_hp": char.current_hp,
+            "max_hp": char.max_hp
+        } for char in characters
+        if char.visible_to_players or request.user == char.owner or request.user == char.world.creator
+    }
+    return JsonResponse({"status": "ok", "characters": data})
