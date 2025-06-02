@@ -181,7 +181,6 @@ class AcceptInviteView(View):
             return redirect(f"{reverse_lazy('accounts:login')}?next={request.path}")
         # связываем пользователя с миром
         inv.world.players.add(request.user)
-        inv.accepted = True
         inv.save()
         messages.success(request, f"Вы присоединились к миру «{inv.world.name}»")
         return redirect("worlds:detail", pk=inv.world.pk)
