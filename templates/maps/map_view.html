@@ -1,143 +1,173 @@
 {% extends "base.html" %}
-{% load static %}
-
 {% block content %}
-<h1>{{ location.name }}</h1>
-<p>{{ location.description }}</p>
+<div class="controls">
+  <input id="token-id" placeholder="Ваш ID">
+  <input id="token-label" placeholder="Имя токена">
+  <input type="color" id="token-color" value="#00aaff">
+  <button id="set-token">Создать/Обновить</button>
+  <button id="delete-token">Удалить</button>
+</div>
 
-<!-- Форма настроек токена -->
-<form id="token-settings" style="margin-bottom: 1em;">
-  <label>ID: <input type="text" id="user-id" required></label>
-  <label>Цвет: <input type="color" id="user-color" value="#0000ff"></label>
-  <label>Имя: <input type="text" id="user-label"></label>
-  <button type="submit">Создать / Обновить токен</button>
-  <button type="button" id="delete-token-btn">Удалить токен</button>
-</form>
-
-<!-- Контейнер карты -->
-<div id="map-container" style="position: relative; width: 100%; max-width: 900px;">
-  <img src="{{ location.image.url }}" style="width: 100%;" id="map-image">
-  <div id="tokens-layer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
+<div id="map-container">
+  <img id="map-image" src="{{ location.image.url }}">
+  <canvas id="token-canvas"></canvas>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<style>
-  .token-dot {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    touch-action: none; /* важно для мобильного drag */
-  }
-</style>
-
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-  import {
-    getDatabase,
-    ref,
-    onValue,
-    set,
-    remove
-  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyA-Q9vinhWGopdMom8lTGtfzR2NoTb7u6g",
-    authDomain: "trpg-322.firebaseapp.com",
-    databaseURL: "https://trpg-322-default-rtdb.firebaseio.com",
-    projectId: "trpg-322",
-    storageBucket: "trpg-322.appspot.com",
-    messagingSenderId: "1029708883946",
-    appId: "1:1029708883946:web:8ab0434363c72e04f0b493"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyA-Q9vinhWGopdMom8lTGtfzR2NoTb7u6g",
+  authDomain: "trpg-322.firebaseapp.com",
+  databaseURL: "https://trpg-322-default-rtdb.firebaseio.com",
+  projectId: "trpg-322",
+  storageBucket: "trpg-322.appspot.com",
+  messagingSenderId: "1029708883946",
+  appId: "1:1029708883946:web:8ab0434363c72e04f0b493"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const locationId = {{ location.id }};
-  const tokensRef = ref(db, 'locations/' + locationId + '/tokens');
-  const tokensLayer = document.getElementById('tokens-layer');
-  const mapContainer = document.getElementById('map-container');
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const locationId = {{ location.id }};
+const tokensRef = ref(db, `locations/${locationId}/tokens`);
 
-  let tokenData = {};
-  let activeToken = null;
+const canvas = document.getElementById("token-canvas");
+const mapImage = document.getElementById("map-image");
+const ctx = canvas.getContext("2d");
 
-  onValue(tokensRef, (snapshot) => {
-    tokenData = snapshot.val() || {};
-    tokensLayer.innerHTML = "";
+let tokens = {};
+let draggingId = null;
 
-    for (const [id, token] of Object.entries(tokenData)) {
-      const dot = document.createElement("div");
-      dot.className = "token-dot";
-      dot.style.left = `${token.x}%`;
-      dot.style.top = `${token.y}%`;
-      dot.style.backgroundColor = token.color || "#000";
-      dot.title = token.label || `Token ${id}`;
-      dot.dataset.tokenId = id;
+const getID = () => document.getElementById("token-id").value.trim();
+const getLabel = () => document.getElementById("token-label").value.trim();
+const getColor = () => document.getElementById("token-color").value;
 
-      dot.addEventListener("mousedown", (e) => startMove(e, id));
-      dot.addEventListener("touchstart", (e) => startMove(e.touches[0], id), { passive: true });
-
-      tokensLayer.appendChild(dot);
-    }
+document.getElementById("set-token").onclick = () => {
+  const id = getID();
+  if (!id) return;
+  set(ref(db, `locations/${locationId}/tokens/${id}`), {
+    x: 50, y: 50,
+    color: getColor(),
+    label: getLabel() || id
   });
+};
 
-  function startMove(startEvent, tokenId) {
-    const userId = document.getElementById("user-id").value.trim();
-    if (tokenId !== userId) return;
+document.getElementById("delete-token").onclick = () => {
+  const id = getID();
+  if (!id) return;
+  remove(ref(db, `locations/${locationId}/tokens/${id}`));
+};
 
-    const moveHandler = (e) => {
-      const point = e.touches ? e.touches[0] : e;
-      const rect = mapContainer.getBoundingClientRect();
-      const x = ((point.clientX - rect.left) / rect.width) * 100;
-      const y = ((point.clientY - rect.top) / rect.height) * 100;
+function resizeCanvas() {
+  canvas.width = mapImage.clientWidth;
+  canvas.height = mapImage.clientHeight;
+  drawTokens();
+}
 
-      if (x < 0 || x > 100 || y < 0 || y > 100) return;
-
-      set(ref(db, `locations/${locationId}/tokens/${tokenId}`), {
-        ...tokenData[tokenId],
-        x: x.toFixed(2),
-        y: y.toFixed(2)
-      });
-    };
-
-    const stopHandler = () => {
-      document.removeEventListener("mousemove", moveHandler);
-      document.removeEventListener("mouseup", stopHandler);
-      document.removeEventListener("touchmove", moveHandler);
-      document.removeEventListener("touchend", stopHandler);
-    };
-
-    document.addEventListener("mousemove", moveHandler);
-    document.addEventListener("mouseup", stopHandler);
-    document.addEventListener("touchmove", moveHandler, { passive: false });
-    document.addEventListener("touchend", stopHandler);
+function drawTokens() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (const [id, token] of Object.entries(tokens)) {
+    const x = (token.x / 100) * canvas.width;
+    const y = (token.y / 100) * canvas.height;
+    ctx.beginPath();
+    ctx.arc(x, y, 10, 0, Math.PI * 2);
+    ctx.fillStyle = token.color || "#000";
+    ctx.fill();
+    ctx.strokeStyle = id === getID() ? "#fff" : "#000";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.font = "14px sans-serif";
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "center";
+    ctx.fillText(token.label || id, x, y + 20);
   }
+}
 
-  document.getElementById("token-settings").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const id = document.getElementById("user-id").value.trim();
-    const color = document.getElementById("user-color").value;
-    const label = document.getElementById("user-label").value;
+function getEventPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: (clientX - rect.left) / rect.width * 100,
+    y: (clientY - rect.top) / rect.height * 100
+  };
+}
 
-    if (!id) return alert("Введите ваш ID");
+canvas.addEventListener("mousedown", startDrag);
+canvas.addEventListener("touchstart", startDrag, { passive: false });
 
-    set(ref(db, `locations/${locationId}/tokens/${id}`), {
-      x: 50,
-      y: 50,
-      color,
-      label
-    });
-  });
+function startDrag(e) {
+  const pos = getEventPos(e);
+  const id = getID();
+  if (!id || !tokens[id]) return;
 
-  document.getElementById("delete-token-btn").addEventListener("click", () => {
-    const id = document.getElementById("user-id").value.trim();
-    if (!id) return alert("Введите ваш ID для удаления токена.");
-    if (!tokenData[id]) return alert("Токен не найден.");
+  const token = tokens[id];
+  const dx = pos.x - token.x;
+  const dy = pos.y - token.y;
+  if (Math.hypot(dx, dy) > 3) return;
 
-    if (confirm("Удалить ваш токен с карты?")) {
-      remove(ref(db, `locations/${locationId}/tokens/${id}`));
-    }
-  });
+  draggingId = id;
+  e.preventDefault();
+}
+
+function handleMove(e) {
+  if (!draggingId) return;
+  const pos = getEventPos(e);
+  tokens[draggingId].x = Math.max(0, Math.min(100, pos.x));
+  tokens[draggingId].y = Math.max(0, Math.min(100, pos.y));
+  drawTokens();
+  set(ref(db, `locations/${locationId}/tokens/${draggingId}`), tokens[draggingId]);
+  e.preventDefault();
+}
+
+function stopDrag() {
+  draggingId = null;
+}
+
+canvas.addEventListener("mousemove", handleMove);
+canvas.addEventListener("touchmove", handleMove, { passive: false });
+canvas.addEventListener("mouseup", stopDrag);
+canvas.addEventListener("touchend", stopDrag);
+
+mapImage.onload = resizeCanvas;
+window.addEventListener("resize", resizeCanvas);
+
+onValue(tokensRef, (snapshot) => {
+  tokens = snapshot.val() || {};
+  resizeCanvas();
+});
 </script>
+{% endblock %}
+
+{% block css %}
+<style>
+body {
+  font-family: sans-serif;
+  padding: 1rem;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+#map-container {
+  position: relative;
+  max-width: 100%;
+}
+#map-image {
+  width: 100%;
+  display: block;
+}
+#token-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  touch-action: none;
+}
+</style>
 {% endblock %}
