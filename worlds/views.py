@@ -12,6 +12,7 @@ from items.forms import LootConfigForm
 from items.loot import generate_loot_items
 from items.models import Item
 from magic.models import Spell
+from maps.models import Location
 from .forms import WorldForm, GrantAbilityPointsForm, GrantItemForm, QuickChestForm
 from .loot import open_chest_in_world
 from .models import World, WorldItemPool, WorldInvitation
@@ -42,7 +43,9 @@ class WorldDetailView(LoginRequiredMixin, DetailView):
             ctx["invite_link"] = self.request.build_absolute_uri(
                 reverse("worlds:accept-invite", kwargs={"token": str(inv.token)})
             )
-
+            ctx['locations'] = Location.objects.filter(world=world)
+        else:
+            ctx['locations'] = Location.objects.filter(world=world, is_opened=True)
         ctx["player_chars"] = players
         ctx["npc_chars"] = npcs
         return ctx

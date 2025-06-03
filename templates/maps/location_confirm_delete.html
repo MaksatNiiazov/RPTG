@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Удалить локацию "{{ object.name }}"?</h1>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Подтвердить удаление</button>
+</form>
+<a href="{% url 'worlds:detail' world_id %}">Отмена</a>
+{% endblock %}

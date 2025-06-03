@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>{% if form.instance.pk %}Редактировать{% else %}Создать{% endif %} локацию</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Сохранить</button>
+    </form>
+    {% if update %}
+        <a href="{% url 'maps:delete' object.pk %}">Удалить локацию</a>
+    {% endif %} 
+    <a href="{% url 'worlds:detail' world_id %}">Назад к миру</a>
+
+{% endblock %}

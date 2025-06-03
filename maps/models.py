@@ -7,6 +7,7 @@ class Location(models.Model):
     name = models.CharField("Название локации", max_length=100)
     description = models.TextField("Описание", blank=True)
     image = models.ImageField("Карта локации", upload_to="locations/")
+    is_opened = models.BooleanField("Открыто", default=False)
 
     def __str__(self):
         return self.name
