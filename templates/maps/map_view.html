@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="controls">
-  <input id="token-id" placeholder="Ваш ID" value="{{ user_id }}" type="hidden">
+  <input id="token-id" placeholder="Ваш ID" value="{{ user_id }}" {% if not is_gm %}readonly type="hidden" {% endif %}>
   <input id="token-label" placeholder="Имя">
   <input type="color" id="token-color" value="#00aaff">
   <button id="set-token">Создать/Обновить</button>
