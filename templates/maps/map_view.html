@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>{{ location.name }}</h1>
+<p>{{ location.description }}</p>
+
+<!-- Форма настроек токена -->
+<form id="token-settings" style="margin-bottom: 1em;">
+  <label>ID: <input type="text" id="user-id" required></label>
+  <label>Цвет: <input type="color" id="user-color" value="#0000ff"></label>
+  <label>Имя: <input type="text" id="user-label"></label>
+  <button type="submit">Создать / Обновить токен</button>
+  <button type="button" id="delete-token-btn">Удалить токен</button>
+</form>
+
+<!-- Контейнер карты -->
+<div id="map-container" style="position: relative; width: 100%; max-width: 900px;">
+  <img src="{{ location.image.url }}" style="width: 100%;" id="map-image">
+  <div id="tokens-layer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+  .token-dot {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    touch-action: none; /* важно для мобильного drag */
+  }
+</style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+  import {
+    getDatabase,
+    ref,
+    onValue,
+    set,
+    remove
+  } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA-Q9vinhWGopdMom8lTGtfzR2NoTb7u6g",
+    authDomain: "trpg-322.firebaseapp.com",
+    databaseURL: "https://trpg-322-default-rtdb.firebaseio.com",
+    projectId: "trpg-322",
+    storageBucket: "trpg-322.appspot.com",
+    messagingSenderId: "1029708883946",
+    appId: "1:1029708883946:web:8ab0434363c72e04f0b493"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const locationId = {{ location.id }};
+  const tokensRef = ref(db, 'locations/' + locationId + '/tokens');
+  const tokensLayer = document.getElementById('tokens-layer');
+  const mapContainer = document.getElementById('map-container');
+
+  let tokenData = {};
+  let activeToken = null;
+
+  onValue(tokensRef, (snapshot) => {
+    tokenData = snapshot.val() || {};
+    tokensLayer.innerHTML = "";
+
+    for (const [id, token] of Object.entries(tokenData)) {
+      const dot = document.createElement("div");
+      dot.className = "token-dot";
+      dot.style.left = `${token.x}%`;
+      dot.style.top = `${token.y}%`;
+      dot.style.backgroundColor = token.color || "#000";
+      dot.title = token.label || `Token ${id}`;
+      dot.dataset.tokenId = id;
+
+      dot.addEventListener("mousedown", (e) => startMove(e, id));
+      dot.addEventListener("touchstart", (e) => startMove(e.touches[0], id), { passive: true });
+
+      tokensLayer.appendChild(dot);
+    }
+  });
+
+  function startMove(startEvent, tokenId) {
+    const userId = document.getElementById("user-id").value.trim();
+    if (tokenId !== userId) return;
+
+    const moveHandler = (e) => {
+      const point = e.touches ? e.touches[0] : e;
+      const rect = mapContainer.getBoundingClientRect();
+      const x = ((point.clientX - rect.left) / rect.width) * 100;
+      const y = ((point.clientY - rect.top) / rect.height) * 100;
+
+      if (x < 0 || x > 100 || y < 0 || y > 100) return;
+
+      set(ref(db, `locations/${locationId}/tokens/${tokenId}`), {
+        ...tokenData[tokenId],
+        x: x.toFixed(2),
+        y: y.toFixed(2)
+      });
+    };
+
+    const stopHandler = () => {
+      document.removeEventListener("mousemove", moveHandler);
+      document.removeEventListener("mouseup", stopHandler);
+      document.removeEventListener("touchmove", moveHandler);
+      document.removeEventListener("touchend", stopHandler);
+    };
+
+    document.addEventListener("mousemove", moveHandler);
+    document.addEventListener("mouseup", stopHandler);
+    document.addEventListener("touchmove", moveHandler, { passive: false });
+    document.addEventListener("touchend", stopHandler);
+  }
+
+  document.getElementById("token-settings").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = document.getElementById("user-id").value.trim();
+    const color = document.getElementById("user-color").value;
+    const label = document.getElementById("user-label").value;
+
+    if (!id) return alert("Введите ваш ID");
+
+    set(ref(db, `locations/${locationId}/tokens/${id}`), {
+      x: 50,
+      y: 50,
+      color,
+      label
+    });
+  });
+
+  document.getElementById("delete-token-btn").addEventListener("click", () => {
+    const id = document.getElementById("user-id").value.trim();
+    if (!id) return alert("Введите ваш ID для удаления токена.");
+    if (!tokenData[id]) return alert("Токен не найден.");
+
+    if (confirm("Удалить ваш токен с карты?")) {
+      remove(ref(db, `locations/${locationId}/tokens/${id}`));
+    }
+  });
+</script>
+{% endblock %}

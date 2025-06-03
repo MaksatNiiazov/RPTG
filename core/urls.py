@@ -30,6 +30,7 @@ urlpatterns = [
     path('magic/', include('magic.urls')),
     path("characters/", include("character.urls")),
     path("worlds/", include("worlds.urls")),
+    path("maps/", include("maps.urls")),
 
 ]
 

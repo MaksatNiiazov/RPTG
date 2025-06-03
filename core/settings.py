@@ -33,17 +33,14 @@ INSTALLED_APPS = [
     "unfold.contrib.forms",
     "unfold.contrib.inlines",
     "unfold.contrib.import_export",  # optional, if django-import-export package is used
-
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-
     'django.contrib.staticfiles',
     'mptt',
     'django.contrib.admin',
     'import_export',
-
     "ckeditor",
     "ckeditor_uploader",
     'accounts',
@@ -52,6 +49,7 @@ INSTALLED_APPS = [
     'magic',
     'character',
     'worlds',
+    'maps'
 ]
 AUTH_USER_MODEL = "accounts.User"
 
@@ -90,7 +88,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'db1.sqlite3',
     }
 }
 
@@ -158,5 +156,14 @@ CKEDITOR_CONFIGS = {
         # чтобы ссылка на превью картинок работала
         "filebrowserUploadUrl": "/ckeditor/upload/",
         "filebrowserBrowseUrl": "/ckeditor/browse/",
+    },
+}
+
+
+ASGI_APPLICATION = 'core.asgi.application'  # замени на своё
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
     },
 }
