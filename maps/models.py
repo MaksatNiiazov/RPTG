@@ -3,6 +3,7 @@ from accounts.models import User
 
 
 class Location(models.Model):
+    world = models.ForeignKey("worlds.World", on_delete=models.CASCADE, related_name="locations")
     name = models.CharField("Название локации", max_length=100)
     description = models.TextField("Описание", blank=True)
     image = models.ImageField("Карта локации", upload_to="locations/")

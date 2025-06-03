@@ -1,12 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="controls">
-  <input id="token-id" placeholder="Ваш ID">
-  <input id="token-label" placeholder="Имя токена">
+  <input id="token-id" placeholder="Ваш ID" value="{{ user_id }}" type="hidden">
+  <input id="token-label" placeholder="Имя">
   <input type="color" id="token-color" value="#00aaff">
   <button id="set-token">Создать/Обновить</button>
   <button id="delete-token">Удалить</button>
 </div>
+
+{% if is_gm %}
+  <div class="gm-panel">
+    <h3>Список токенов</h3>
+    <ul id="token-list"></ul>
+  </div>
+{% endif %}
 
 <div id="map-container">
   <img id="map-image" src="{{ location.image.url }}">
@@ -33,6 +40,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const locationId = {{ location.id }};
 const tokensRef = ref(db, `locations/${locationId}/tokens`);
+const isGM = {{ is_gm|yesno:"true,false" }};
 
 const canvas = document.getElementById("token-canvas");
 const mapImage = document.getElementById("map-image");
@@ -40,6 +48,7 @@ const ctx = canvas.getContext("2d");
 
 let tokens = {};
 let draggingId = null;
+let selectedId = null;
 
 const getID = () => document.getElementById("token-id").value.trim();
 const getLabel = () => document.getElementById("token-label").value.trim();
@@ -48,11 +57,13 @@ const getColor = () => document.getElementById("token-color").value;
 document.getElementById("set-token").onclick = () => {
   const id = getID();
   if (!id) return;
-  set(ref(db, `locations/${locationId}/tokens/${id}`), {
-    x: 50, y: 50,
+  const token = {
+    x: tokens[id]?.x || 50,
+    y: tokens[id]?.y || 50,
     color: getColor(),
     label: getLabel() || id
-  });
+  };
+  set(ref(db, `locations/${locationId}/tokens/${id}`), token);
 };
 
 document.getElementById("delete-token").onclick = () => {
@@ -76,8 +87,8 @@ function drawTokens() {
     ctx.arc(x, y, 10, 0, Math.PI * 2);
     ctx.fillStyle = token.color || "#000";
     ctx.fill();
-    ctx.strokeStyle = id === getID() ? "#fff" : "#000";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = id === selectedId ? "#eaead1" : "#000";
+    ctx.lineWidth = id === selectedId ? 4 : 2;
     ctx.stroke();
     ctx.font = "14px sans-serif";
     ctx.fillStyle = "#fff";
@@ -103,12 +114,10 @@ function startDrag(e) {
   const pos = getEventPos(e);
   const id = getID();
   if (!id || !tokens[id]) return;
-
   const token = tokens[id];
   const dx = pos.x - token.x;
   const dy = pos.y - token.y;
   if (Math.hypot(dx, dy) > 3) return;
-
   draggingId = id;
   e.preventDefault();
 }
@@ -135,9 +144,31 @@ canvas.addEventListener("touchend", stopDrag);
 mapImage.onload = resizeCanvas;
 window.addEventListener("resize", resizeCanvas);
 
+document.getElementById("token-id").addEventListener("input", (e) => {
+  selectedId = e.target.value;
+  drawTokens();
+});
+
 onValue(tokensRef, (snapshot) => {
   tokens = snapshot.val() || {};
   resizeCanvas();
+  if (isGM && document.getElementById("token-list")) {
+    const list = document.getElementById("token-list");
+    list.innerHTML = "";
+    for (const [id, token] of Object.entries(tokens)) {
+      const li = document.createElement("li");
+      li.textContent = `${token.label || id}`;
+      li.style.cursor = "pointer";
+      li.onclick = () => {
+        document.getElementById("token-id").value = id;
+        document.getElementById("token-label").value = token.label || id;
+        document.getElementById("token-color").value = token.color || "#000000";
+        selectedId = id;
+        drawTokens();
+      };
+      list.appendChild(li);
+    }
+  }
 });
 </script>
 {% endblock %}
@@ -153,6 +184,24 @@ body {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1rem;
+}
+.gm-panel {
+  margin-bottom: 1rem;
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 6px;
+}
+.gm-panel h3 {
+  margin-top: 0;
+}
+.gm-panel ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.gm-panel li {
+  padding: 4px 6px;
+  border-bottom: 1px solid #ddd;
 }
 #map-container {
   position: relative;
