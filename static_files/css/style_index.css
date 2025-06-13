@@ -1,12 +1,13 @@
 .home-hero {
-  background: linear-gradient(135deg, #0D0D15 0%, #1f1f29 100%);
+
+  background: linear-gradient(135deg, #263238 0%, #37474f 100%);
   color: var(--text);
   padding: 6rem 0;
   text-align: center;
   border-bottom: 1px solid var(--border);
 }
 .hero-title {
-  font-family: 'Beleren', 'Cinzel', serif;
+  font-family: 'Inter', 'Merriweather', serif;
   font-size: 3rem;
   margin-bottom: 0.5rem;
 }
