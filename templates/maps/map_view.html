@@ -175,47 +175,15 @@ onValue(tokensRef, (snapshot) => {
 
 {% block css %}
 <style>
-body {
-  font-family: sans-serif;
-}
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-.gm-panel {
-  margin-bottom: 1rem;
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 6px;
-}
-.gm-panel h3 {
-  margin-top: 0;
-}
-.gm-panel ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.gm-panel li {
-  padding: 4px 6px;
-  border-bottom: 1px solid #ddd;
-}
-#map-container {
-  position: relative;
-  max-width: 100%;
-}
-#map-image {
-  width: 100%;
-  display: block;
-}
-#token-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 2;
-  touch-action: none;
-}
+body { font-family: sans-serif; background: var(--bg); color: var(--text); }
+.controls { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem; }
+.gm-panel { margin-bottom:1rem; background: var(--card-bg); padding:1rem; border-radius:6px; border:1px solid var(--border); }
+.gm-panel h3 { margin-top:0; color: var(--accent); }
+.gm-panel ul { list-style:none; padding:0; margin:0; }
+.gm-panel li { padding:4px 6px; border-bottom:1px solid var(--border); }
+#map-container { position: relative; max-width:100%; }
+#map-image { width:100%; display:block; }
+#token-canvas { position:absolute; top:0; left:0; z-index:2; touch-action:none; }
 </style>
+
 {% endblock %}

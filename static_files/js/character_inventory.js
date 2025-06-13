@@ -2,6 +2,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.querySelector(".inventory-layout");
     if (!container) return;
 
+    function flashElement(el) {
+        if (!el) return;
+        el.classList.add("flash");
+        setTimeout(() => el.classList.remove("flash"), 1000);
+    }
+
     // создаём таб-бар
     const tabs = document.createElement("div");
     tabs.className = "inventory-tabs";
@@ -129,12 +135,18 @@ document.addEventListener("DOMContentLoaded", () => {
               <button class="btn-inventory btn-unequip">Снять</button>
             </form>
           </td>`;
+                flashElement(eqRow);
                 // убавляем из инвентаря
                 const invRow = container.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
                     const cell = invRow.querySelector(".quantity-cell");
                     const q = parseInt(cell.textContent, 10) - 1;
-                    if (q > 0) cell.textContent = q; else invRow.remove();
+                    if (q > 0) {
+                        cell.textContent = q;
+                        flashElement(invRow);
+                    } else {
+                        invRow.remove();
+                    }
                 }
             } else if (form.matches(".unequip-form")) {
                 const {slot, item} = data;
@@ -142,11 +154,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
           <td colspan="4" class="empty-slot">Пусто</td>`;
+                flashElement(eqRow);
                 // добавляем в инвентарь
                 let invRow = invTableBody.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
                     invRow.querySelector(".quantity-cell").textContent =
                         parseInt(invRow.querySelector(".quantity-cell").textContent, 10) + 1;
+                    flashElement(invRow);
                 } else {
                     const tpl = document.getElementById("inv-row-template");
                     const clone = tpl.content.cloneNode(true);
@@ -158,13 +172,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     newRow.querySelector(".weight-cell").textContent = item.weight + " кг";
                     newRow.querySelector(".legendary-cell").textContent = item.legendary_buff || "—";
                     invTableBody.append(newRow);
+                    flashElement(newRow);
                 }
             } else {  // drop-form
                 const {item_id, remaining} = data;
                 const invRow = container.querySelector(`tr.inv-row[data-item-id="${item_id}"]`);
                 if (!invRow) return;
-                if (remaining > 0) invRow.querySelector(".quantity-cell").textContent = remaining;
-                else invRow.remove();
+                if (remaining > 0) {
+                    invRow.querySelector(".quantity-cell").textContent = remaining;
+                    flashElement(invRow);
+                } else {
+                    invRow.remove();
+                }
             }
 
         } catch (err) {
