@@ -3,6 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 from accounts.models import User
+from character.character_utils import CharacterGetUtils
 from items.loot import generate_loot_items
 from items.models import Item
 from magic.models import Spell
@@ -31,7 +32,7 @@ EQUIPMENT_SLOT_MAP = {
 }
 
 
-class Character(models.Model):
+class Character(models.Model, CharacterGetUtils):
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name="characters", verbose_name="Мир",
                               blank=True, null=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="characters", verbose_name="Владелец",
@@ -65,7 +66,7 @@ class Character(models.Model):
                                                 validators=[MinValueValidator(0), MaxValueValidator(10)])
 
     max_hp = models.PositiveIntegerField("Макс. HP", editable=False)
-    current_hp = models.PositiveIntegerField("Текущие HP", default=0)
+    current_hp = models.PositiveIntegerField("Текущие HP", default=0, validators=[MinValueValidator(0)])
     concentration = models.IntegerField("CP", editable=False)
     current_concentration = models.IntegerField("Текущие CP", null=True, default=None)
     carry_capacity = models.PositiveIntegerField("Грузоподъёмность (кг)", editable=False)
@@ -99,7 +100,6 @@ class Character(models.Model):
 
     def save(self, *args, **kwargs):
         self.max_hp = 10 + 10 * self.con_stat
-        self.current_hp = self.current_hp or self.max_hp
         self.concentration = self.int_stat - 5
 
         if self.current_concentration is None:
@@ -163,58 +163,6 @@ class Character(models.Model):
 
     def can_wield_2_two_h(self):
         return self.str_stat >= 10
-
-    def get_total_defense(self):
-        """
-        Общая броня — сумма бонусов от экипированных доспехов и щита.
-        """
-        armor_slots = ["head", "neck", "chest", "hands", "waist", "legs", "feet", "cloak"]
-        total = 0
-
-        if hasattr(self, "equipment"):
-            for slot in armor_slots:
-                item = getattr(self.equipment, slot, None)
-                if item:
-                    total += item.bonus
-
-            # Добавляем бонус от щита, если он есть
-            shield_item = getattr(self.equipment, "off_hand", None)
-            if shield_item and shield_item.equipment_slot == "SHIELD":
-                total += shield_item.bonus
-
-        return total
-
-    def get_total_attack(self):
-        """
-        Общий урон — сумма бонусов от экипированного оружия.
-        """
-        weapon_slots = ["main_hand", "off_hand", "two_hands"]
-        total = 0
-        if hasattr(self, "equipment"):
-            for slot in weapon_slots:
-                item = getattr(self.equipment, slot, None)
-                if item:
-                    total += item.bonus
-        total += self.str_stat
-        return total
-
-    def get_critical_hit(self):
-        base_damage = self.get_total_attack()
-        multiplier = 1 + self.str_stat / 5  # плавный рост урона
-        return int(base_damage * multiplier)
-
-    def get_legendary_bonuses(self):
-        """
-        Возвращает список легендарных бонусов от всех экипированных предметов.
-        """
-        bonuses = []
-        if hasattr(self, "equipment"):
-            for field in self.equipment._meta.fields:
-                if isinstance(field, models.ForeignKey) and field.name != "character":
-                    item = getattr(self.equipment, field.name)
-                    if item and item.rarity.legendary and item.legendary_buff:
-                        bonuses.append(item.legendary_buff)
-        return bonuses
 
     def equip_item(self, item):
         # Проверка наличия в инвентаре
@@ -363,6 +311,8 @@ class Character(models.Model):
         equipment.save()
 
         return item
+
+
 
     def __str__(self):
         return self.name

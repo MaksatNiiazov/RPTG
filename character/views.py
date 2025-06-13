@@ -96,6 +96,17 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
             'known_equipment': c.known_equipment,
             'known_notes': c.known_notes,
         }
+        stat_roll_bonuses = {
+            'str': c.get_stat_roll_bonus(c.str_stat),
+            'dex': c.get_stat_roll_bonus(c.dex_stat),
+            'con': c.get_stat_roll_bonus(c.con_stat),
+            'int': c.get_stat_roll_bonus(c.int_stat),
+            'wis': c.get_stat_roll_bonus(c.wis_stat),
+            'cha': c.get_stat_roll_bonus(c.cha_stat),
+            'acc': c.get_stat_roll_bonus(c.acc_stat),
+            'lck': c.get_stat_roll_bonus(c.lck_stat),
+        }
+        ctx['stat_roll_bonuses'] = stat_roll_bonuses
         return ctx
 
 

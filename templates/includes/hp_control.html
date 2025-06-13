@@ -1,0 +1,329 @@
+<div class="hp-control card">
+    <h3 class="hp-title">Управление здоровьем</h3>
+
+    <div class="hp-display">
+        <span class="hp-label">Текущие HP:</span>
+        <strong id="hp-current" class="hp-value">{{ char.current_hp }}</strong>
+        <span class="hp-separator">/</span>
+        <span id="hp-max" class="hp-max">{{ char.max_hp }}</span>
+    </div>
+
+    <div class="hp-adjust">
+        <div class="hp-quick-controls">
+            <button class="hp-btn hp-decrease" data-delta="-5">-5</button>
+            <button class="hp-btn hp-decrease" data-delta="-1">-1</button>
+
+            <input type="number" id="hp-delta" class="hp-input" value="1" step="1">
+
+            <button class="hp-btn hp-increase" data-delta="+1">+1</button>
+            <button class="hp-btn hp-increase" data-delta="+5">+5</button>
+
+            <button id="hp-apply-btn" class="hp-apply-btn">Применить</button>
+        </div>
+
+        <div class="hp-special-actions">
+            <button class="hp-special-btn hp-min-btn" data-action="min">Установить 0</button>
+            <button class="hp-special-btn hp-heal-btn" data-action="heal">Полное лечение</button>
+            <button class="hp-special-btn hp-half-btn" data-action="half">50% </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const url = "{% url 'characters:ajax_adjust_hp' char.id %}";
+        let maxHp = parseInt(document.getElementById("hp-max").textContent);
+        let currentHp = parseInt(document.getElementById("hp-current").textContent);
+
+        function getCookie(name) {
+            let v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return v ? v.pop() : '';
+        }
+
+        const csrfToken = getCookie('csrftoken');
+        const deltaInput = document.getElementById("hp-delta");
+        const currentEl = document.getElementById("hp-current");
+
+        async function changeHp(delta) {
+            if (isNaN(delta)) return;
+
+            try {
+                const res = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrfToken,
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({delta: delta.toString()})
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const json = await res.json();
+                if (json.status === "ok") {
+                    currentHp = json.current_hp;
+                    currentEl.textContent = currentHp;
+
+                    // Визуальный эффект
+                    const effectClass = delta > 0 ? 'hp-heal-effect' : 'hp-damage-effect';
+                    currentEl.classList.add(effectClass);
+                    setTimeout(() => currentEl.classList.remove(effectClass), 500);
+                } else {
+                    alert("Ошибка: " + json.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Не удалось изменить HP");
+            }
+        }
+
+        async function setHp(value) {
+            const delta = value - currentHp;
+            await changeHp(delta);
+        }
+
+        // Обработчики для кнопок быстрого изменения
+        document.querySelectorAll('.hp-btn[data-delta]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                let delta = parseInt(btn.dataset.delta);
+                await changeHp(delta);
+            });
+        });
+
+        // Обработчик для кнопки Применить
+        document.getElementById("hp-apply-btn").addEventListener("click", async () => {
+            const delta = parseInt(deltaInput.value);
+            if (isNaN(delta)) {
+                alert("Пожалуйста, введите число");
+                return;
+            }
+            await changeHp(delta);
+        });
+
+        // Обработчики для специальных кнопок
+        document.querySelectorAll('.hp-special-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const action = btn.dataset.action;
+
+                if (action === 'heal') {
+                    await setHp(maxHp);
+                }
+                else if (action === 'min') {
+                    await setHp(0);
+                }
+                else if (action === 'half') {
+                    await setHp(Math.floor(maxHp / 2));
+                }
+            });
+        });
+
+        // Проверка ввода вручную
+        deltaInput.addEventListener('change', () => {
+            let value = parseInt(deltaInput.value);
+            if (isNaN(value)) {
+                deltaInput.value = 0;
+            }
+        });
+    });
+</script>
+
+<style>
+    /* Основные стили HP контрола */
+    .hp-control {
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        background: #f7f1e7;
+        border: 1px solid #dac8a0;
+    }
+
+    .hp-title {
+        font-family: "Cinzel", serif;
+        font-size: 1.5rem;
+        color: #3e2f1b;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #dac8a0;
+        padding-bottom: 0.5rem;
+    }
+
+    .hp-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+        font-family: "Merriweather", serif;
+        font-size: 1.25rem;
+    }
+
+    .hp-label {
+        color: #4a3723;
+    }
+
+    .hp-value {
+        color: #3e2f1b;
+        font-size: 1.5rem;
+        min-width: 2.5rem;
+        text-align: center;
+    }
+
+    .hp-separator {
+        color: #8c7151;
+    }
+
+    .hp-max {
+        color: #6b4f2b;
+    }
+
+    .hp-adjust {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .hp-quick-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .hp-input {
+        width: 4rem;
+        padding: 0.5rem;
+        text-align: center;
+        font-family: "Merriweather", serif;
+        border: 1px solid #c5ad8a;
+        border-radius: 4px;
+        background: #fbf6ee;
+        color: #4a3723;
+    }
+
+    .hp-btn {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #8c7151;
+        border-radius: 4px;
+        font-family: "Merriweather", serif;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .hp-decrease {
+        background: #ffebee;
+        color: #721c24;
+    }
+
+    .hp-decrease:hover {
+        background: #ffcdd2;
+    }
+
+    .hp-increase {
+        background: #e8f5e9;
+        color: #155724;
+    }
+
+    .hp-increase:hover {
+        background: #c8e6c9;
+    }
+
+    .hp-apply-btn {
+        padding: 0.5rem 1rem;
+        background: #e8d8b0;
+        color: #3e2f1b;
+        border: 1px solid #8c7151;
+        border-radius: 4px;
+        font-family: "Merriweather", serif;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .hp-apply-btn:hover {
+        background: #dbc79a;
+    }
+
+    .hp-special-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .hp-special-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-family: "Merriweather", serif;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .hp-min-btn {
+        background: #ffebee;
+        color: #721c24;
+        border-color: #ef9a9a;
+    }
+
+    .hp-min-btn:hover {
+        background: #ffcdd2;
+    }
+
+    .hp-heal-btn {
+        background: #e8f5e9;
+        color: #155724;
+        border-color: #a5d6a7;
+        font-weight: bold;
+    }
+
+    .hp-heal-btn:hover {
+        background: #c8e6c9;
+    }
+
+    .hp-half-btn {
+        background: #e3f2fd;
+        color: #0d47a1;
+        border-color: #90caf9;
+    }
+
+    .hp-half-btn:hover {
+        background: #bbdefb;
+    }
+
+    /* Анимации */
+    .hp-heal-effect {
+        color: #2e7d32;
+        font-weight: bold;
+        animation: hp-pulse-green 0.5s;
+    }
+
+    .hp-damage-effect {
+        color: #c62828;
+        font-weight: bold;
+        animation: hp-pulse-red 0.5s;
+    }
+
+    @keyframes hp-pulse-green {
+        0% { color: #2e7d32; transform: scale(1); }
+        50% { color: #4caf50; transform: scale(1.1); }
+        100% { color: #2e7d32; transform: scale(1); }
+    }
+
+    @keyframes hp-pulse-red {
+        0% { color: #c62828; transform: scale(1); }
+        50% { color: #f44336; transform: scale(1.1); }
+        100% { color: #c62828; transform: scale(1); }
+    }
+
+    /* Адаптивность */
+    @media (max-width: 600px) {
+        .hp-quick-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .hp-input, .hp-btn, .hp-apply-btn {
+            width: 100%;
+        }
+
+        .hp-special-actions {
+            flex-direction: column;
+        }
+    }
+</style>

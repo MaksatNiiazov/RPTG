@@ -1,0 +1,64 @@
+<div class="cp-control">
+    <strong>Концентрация:</strong>
+    <button class="cp-btn" data-action="dec">–</button>
+    <span id="cp-value">{{ char.current_concentration }}</span>
+    <button class="cp-btn" data-action="inc">+</button>
+    <span class="cp-note">(макс {{ char.concentration }})</span>
+</div>
+<script>
+    function getCookie(name) {
+        const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return match ? match.pop() : '';
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const cpValueEl = document.getElementById("cp-value");
+        const cpUrl = "{% url 'characters:ajax_adjust_cp' char.id %}";
+        const csrfToken = getCookie('csrftoken');
+        const maxConcentration = {{ char.concentration }};
+
+        document.querySelectorAll(".cp-btn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const action = btn.dataset.action;
+                const currentValue = parseInt(cpValueEl.textContent);
+
+                // Проверяем, не пытаемся ли мы превысить максимум при увеличении
+                if (action === "inc" && currentValue >= maxConcentration) {
+                    alert("Достигнуто максимальное значение концентрации");
+                    return;
+                }
+
+                try {
+                    const res = await fetch(cpUrl, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrfToken,
+                            "X-Requested-With": "XMLHttpRequest",
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        body: new URLSearchParams({action})
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const json = await res.json();
+                    if (json.status === "ok") {
+                        cpValueEl.textContent = json.current_concentration;
+                    } else {
+                        alert("Ошибка: " + json.message);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Не удалось изменить концентрацию");
+                }
+            });
+        });
+    });
+    if (json.status === "ok") {
+    cpValueEl.textContent = json.current_concentration;
+    // Обновляем состояние кнопок
+    document.querySelector('[data-action="inc"]').disabled = json.current_concentration >= maxConcentration;
+    document.querySelector('[data-action="dec"]').disabled = json.current_concentration <= 0;
+}
+</script>
+<form action="#">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+</form>

@@ -16,11 +16,11 @@
                     <a href="{% url 'characters:character-inventory' char.id %}" class="btn">Инвентарь</a>
                 </div>
             {% endif %}
-        {% if is_gm %}
-        	<div>
+            {% if is_gm %}
+                <div>
                     <a href="{% url 'worlds:gm-grant-spell' world char.id %}" class="btn">Выдать заклинание</a>
                 </div>
-        {% endif %}
+            {% endif %}
             <a href="{% url 'worlds:detail' world %}" class="btn">⬅ Мир</a>
         </div>
 
@@ -40,21 +40,9 @@
         <div class="main_info">
             <div class="control">
                 <!-- Управление HP -->
-                <div class="hp-control">
-                    <span class="hp-current">Текущие HP: <strong
-                            id="hp-current">{{ char.current_hp }}</strong> / {{ char.max_hp }}</span>
-                    <input type="number" id="hp-delta" value="0" step="1">
-                    <button id="hp-delta-btn" class="btn-small">Применить</button>
-
-                </div>
+                {% include "includes/hp_control.html" %}
                 <!-- Управление CP -->
-                <div class="cp-control">
-                    <strong>Концентрация:</strong>
-                    <button class="cp-btn" data-action="dec">–</button>
-                    <span id="cp-value">{{ char.current_concentration }}</span>
-                    <button class="cp-btn" data-action="inc">+</button>
-                    <span class="cp-note">(макс {{ char.concentration }})</span>
-                </div>
+                {% include "includes/cp_control.html" %}
             </div>
             <br>
             <div class="stats">
@@ -107,39 +95,56 @@
                         <br>
                         <br>
                     {% endif %}
-
                     <table class="item-table">
+                        <thead>
+                        <tr>
+                            <th></th>
+                            <th>Очки</th>
+                            <th>Бонус</th>
+                        </tr>
+                        </thead>
+                        <tbody>
                         <tr>
                             <th>Сила</th>
                             <td>{{ char.str_stat }}</td>
+                            <td>{{ stat_roll_bonuses.str }}</td>
                         </tr>
                         <tr>
                             <th>Ловкость</th>
                             <td>{{ char.dex_stat }}</td>
+                            <td>{{ stat_roll_bonuses.str }}</td>
+
                         </tr>
                         <tr>
                             <th>Телосложение</th>
                             <td>{{ char.con_stat }}</td>
+                            <td>{{ stat_roll_bonuses.con }}</td>
+
                         </tr>
                         <tr>
                             <th>Интеллект</th>
                             <td>{{ char.int_stat }}</td>
+                            <td>{{ stat_roll_bonuses.int }}</td>
                         </tr>
                         <tr>
                             <th>Мудрость</th>
                             <td>{{ char.wis_stat }}</td>
+                            <td>{{ stat_roll_bonuses.wis }}</td>
                         </tr>
                         <tr>
                             <th>Харизма</th>
                             <td>{{ char.cha_stat }}</td>
+                            <td>{{ stat_roll_bonuses.cha }}</td>
                         </tr>
                         <tr>
                             <th>Меткость</th>
                             <td>{{ char.acc_stat }}</td>
+                            <td>{{ stat_roll_bonuses.acc }}</td>
                         </tr>
                         <tr>
                             <th>Удача</th>
                             <td>{{ char.lck_stat }}</td>
+                            <td>{{ stat_roll_bonuses.lck }}</td>
                         </tr>
                     </table>
 
@@ -332,92 +337,8 @@
             });
         });
     </script>
-    <script>
-        // простой хелпер для чтения CSRF из cookie
-        function getCookie(name) {
-            const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-            return match ? match.pop() : '';
-        }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const cpValueEl = document.getElementById("cp-value");
-            // подставляем сюда правильный URL из Django
-            const cpUrl = "{% url 'characters:ajax_adjust_cp' char.id %}";
-            const csrfToken = getCookie('csrftoken');
 
-            document.querySelectorAll(".cp-btn").forEach(btn => {
-                btn.addEventListener("click", async () => {
-                    const action = btn.dataset.action;  // "inc" или "dec"
-                    try {
-                        const res = await fetch(cpUrl, {
-                            method: "POST",
-                            headers: {
-                                "X-CSRFToken": csrfToken,
-                                "X-Requested-With": "XMLHttpRequest",
-                                "Content-Type": "application/x-www-form-urlencoded"
-                            },
-                            body: new URLSearchParams({action})
-                        });
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                        const json = await res.json();
-                        if (json.status === "ok") {
-                            // обновляем значение на странице
-                            cpValueEl.textContent = json.current_concentration;
-                        } else {
-                            alert("Ошибка: " + json.message);
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert("Не удалось изменить CP");
-                    }
-                });
-            });
-        });
-    </script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const url = "{% url 'characters:ajax_adjust_hp' char.id %}";
-
-            // берём CSRF из куки
-            function getCookie(name) {
-                let v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-                return v ? v.pop() : '';
-            }
-
-            const csrfToken = getCookie('csrftoken');
-
-            const deltaInput = document.getElementById("hp-delta");
-            const applyBtn = document.getElementById("hp-delta-btn");
-            const currentEl = document.getElementById("hp-current");
-
-            applyBtn.addEventListener("click", async () => {
-                const delta = deltaInput.value;
-                try {
-                    const res = await fetch(url, {
-                        method: "POST",
-                        headers: {
-                            "X-CSRFToken": csrfToken,
-                            "X-Requested-With": "XMLHttpRequest",
-                            "Content-Type": "application/x-www-form-urlencoded"
-                        },
-                        body: new URLSearchParams({delta})
-                    });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const json = await res.json();
-                    if (json.status === "ok") {
-                        currentEl.textContent = json.current_hp;
-                        deltaInput.value = 0;
-                    } else {
-                        alert("Ошибка: " + json.message);
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert("Не удалось применить изменение HP");
-                }
-            });
-        });
-    </script>
 
 
 
