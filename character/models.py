@@ -154,7 +154,10 @@ class Character(models.Model, CharacterGetUtils):
         if action not in ('inc', 'dec'):
             raise ValidationError("Action must be 'inc' or 'dec'")
         delta = 1 if action == 'inc' else -1
-        self.current_concentration += delta
+        self.current_concentration = max(
+            0,
+            min(self.current_concentration + delta, self.concentration)
+        )
         self.save(update_fields=['current_concentration'])
         return self.current_concentration
 
