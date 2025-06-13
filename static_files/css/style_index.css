@@ -1,7 +1,7 @@
 .home-hero {
-
-  background: linear-gradient(135deg, #263238 0%, #37474f 100%);
-  color: var(--text);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: #fff;
+  font-family: 'Merriweather', serif;
   padding: 6rem 0;
   text-align: center;
   border-bottom: 1px solid var(--border);

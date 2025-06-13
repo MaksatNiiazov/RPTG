@@ -1,13 +1,12 @@
 # Visual Redesign
 
-The entire stylesheet collection was refreshed with a dark fantasy theme. Colors and fonts are driven by CSS variables so the style can be tweaked easily. Inline styles in templates were also updated to keep the new look.
+The styles have been reworked again with a clean light theme. Fonts now use **Roboto** and **Merriweather** and a sidebar navigation was introduced. All colors come from CSS variables for easy tweaks.
 
 ## Changes
-- Unified "dark velvet" color palette
-- Reworked layout styles across all pages
-- New Google font imports: **Beleren** and **Cormorant Garamond**
+- Soft blue color scheme with neutral backgrounds
+- Sidebar navigation layout
+- Google font imports updated to **Roboto** and **Merriweather**
 - Updated inline styles in map and HP controls
-- Buttons and cards feature gold and burgundy highlights
 - Inventory rows still flash when changed
 - Added `fog-in` animation utility
 =======

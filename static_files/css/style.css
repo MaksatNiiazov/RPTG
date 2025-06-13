@@ -1,17 +1,17 @@
-
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Roboto:wght@400;500&display=swap');
 :root {
-  --bg: #1c1c1c;
-  --text: #e0e0e0;
-  --accent: #64ffda;
-  --accent-dark: #1de9b6;
-  --card-bg: #222;
-  --border: #333;
-  --success-bg: #2e7d32;
-  --success-text: #e8f5e9;
-  --error-bg: #c62828;
-  --error-text: #ffebee;
-}
-
+  --bg: #f4f4f7;
+  --text: #333;
+  --accent: #007bff;
+  --accent-dark: #0056b3;
+  --accent-red: #dc3545;
+  --highlight: #17a2b8;
+  --card-bg: #fff;
+  --border: #dee2e6;
+  --success-bg: #d4edda;
+  --success-text: #155724;
+  --error-bg: #f8d7da;
+  --error-text: #721c24;
 *, *::before, *::after {
   margin: 0;
   padding: 0;
@@ -19,11 +19,7 @@
 }
 
 html {
-
-  font-family: 'Inter', 'Merriweather', serif;
-  font-size: 16px;
-  line-height: 1.6;
-  background: var(--bg);
+  font-family: 'Roboto', sans-serif;
   color: var(--text);
 }
 
@@ -50,6 +46,52 @@ body {
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: var(--card-bg);
+  border-right: 1px solid var(--border);
+  padding: 1rem;
+}
+
+.sidebar .logo {
+  display: block;
+  margin-bottom: 1.5rem;
+  font-family: 'Merriweather', serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.side-nav a {
+  color: var(--text);
+  padding: 0.5rem 0;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+.side-nav a:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.layout-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .container {
@@ -161,6 +203,24 @@ footer {
   animation: flash-highlight 1s ease-in-out;
 }
 @keyframes flash-highlight {
+@media (max-width: 800px) {
+  .layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .side-nav {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}
+
   0% { background: rgba(100,255,218,0.3); }
   100% { background: transparent; }
 }
