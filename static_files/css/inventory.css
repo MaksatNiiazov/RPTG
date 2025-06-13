@@ -1,191 +1,107 @@
-/* === Общий контейнер === */
 .inventory-layout {
   display: flex;
   flex-wrap: wrap;
   gap: 2rem;
   margin-top: 1.5rem;
 }
-
-/* === Секции экипировки и инвентаря === */
 .inventory-section {
   flex: 1 1 480px;
-  background: #fbf6ee;        /* светлый пергамент */
-  border: 1px solid #dac8a0;  /* бежевый кант */
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.5);
   padding: 1.25rem;
   transition: display 0.3s;
 }
-
-/* Заголовок секции */
 .inventory-section h2 {
-  font-family: "Cinzel", serif;
-  color: #3e2f1b;
+  font-family: "Beleren", "Cinzel", serif;
+  color: var(--accent);
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  border-bottom: 2px solid #dac8a0;
+  border-bottom: 2px solid var(--border);
   padding-bottom: 0.25rem;
 }
-
-/* === Таблица предметов === */
 .item-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: "Merriweather", serif;
-  color: #4a3723;
+  font-family: "Cormorant Garamond", serif;
+  color: var(--text);
 }
 .item-table th,
 .item-table td {
-  border: 1px solid #dac8a0;
+  border: 1px solid var(--border);
   padding: 0.6rem 0.8rem;
   text-align: left;
 }
 .item-table th {
-  background: #e8d8b0;
+  background: var(--accent);
   font-weight: 600;
+  color:#000;
 }
-.item-table tbody tr:nth-child(odd) {
-  background: #f7f1e7;
-}
-.item-table tbody tr:hover {
-  background: #dbc79a;
-}
-
-/* Пустые слоты и строки */
-.empty-slot {
-  text-align: center;
-  font-style: italic;
-  color: #6c5b49;
-}
-
-/* === Кнопки управления === */
+.item-table tbody tr:nth-child(odd) { background: #1f1f1f; }
+.item-table tbody tr:hover { background: #2c2c2c; }
+.empty-slot { text-align: center; font-style: italic; color: #aaa; }
 .btn-inventory {
-  font-family: "Merriweather", serif;
-  border: 1px solid #8c7151;
+  font-family: "Cormorant Garamond", serif;
+  border: 1px solid var(--accent);
   border-radius: 4px;
   padding: 0.3rem 0.6rem;
   font-size: 0.875rem;
   transition: background 0.2s, box-shadow 0.2s;
+  background: var(--accent);
+  color:#000;
 }
-.btn-equip {
-  background: #d1bfa3;
-  color: #3e2f1b;
-}
-.btn-unequip {
-  background: #e8d8b0;
-  color: #3e2f1b;
-}
-.btn-drop {
-  background: #be9c79;
-  color: #3e2f1b;
-}
-.btn-inventory:hover {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Flex-кнопки в ячейке */
-.td-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-/* === Табы для мобильного === */
-.inventory-tabs {
-  display: none;
-  margin-bottom: 1rem;
-}
+.btn-unequip { background: var(--accent-dark); }
+.btn-drop { background: #ff8a80; border-color:#ff5252; }
+.btn-inventory:hover { box-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+.td-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.inventory-tabs { display: none; margin-bottom: 1rem; }
 .inventory-tabs .tab-button {
   flex: 1;
   padding: 0.5rem 0;
-  font-family: "Merriweather", serif;
-  background: #e8d8b0;
-  border: 1px solid #dac8a0;
+  font-family: "Cormorant Garamond", serif;
+  background: var(--accent);
+  border: 1px solid var(--border);
   cursor: pointer;
   transition: background 0.2s;
   text-align: center;
+  color:#000;
 }
-.inventory-tabs .tab-button.active {
-  background: #d1bfa3;
-}
-
-/* === Адаптивность === */
+.inventory-tabs .tab-button.active { background: var(--accent-dark); }
 @media (max-width: 800px) {
-  /* Показываем табы */
-  .inventory-tabs {
-    display: flex;
-  }
-  /* Скрываем обе секции по умолчанию */
-  .inventory-section {
-    display: none;
-  }
-  /* Активная секция */
-  .inventory-section.active {
-    display: block;
-    max-width: 100%;
-  }
-  /* Размечаем таблицы чуть компактнее */
+  .inventory-tabs { display: flex; }
+  .inventory-section { display: none; }
+  .inventory-section.active { display: block; max-width: 100%; }
   .item-table th,
-  .item-table td {
-    padding: 0.5rem;
-    font-size: 0.9rem;
-  }
+  .item-table td { padding: 0.5rem; font-size: 0.9rem; }
 }
-
 @media (max-width: 600px) {
-  .inventory-layout {
-    flex-direction: column;
-  }
-  .inventory-section {
-    padding: 1rem;
-  }
+  .inventory-layout { flex-direction: column; }
+  .inventory-section { padding: 1rem; }
 }
-/* === Mobile-friendly table wrapper === */
 @media (max-width: 800px) {
-  .inventory-section {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .inventory-section .item-table {
-    min-width: 100%;
-    /* Если всё ещё великовата, можно указать конкретное значение:
-       min-width: 600px; */
-  }
-  /* Убираем лишние внутренние отступы у ячеек, чтобы поместилось по ширине */
+  .inventory-section { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .inventory-section .item-table { min-width: 100%; }
   .item-table th,
-  .item-table td {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.85rem;
-  }
+  .item-table td { padding: 0.4rem 0.6rem; font-size: 0.85rem; }
 }
-
-/* static/css/character_inventory.css */
-
 .card {
-  border: 1px solid #dac8a0;
-  background: #f7f1e7;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
   border-radius: 6px;
   padding: 1rem;
   margin-bottom: 1rem;
 }
-.card h4 {
-  margin: 0 0 0.5rem;
-}
-.card ul {
-  list-style: none;
-  padding-left: 0;
-}
-.card ul li {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.25rem;
-}
+.card h4 { margin: 0 0 0.5rem; }
+.card ul { list-style: none; padding-left: 0; }
+.card ul li { display: flex; justify-content: space-between; margin-bottom: 0.25rem; }
 .btn-small {
   font-size: 0.8rem;
   padding: 0.25rem 0.5rem;
-  background: #e8d8b0;
-  border: 1px solid #c7b091;
+  background: var(--accent);
+  border: 1px solid var(--accent-dark);
   border-radius: 4px;
   cursor: pointer;
+  color:#000;
 }
-.btn-small:hover { background: #dbc79a; }
+.btn-small:hover { background: var(--accent-dark); }
