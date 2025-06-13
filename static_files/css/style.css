@@ -1,14 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Cinzel:wght@700&display=swap');
+
 :root {
-  --bg: #1c1c1c;
-  --text: #e0e0e0;
-  --accent: #64ffda;
-  --accent-dark: #1de9b6;
-  --card-bg: #222;
-  --border: #333;
-  --success-bg: #2e7d32;
-  --success-text: #e8f5e9;
-  --error-bg: #c62828;
-  --error-text: #ffebee;
+  --bg: #0D0D15;
+  --text: rgba(248, 244, 233, 0.85);
+  --accent: #D4AF37;
+  --accent-dark: #B38928;
+  --accent-red: #6D2E46;
+  --highlight: #6BD3E0;
+  --card-bg: rgba(255,255,255,0.05);
+  --border: rgba(212,175,55,0.2);
+  --success-bg: #205a34;
+  --success-text: #e2f9e1;
+  --error-bg: #5c0f18;
+  --error-text: #ffccd4;
 }
 
 *, *::before, *::after {
@@ -18,10 +22,14 @@
 }
 
 html {
-  font-family: 'Inter', 'Merriweather', serif;
+  font-family: 'Cormorant Garamond', serif;
   font-size: 16px;
   line-height: 1.6;
   background: var(--bg);
+  background-image:
+    linear-gradient(0deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 4px 4px;
   color: var(--text);
 }
 
@@ -158,8 +166,23 @@ footer {
   animation: flash-highlight 1s ease-in-out;
 }
 @keyframes flash-highlight {
-  0% { background: rgba(100,255,218,0.3); }
+  0% { background: rgba(107, 211, 224, 0.3); }
   100% { background: transparent; }
+}
+
+.fog-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fog-in 0.6s forwards ease-out;
+}
+
+@keyframes fog-in {
+  from { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fog-in { animation: none; opacity: 1; transform: none; }
 }
 
 .table-responsive { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:1rem; }

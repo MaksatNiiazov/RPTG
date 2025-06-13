@@ -1,5 +1,5 @@
 .article-content {
-  font-family: "Merriweather", serif;
+  font-family: "Cormorant Garamond", serif;
   line-height: 1.6;
   color: var(--text);
   background: var(--card-bg);
@@ -14,6 +14,7 @@
 .article-content h6 {
   margin: 1.5em 0 0.5em;
   font-weight: 600;
+  font-family: "Beleren", "Cinzel", serif;
   color: var(--accent);
   line-height: 1.25;
 }

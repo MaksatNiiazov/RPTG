@@ -136,7 +136,7 @@
         border: 1px solid var(--border);
     }
     .hp-title {
-        font-family: "Cinzel", serif;
+        font-family: "Beleren", "Cinzel", serif;
         font-size: 1.5rem;
         color: var(--accent);
         margin-bottom: 1rem;
@@ -148,7 +148,7 @@
         align-items: center;
         gap: 0.5rem;
         margin-bottom: 1.25rem;
-        font-family: "Merriweather", serif;
+        font-family: "Cormorant Garamond", serif;
         font-size: 1.25rem;
     }
     .hp-label { color: var(--text); }
@@ -161,7 +161,7 @@
         width: 4rem;
         padding: 0.5rem;
         text-align: center;
-        font-family: "Merriweather", serif;
+        font-family: "Cormorant Garamond", serif;
         border: 1px solid var(--border);
         border-radius: 4px;
         background: var(--bg);
@@ -171,14 +171,14 @@
         padding: 0.5rem 0.75rem;
         border: 1px solid var(--accent);
         border-radius: 4px;
-        font-family: "Merriweather", serif;
+        font-family: "Cormorant Garamond", serif;
         cursor: pointer;
         transition: all 0.2s;
         background: var(--accent);
         color:#000;
     }
-    .hp-decrease { background: #ff8a80; border-color:#ff5252; }
-    .hp-decrease:hover { background: #ff5252; }
+    .hp-decrease { background: var(--accent-red); border-color: #512030; color:#fff; }
+    .hp-decrease:hover { background: #551d33; }
     .hp-increase { background: #a5d6a7; border-color:#81c784; }
     .hp-increase:hover { background: #81c784; }
     .hp-apply-btn {
@@ -187,7 +187,7 @@
         color:#000;
         border: 1px solid var(--accent-dark);
         border-radius: 4px;
-        font-family: "Merriweather", serif;
+        font-family: "Cormorant Garamond", serif;
         cursor: pointer;
         transition: background 0.2s;
     }
@@ -196,22 +196,22 @@
     .hp-special-btn {
         padding: 0.5rem 1rem;
         border-radius: 4px;
-        font-family: "Merriweather", serif;
+        font-family: "Cormorant Garamond", serif;
         cursor: pointer;
         transition: all 0.2s;
         border: 1px solid transparent;
         color:#000;
     }
-    .hp-min-btn { background: #ff8a80; color:#000; border-color: #ff5252; }
-    .hp-min-btn:hover { background: #ff5252; }
+    .hp-min-btn { background: var(--accent-red); color:#fff; border-color: #512030; }
+    .hp-min-btn:hover { background: #551d33; }
     .hp-heal-btn { background: #a5d6a7; color:#000; border-color: #81c784; font-weight: bold; }
     .hp-heal-btn:hover { background: #81c784; }
     .hp-half-btn { background: #90caf9; color:#000; border-color: #64b5f6; }
     .hp-half-btn:hover { background: #64b5f6; }
     .hp-heal-effect { color: #2e7d32; font-weight: bold; animation: hp-pulse-green 0.5s; }
-    .hp-damage-effect { color: #c62828; font-weight: bold; animation: hp-pulse-red 0.5s; }
+    .hp-damage-effect { color: var(--accent-red); font-weight: bold; animation: hp-pulse-red 0.5s; }
     @keyframes hp-pulse-green { 0% { color: #2e7d32; transform: scale(1); } 50% { color: #4caf50; transform: scale(1.1); } 100% { color: #2e7d32; transform: scale(1); } }
-    @keyframes hp-pulse-red { 0% { color: #c62828; transform: scale(1); } 50% { color: #f44336; transform: scale(1.1); } 100% { color: #c62828; transform: scale(1); } }
+    @keyframes hp-pulse-red { 0% { color: var(--accent-red); transform: scale(1); } 50% { color: #a83e62; transform: scale(1.1); } 100% { color: var(--accent-red); transform: scale(1); } }
     @media (max-width: 600px) {
         .hp-quick-controls { flex-direction: column; align-items: stretch; }
         .hp-input, .hp-btn, .hp-apply-btn { width: 100%; }
