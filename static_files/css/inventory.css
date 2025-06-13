@@ -1,4 +1,4 @@
-/* === Общий контейнер === */
+/* Inventory page */
 .inventory-layout {
   display: flex;
   flex-wrap: wrap;
@@ -6,186 +6,44 @@
   margin-top: 1.5rem;
 }
 
-/* === Секции экипировки и инвентаря === */
 .inventory-section {
   flex: 1 1 480px;
-  background: #fbf6ee;        /* светлый пергамент */
-  border: 1px solid #dac8a0;  /* бежевый кант */
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  padding: 1.25rem;
-  transition: display 0.3s;
-}
-
-/* Заголовок секции */
-.inventory-section h2 {
-  font-family: "Cinzel", serif;
-  color: #3e2f1b;
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 2px solid #dac8a0;
-  padding-bottom: 0.25rem;
-}
-
-/* === Таблица предметов === */
-.item-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: "Merriweather", serif;
-  color: #4a3723;
-}
-.item-table th,
-.item-table td {
-  border: 1px solid #dac8a0;
-  padding: 0.6rem 0.8rem;
-  text-align: left;
-}
-.item-table th {
-  background: #e8d8b0;
-  font-weight: 600;
-}
-.item-table tbody tr:nth-child(odd) {
-  background: #f7f1e7;
-}
-.item-table tbody tr:hover {
-  background: #dbc79a;
-}
-
-/* Пустые слоты и строки */
-.empty-slot {
-  text-align: center;
-  font-style: italic;
-  color: #6c5b49;
-}
-
-/* === Кнопки управления === */
-.btn-inventory {
-  font-family: "Merriweather", serif;
-  border: 1px solid #8c7151;
-  border-radius: 4px;
-  padding: 0.3rem 0.6rem;
-  font-size: 0.875rem;
-  transition: background 0.2s, box-shadow 0.2s;
-}
-.btn-equip {
-  background: #d1bfa3;
-  color: #3e2f1b;
-}
-.btn-unequip {
-  background: #e8d8b0;
-  color: #3e2f1b;
-}
-.btn-drop {
-  background: #be9c79;
-  color: #3e2f1b;
-}
-.btn-inventory:hover {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Flex-кнопки в ячейке */
-.td-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-/* === Табы для мобильного === */
-.inventory-tabs {
-  display: none;
-  margin-bottom: 1rem;
-}
-.inventory-tabs .tab-button {
-  flex: 1;
-  padding: 0.5rem 0;
-  font-family: "Merriweather", serif;
-  background: #e8d8b0;
-  border: 1px solid #dac8a0;
-  cursor: pointer;
-  transition: background 0.2s;
-  text-align: center;
-}
-.inventory-tabs .tab-button.active {
-  background: #d1bfa3;
-}
-
-/* === Адаптивность === */
-@media (max-width: 800px) {
-  /* Показываем табы */
-  .inventory-tabs {
-    display: flex;
-  }
-  /* Скрываем обе секции по умолчанию */
-  .inventory-section {
-    display: none;
-  }
-  /* Активная секция */
-  .inventory-section.active {
-    display: block;
-    max-width: 100%;
-  }
-  /* Размечаем таблицы чуть компактнее */
-  .item-table th,
-  .item-table td {
-    padding: 0.5rem;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .inventory-layout {
-    flex-direction: column;
-  }
-  .inventory-section {
-    padding: 1rem;
-  }
-}
-/* === Mobile-friendly table wrapper === */
-@media (max-width: 800px) {
-  .inventory-section {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .inventory-section .item-table {
-    min-width: 100%;
-    /* Если всё ещё великовата, можно указать конкретное значение:
-       min-width: 600px; */
-  }
-  /* Убираем лишние внутренние отступы у ячеек, чтобы поместилось по ширине */
-  .item-table th,
-  .item-table td {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.85rem;
-  }
-}
-
-/* static/css/character_inventory.css */
-
-.card {
-  border: 1px solid #dac8a0;
-  background: #f7f1e7;
-  border-radius: 6px;
   padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.inventory-section h2 {
+  font-family: var(--font-heading);
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: 1rem;
+  padding-bottom: .25rem;
 }
-.card h4 {
-  margin: 0 0 0.5rem;
+
+.item-table { width:100%; border-collapse: collapse; }
+.item-table th, .item-table td { border:1px solid var(--color-border); padding:.5rem .75rem; }
+.item-table th { background:#f0f3f9; font-weight:600; }
+.item-table tbody tr:nth-child(odd){ background:#fbfcfe; }
+.item-table tbody tr:hover { background:#eef2ff; }
+
+.td-buttons { display:flex; flex-wrap:wrap; gap:.5rem; }
+.btn-inventory { background:var(--color-primary); color:#fff; border:none; padding:.25rem .5rem; border-radius:4px; cursor:pointer; }
+.btn-inventory:hover { background:#3954c4; }
+
+.inventory-tabs { display:none; margin-bottom:1rem; }
+.inventory-tabs .tab-button { flex:1; padding:.5rem 0; background:#f0f3f9; border:1px solid var(--color-border); cursor:pointer; }
+.inventory-tabs .tab-button.active { background:#eef2ff; }
+
+@media (max-width:800px){
+  .inventory-tabs { display:flex; }
+  .inventory-section { display:none; }
+  .inventory-section.active { display:block; max-width:100%; }
+  .item-table th, .item-table td { padding:.4rem; font-size:.9rem; }
 }
-.card ul {
-  list-style: none;
-  padding-left: 0;
+
+@media (max-width:600px){
+  .inventory-layout { flex-direction: column; }
+  .inventory-section { padding:1rem; }
 }
-.card ul li {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.25rem;
-}
-.btn-small {
-  font-size: 0.8rem;
-  padding: 0.25rem 0.5rem;
-  background: #e8d8b0;
-  border: 1px solid #c7b091;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-small:hover { background: #dbc79a; }

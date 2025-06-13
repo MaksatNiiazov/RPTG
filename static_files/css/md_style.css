@@ -1,189 +1,59 @@
-/* файл: static/css/style.css */
-
-/* Базовые стили (цвета «старой книги») */
 .article-content {
-  font-family: "Merriweather", serif;
+  font-family: var(--font-base);
   line-height: 1.6;
-  color: #4a3723;            /* тёмно-коричневый */
-  background: #fbf6ee;       /* светлый пергамент */
+  color: var(--color-text);
+  background: var(--color-surface);
   padding: 1rem;
   border-radius: 6px;
 }
 
-/* Заголовки */
 .article-content h1,
 .article-content h2,
 .article-content h3,
 .article-content h4,
 .article-content h5,
 .article-content h6 {
-  margin: 1.5em 0 0.5em;
+  margin: 1.5em 0 .5em;
   font-weight: 600;
-  color: #3e2f1b;            /* почти чёрный коричневый */
-  line-height: 1.25;
+  color: var(--color-text);
+  font-family: var(--font-heading);
 }
-.article-content h1 { font-size: 2.25em; }
-.article-content h2 { font-size: 1.75em; }
-.article-content h3 { font-size: 1.5em; }
-.article-content h4 { font-size: 1.25em; }
-.article-content h5 { font-size: 1em; }
-.article-content h6 { font-size: 0.875em; color: #65513d; }
+.article-content h1 { font-size: 2rem; }
+.article-content h2 { font-size: 1.75rem; }
+.article-content h3 { font-size: 1.5rem; }
 
-/* Абзацы */
-.article-content p {
-  margin: 1em 0;
-}
+.article-content p { margin: 1em 0; }
 
-/* Ссылки */
-.article-content a {
-  color: #6b4f2b;            /* коричневый */
-  text-decoration: underline;
-}
-.article-content a:hover {
-  color: #48341f;
-}
+.article-content a { color: var(--color-primary); text-decoration: underline; }
+.article-content a:hover { text-decoration: none; }
 
-/* Списки */
-.article-content ul,
-.article-content ol {
-  margin: 1em 0 1em 1.5em;
-}
-.article-content ul li {
-  list-style-type: disc;
-}
-.article-content ul ul {
-  list-style-type: circle;
-  margin-left: 1.5em;
-}
-.article-content ul ul ul {
-  list-style-type: square;
-  margin-left: 1.5em;
-}
-.article-content ol li {
-  margin-bottom: 0.5em;
-}
-
-/* Цитаты */
 .article-content blockquote {
-  border-left: 4px solid #dac8a0;
+  border-left: 4px solid var(--color-primary);
   margin: 1em 0;
-  padding: 0.5em 1em;
-  color: #65513d;
-  background: #f7f1e7;
+  padding: .5em 1em;
+  background: #f0f3f9;
 }
 
-/* Код и блоки кода */
 .article-content code {
-  background: #e8d8b0;      /* светлый пергаментный */
-  padding: 0.2em 0.4em;
-  font-family: Menlo, Consolas, monospace;
-  font-size: 0.95em;
+  background: #f0f3f9;
+  padding: .2em .4em;
   border-radius: 3px;
-  color: #3e2f1b;
+  font-family: Menlo, Consolas, monospace;
 }
 .article-content pre {
-  background: #dac8a0;      /* чуть темнее, чем inline code */
-  color: #3e2f1b;
+  background: #f0f3f9;
   padding: 1em;
   overflow: auto;
   border-radius: 4px;
-  margin: 1em 0;
-  font-family: Menlo, Consolas, monospace;
-  font-size: 0.9em;
 }
 
-/* Таблицы */
-.article-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1em 0;
-}
-.article-content th,
-.article-content td {
-  border: 1px solid #dac8a0;
-  padding: 0.5em 0.75em;
-  text-align: left;
-  color: #4a3723;
-}
-.article-content th {
-  background: #e8d8b0;
-  font-weight: 600;
-}
+.article-content table { width: 100%; border-collapse: collapse; margin: 1em 0; }
+.article-content th, .article-content td { border: 1px solid var(--color-border); padding: .5em .75em; text-align: left; }
+.article-content th { background: #eef2ff; font-weight: 600; }
 
-/* Горизонтальная линия */
-.article-content hr {
-  border: none;
-  border-top: 1px solid #dac8a0;
-  margin: 2em 0;
+@media (max-width:600px){
+  .article-content { font-size:.9rem; padding:.5rem; }
+  .article-content pre { font-size:.8em; }
+  .article-content table { display:block; overflow-x:auto; }
+  .article-content th, .article-content td { white-space:nowrap; }
 }
-
-/* Изображения */
-.article-content img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 1em auto;
-}
-
-/* Сноски */
-.article-content sup {
-  font-size: 0.8em;
-}
-
-/* TOC */
-.article-content .toc {
-  background: #f7f1e7;
-  padding: 1em;
-  border: 1px solid #e1d7c2;
-  margin: 1em 0;
-}
-.article-content .toc ul {
-  list-style: none;
-  padding-left: 0;
-}
-.article-content .toc a {
-  text-decoration: none;
-  color: #6b4f2b;
-}
-
-/* === Адаптивность === */
-/* Малые экраны */
-@media (max-width: 600px) {
-  .article-content {
-    font-size: 0.9rem;
-    line-height: 1.4;
-    padding: 0.5rem;
-  }
-  .article-content h1 { font-size: 1.75rem; }
-  .article-content h2 { font-size: 1.5rem; }
-  .article-content h3 { font-size: 1.25rem; }
-  .article-content pre {
-    font-size: 0.8em;
-    padding: 0.75em;
-  }
-  .article-content table {
-    display: block;
-    overflow-x: auto;
-  }
-  .article-content th,
-  .article-content td {
-    white-space: nowrap;
-  }
-}
-
-/* Средние экраны */
-@media (min-width: 601px) and (max-width: 1023px) {
-  .article-content {
-    font-size: 1rem;
-    line-height: 1.5;
-    padding: 0.75rem;
-  }
-  .article-content h1 { font-size: 2rem; }
-  .article-content h2 { font-size: 1.5rem; }
-  .article-content pre {
-    font-size: 0.85em;
-    padding: 0.9em;
-  }
-}
-
-/* Большие экраны — базовые стили */

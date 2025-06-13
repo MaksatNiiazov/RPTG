@@ -1,84 +1,12 @@
-.folder-page {
-  max-width: 1000px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-  font-family: "Merriweather", serif;
-}
-.page-title {
-  text-align: center;
-  font-size: 2.5rem;
-  color: #3e2f1b;
-  margin-bottom: 1.5rem;
-}
-
-/* Сетка карточек */
-.cards-root {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
-  gap: 1rem;
-}
-
-/* Карточка */
-.card-root {
-  background: #f7f1e7;
-  border: 1px solid #dac8a0;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.card-root:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-/* Заголовок карточки */
-.btn-root {
-  width: 100%;
-  background: #e8d8b0;
-  border: none;
-  padding: 1rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-  position: relative;
-}
-.btn-root .toggle {
-  position: absolute;
-  right: 1rem;
-  font-size: 1rem;
-  transition: transform 0.2s;
-}
-
-/* Список подглав */
-.cards-children {
-  padding: 0.5rem 1rem 1rem;
-}
-.btn-child {
-  display: block;
-  margin: 0.25rem 0;
-  padding: 0.5rem;
-  background: #ffffff;
-  border: 1px solid #c5ad8a;
-  border-radius: 4px;
-  text-decoration: none;
-  color: #5a432d;
-  transition: background 0.2s;
-}
-.btn-child:hover {
-  background: #f1e6d4;
-}
-
-/* Секция предложений */
-.suggestion-section {
-  margin-top: 2rem;
-  border-top: 1px solid #dac8a0;
-  padding-top: 1rem;
-}
-.suggestion-title {
-  font-size: 1.5rem;
-  color: #3e2f1b;
-  text-align: center;
-  margin-bottom: 1rem;
-}
+.folder-page { max-width:1000px; margin:2rem auto; padding:0 1rem; font-family:var(--font-base); }
+.page-title { text-align:center; font-size:2.5rem; color:var(--color-text); margin-bottom:1.5rem; font-family:var(--font-heading); }
+.cards-root { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; }
+.card-root { background:var(--color-surface); border:1px solid var(--color-border); border-radius:8px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.05); transition:transform .2s, box-shadow .2s; }
+.card-root:hover { transform:translateY(-3px); box-shadow:0 4px 10px rgba(0,0,0,0.1); }
+.btn-root { width:100%; background:var(--color-primary); border:none; color:#fff; padding:1rem; font-size:1.1rem; text-align:left; position:relative; cursor:pointer; }
+.btn-root .toggle { position:absolute; right:1rem; transition:transform .2s; }
+.cards-children { padding:.5rem 1rem 1rem; }
+.btn-child { display:block; margin:.25rem 0; padding:.5rem; background:#fff; border:1px solid var(--color-border); border-radius:4px; text-decoration:none; color:var(--color-text); }
+.btn-child:hover { background:#f0f3f9; }
+.suggestion-section { margin-top:2rem; border-top:1px solid var(--color-border); padding-top:1rem; }
+.suggestion-title { font-size:1.5rem; color:var(--color-text); text-align:center; margin-bottom:1rem; font-family:var(--font-heading); }
