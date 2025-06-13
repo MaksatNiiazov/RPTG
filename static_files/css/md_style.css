@@ -1,16 +1,11 @@
-/* файл: static/css/style.css */
-
-/* Базовые стили (цвета «старой книги») */
 .article-content {
-  font-family: "Merriweather", serif;
+  font-family: "Roboto", sans-serif;
   line-height: 1.6;
-  color: #4a3723;            /* тёмно-коричневый */
-  background: #fbf6ee;       /* светлый пергамент */
+  color: var(--text);
+  background: var(--card-bg);
   padding: 1rem;
   border-radius: 6px;
 }
-
-/* Заголовки */
 .article-content h1,
 .article-content h2,
 .article-content h3,
@@ -19,7 +14,8 @@
 .article-content h6 {
   margin: 1.5em 0 0.5em;
   font-weight: 600;
-  color: #3e2f1b;            /* почти чёрный коричневый */
+  font-family: "Merriweather", serif;
+  color: var(--accent);
   line-height: 1.25;
 }
 .article-content h1 { font-size: 2.25em; }
@@ -27,63 +23,34 @@
 .article-content h3 { font-size: 1.5em; }
 .article-content h4 { font-size: 1.25em; }
 .article-content h5 { font-size: 1em; }
-.article-content h6 { font-size: 0.875em; color: #65513d; }
-
-/* Абзацы */
-.article-content p {
-  margin: 1em 0;
-}
-
-/* Ссылки */
-.article-content a {
-  color: #6b4f2b;            /* коричневый */
-  text-decoration: underline;
-}
-.article-content a:hover {
-  color: #48341f;
-}
-
-/* Списки */
+.article-content h6 { font-size: 0.875em; color: #aaa; }
+.article-content p { margin: 1em 0; }
+.article-content a { color: var(--accent); text-decoration: underline; }
+.article-content a:hover { color: var(--accent-dark); }
 .article-content ul,
-.article-content ol {
-  margin: 1em 0 1em 1.5em;
-}
-.article-content ul li {
-  list-style-type: disc;
-}
-.article-content ul ul {
-  list-style-type: circle;
-  margin-left: 1.5em;
-}
-.article-content ul ul ul {
-  list-style-type: square;
-  margin-left: 1.5em;
-}
-.article-content ol li {
-  margin-bottom: 0.5em;
-}
-
-/* Цитаты */
+.article-content ol { margin: 1em 0 1em 1.5em; }
+.article-content ul li { list-style-type: disc; }
+.article-content ul ul { list-style-type: circle; margin-left: 1.5em; }
+.article-content ul ul ul { list-style-type: square; margin-left: 1.5em; }
+.article-content ol li { margin-bottom: 0.5em; }
 .article-content blockquote {
-  border-left: 4px solid #dac8a0;
+  border-left: 4px solid var(--accent);
   margin: 1em 0;
   padding: 0.5em 1em;
-  color: #65513d;
-  background: #f7f1e7;
+  color: var(--text);
+  background: var(--card-bg);
 }
-
-/* Код и блоки кода */
 .article-content code {
-  background: #e8d8b0;      /* светлый пергаментный */
+  background: #e9ecef;
   padding: 0.2em 0.4em;
   font-family: Menlo, Consolas, monospace;
   font-size: 0.95em;
   border-radius: 3px;
-  color: #3e2f1b;
+  color: var(--accent);
 }
 .article-content pre {
-  background: #dac8a0;      /* чуть темнее, чем inline code */
-  color: #3e2f1b;
+  background: #e9ecef;
+  color: var(--text);
   padding: 1em;
   overflow: auto;
   border-radius: 4px;
@@ -91,8 +58,6 @@
   font-family: Menlo, Consolas, monospace;
   font-size: 0.9em;
 }
-
-/* Таблицы */
 .article-content table {
   width: 100%;
   border-collapse: collapse;
@@ -100,90 +65,49 @@
 }
 .article-content th,
 .article-content td {
-  border: 1px solid #dac8a0;
+  border: 1px solid var(--border);
   padding: 0.5em 0.75em;
   text-align: left;
-  color: #4a3723;
+  color: var(--text);
 }
 .article-content th {
-  background: #e8d8b0;
+  background: var(--accent);
   font-weight: 600;
+  color:#000;
 }
-
-/* Горизонтальная линия */
 .article-content hr {
   border: none;
-  border-top: 1px solid #dac8a0;
+  border-top: 1px solid var(--border);
   margin: 2em 0;
 }
-
-/* Изображения */
 .article-content img {
   max-width: 100%;
   height: auto;
   display: block;
   margin: 1em auto;
 }
-
-/* Сноски */
-.article-content sup {
-  font-size: 0.8em;
-}
-
-/* TOC */
+.article-content sup { font-size: 0.8em; }
 .article-content .toc {
-  background: #f7f1e7;
+  background: var(--card-bg);
   padding: 1em;
-  border: 1px solid #e1d7c2;
+  border: 1px solid var(--border);
   margin: 1em 0;
 }
-.article-content .toc ul {
-  list-style: none;
-  padding-left: 0;
-}
-.article-content .toc a {
-  text-decoration: none;
-  color: #6b4f2b;
-}
-
-/* === Адаптивность === */
-/* Малые экраны */
+.article-content .toc ul { list-style: none; padding-left: 0; }
+.article-content .toc a { text-decoration: none; color: var(--accent); }
 @media (max-width: 600px) {
-  .article-content {
-    font-size: 0.9rem;
-    line-height: 1.4;
-    padding: 0.5rem;
-  }
+  .article-content { font-size: 0.9rem; line-height: 1.4; padding: 0.5rem; }
   .article-content h1 { font-size: 1.75rem; }
   .article-content h2 { font-size: 1.5rem; }
   .article-content h3 { font-size: 1.25rem; }
-  .article-content pre {
-    font-size: 0.8em;
-    padding: 0.75em;
-  }
-  .article-content table {
-    display: block;
-    overflow-x: auto;
-  }
+  .article-content pre { font-size: 0.8em; padding: 0.75em; }
+  .article-content table { display: block; overflow-x: auto; }
   .article-content th,
-  .article-content td {
-    white-space: nowrap;
-  }
+  .article-content td { white-space: nowrap; }
 }
-
-/* Средние экраны */
 @media (min-width: 601px) and (max-width: 1023px) {
-  .article-content {
-    font-size: 1rem;
-    line-height: 1.5;
-    padding: 0.75rem;
-  }
+  .article-content { font-size: 1rem; line-height: 1.5; padding: 0.75rem; }
   .article-content h1 { font-size: 2rem; }
   .article-content h2 { font-size: 1.5rem; }
-  .article-content pre {
-    font-size: 0.85em;
-    padding: 0.9em;
-  }
+  .article-content pre { font-size: 0.85em; padding: 0.9em; }
 }
-
-/* Большие экраны — базовые стили */

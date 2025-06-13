@@ -6,11 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>{% block title %}MySite{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block css %}{% endblock %}
 
 </head>
 <body>
+<div class="layout">
+<aside class="sidebar">
+    <a href="{% url 'index' %}" class="logo">RPTG</a>
+    <nav class="side-nav">
+        <a href="{% url 'rulebook:folder_list' %}">Правила</a>
+        <a href="{% url 'items:items_main' %}">Предметы</a>
+        <a href="{% url 'magic:magic_main' %}">Магия</a>
+    </nav>
+</aside>
+<div class="layout-content">
 <header class="site-header">
     <nav class="site-nav">
         <!-- Кнопка Назад -->
@@ -55,6 +68,7 @@
 {% block extra_js %}
 
 {% endblock %}
-
+</div><!-- layout-content -->
+</div><!-- layout -->
 </body>
 </html>
