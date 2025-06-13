@@ -7,35 +7,29 @@
 .page-title {
   text-align: center;
   font-size: 2.5rem;
-  color: #3e2f1b;
+  color: var(--accent);
   margin-bottom: 1.5rem;
 }
-
-/* Сетка карточек */
 .cards-root {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
   gap: 1rem;
 }
-
-/* Карточка */
 .card-root {
-  background: #f7f1e7;
-  border: 1px solid #dac8a0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .card-root:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.8);
 }
-
-/* Заголовок карточки */
 .btn-root {
   width: 100%;
-  background: #e8d8b0;
+  background: var(--accent);
   border: none;
   padding: 1rem;
   font-size: 1.1rem;
@@ -43,6 +37,7 @@
   text-align: left;
   cursor: pointer;
   position: relative;
+  color: #000;
 }
 .btn-root .toggle {
   position: absolute;
@@ -50,35 +45,23 @@
   font-size: 1rem;
   transition: transform 0.2s;
 }
-
-/* Список подглав */
-.cards-children {
-  padding: 0.5rem 1rem 1rem;
-}
+.cards-children { padding: 0.5rem 1rem 1rem; }
 .btn-child {
   display: block;
   margin: 0.25rem 0;
   padding: 0.5rem;
-  background: #ffffff;
-  border: 1px solid #c5ad8a;
+  background: #2c2c2c;
+  border: 1px solid var(--border);
   border-radius: 4px;
   text-decoration: none;
-  color: #5a432d;
+  color: var(--text);
   transition: background 0.2s;
 }
-.btn-child:hover {
-  background: #f1e6d4;
-}
-
-/* Секция предложений */
-.suggestion-section {
-  margin-top: 2rem;
-  border-top: 1px solid #dac8a0;
-  padding-top: 1rem;
-}
+.btn-child:hover { background: #3a3a3a; }
+.suggestion-section { margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1rem; }
 .suggestion-title {
   font-size: 1.5rem;
-  color: #3e2f1b;
+  color: var(--accent);
   text-align: center;
   margin-bottom: 1rem;
 }
