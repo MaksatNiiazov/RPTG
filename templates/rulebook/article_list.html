@@ -1,17 +1,227 @@
 {% extends "base.html" %}
 
 {% block title %}Статьи в «{{ folder.name }}»{% endblock %}
+
 {% block content %}
-    <h1>Папка: {{ folder.name }}</h1>
-    <ul>
-        {% for article in articles %}
-            <li>
-                <a href="{% url 'rulebook:article_detail' slug=article.slug %}">
-                    {{ article.title }}
+<div class="article-container">
+    <div class="article-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'rulebook:folder_list' %}">Справочник</a>
+            <span> / </span>
+            <span>{{ folder.name }}</span>
+        </nav>
+
+        <h1 class="article-title">{{ folder.name }}</h1>
+
+        {% if folder.description %}
+        <p class="folder-description">{{ folder.description }}</p>
+        {% endif %}
+    </div>
+
+    <div class="article-list">
+        {% if articles %}
+            <div class="article-grid">
+                {% for article in articles %}
+                <article class="article-card">
+                    <a href="{% url 'rulebook:article_detail' slug=article.slug %}" class="article-link">
+                        <h2 class="article-card-title">{{ article.title }}</h2>
+                        {% if article.short_description %}
+                        <p class="article-excerpt">{{ article.short_description }}</p>
+                        {% endif %}
+                        <div class="article-meta">
+                            <span class="meta-item">
+                                <svg class="meta-icon" viewBox="0 0 24 24">
+                                    <path d="M3 6l9-4 9 4m-9-4v20m-7-3l7-3 7 3"/>
+                                </svg>
+                                {{ folder.name }}
+                            </span>
+                            {% if article.updated_at %}
+                            <span class="meta-item">
+                                <svg class="meta-icon" viewBox="0 0 24 24">
+                                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Обновлено: {{ article.updated_at|date:"d.m.Y" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <svg class="empty-icon" viewBox="0 0 24 24">
+                    <path d="M3 3h18v18H3zM8 8h8v8H8z"/>
+                </svg>
+                <p>В этой папке пока нет статей</p>
+                {% if user.is_staff %}
+                <a href="{% url 'admin:rulebook_article_add' %}?folder={{ folder.id }}" class="btn-add">
+                    Добавить статью
                 </a>
-            </li>
-        {% empty %}
-            <li>В этой папке пока нет статей.</li>
-        {% endfor %}
-    </ul>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.article-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.article-header {
+    margin-bottom: 2.5rem;
+}
+
+.breadcrumb {
+    font-family: 'Merriweather', serif;
+    color: #6b4f2b;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: #6b4f2b;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.article-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2rem;
+    color: #3a2e1b;
+    margin-bottom: 1rem;
+}
+
+.folder-description {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    line-height: 1.6;
+    max-width: 700px;
+}
+
+.article-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.article-card {
+    background: #f7f1e7;
+    border: 1px solid #dac8a0;
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.article-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.article-link {
+    display: block;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+}
+
+.article-card-title {
+    font-family: 'Merriweather', serif;
+    font-size: 1.2rem;
+    color: #3a2e1b;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.article-excerpt {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+}
+
+.article-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-family: 'Merriweather', serif;
+    font-size: 0.85rem;
+    color: #8a7866;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.meta-icon {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: #f7f1e7;
+    border-radius: 8px;
+    border: 1px dashed #dac8a0;
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+    stroke: #dac8a0;
+    stroke-width: 1.5;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    margin-bottom: 1.5rem;
+}
+
+.btn-add {
+    display: inline-block;
+    padding: 0.6rem 1.25rem;
+    background: #6b4f2b;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    transition: background 0.2s;
+}
+
+.btn-add:hover {
+    background: #5a432d;
+}
+
+@media (max-width: 768px) {
+    .article-container {
+        padding: 0 1rem;
+    }
+
+    .article-title {
+        font-size: 1.8rem;
+    }
+
+    .article-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}

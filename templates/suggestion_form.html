@@ -1,25 +1,221 @@
-{# templates/suggestions/suggestion_form.html #}
-<form action="{% url 'rulebook:submit' %}" method="post" class="suggestion-form">
-    {% csrf_token %}
-    {{ form.article_slug }}
-    <div>
-        {{ form.suggestion.label_tag }}<br>
-        {{ form.suggestion }}<br>
-        {{ form.suggestion.errors }}
-    </div>
-    <div>
-        {{ form.submitter_name.label_tag }}<br>
-        {{ form.submitter_name }}<br>
-        {{ form.submitter_name.errors }}
-    </div>
-    <div>
-        {{ form.submitter_email.label_tag }}<br>
-        {{ form.submitter_email }}<br>
-        {{ form.submitter_email.errors }}
-    </div>
-    <button type="submit" class="btn">Отправить</button>
+<div class="suggestion-container">
+    <form action="{% url 'rulebook:submit' %}" method="post" class="suggestion-form">
+        {% csrf_token %}
+        {{ form.article_slug }}
 
-    {% if request.GET.suggestion == 'ok' %}
-        <p class="success">Спасибо! Ваше предложение получено.</p>
-    {% endif %}
-</form>
+        <h3 class="suggestion-title">Предложить правки</h3>
+        <p class="suggestion-description">Заметили ошибку или есть предложения по улучшению? Оставьте свои замечания ниже.</p>
+
+        <div class="form-group">
+            <label for="{{ form.suggestion.id_for_label }}" class="form-label">
+                Ваше предложение
+                <span class="required">*</span>
+            </label>
+            {{ form.suggestion }}
+            {% if form.suggestion.errors %}
+                <div class="error-message">
+                    {{ form.suggestion.errors }}
+                </div>
+            {% endif %}
+            <div class="form-hint">Максимум 1000 символов</div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group half-width">
+                <label for="{{ form.submitter_name.id_for_label }}" class="form-label">
+                    Ваше имя
+                </label>
+                {{ form.submitter_name }}
+                {% if form.submitter_name.errors %}
+                    <div class="error-message">
+                        {{ form.submitter_name.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group half-width">
+                <label for="{{ form.submitter_email.id_for_label }}" class="form-label">
+                    Email для обратной связи
+                </label>
+                {{ form.submitter_email }}
+                {% if form.submitter_email.errors %}
+                    <div class="error-message">
+                        {{ form.submitter_email.errors }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <button type="submit" class="submit-btn">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+                Отправить предложение
+            </button>
+
+            {% if request.GET.suggestion == 'ok' %}
+                <div class="success-message">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <path d="M22 4L12 14.01l-3-3"/>
+                    </svg>
+                    <div>
+                        <strong>Спасибо!</strong> Ваше предложение получено и будет рассмотрено.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<style>
+    .suggestion-container {
+        padding-top: 2rem;
+        border-top: 1px solid #e0d6c2;
+    }
+
+    .suggestion-title {
+        font-family: 'Cinzel', serif;
+        font-size: 1.5rem;
+        color: #3a2e1b;
+        margin-bottom: 0.5rem;
+    }
+
+    .suggestion-description {
+        font-family: 'Merriweather', serif;
+        color: #5a432d;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .suggestion-form {
+        max-width: 700px;
+                margin: 0 auto;
+
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    .half-width {
+        flex: 1;
+    }
+
+    .form-label {
+        display: block;
+        font-family: 'Merriweather', serif;
+        font-weight: 500;
+        color: #3a2e1b;
+        margin-bottom: 0.5rem;
+    }
+
+    .required {
+        color: #c44;
+        margin-left: 0.2rem;
+    }
+
+    .suggestion-form textarea,
+    .suggestion-form input[type="text"],
+    .suggestion-form input[type="email"] {
+        width: 100%;
+        padding: 0.75rem;
+        font-family: 'Merriweather', serif;
+        border: 1px solid #c7b091;
+        border-radius: 4px;
+        background: #f7f1e7;
+        color: #4a3723;
+        transition: border-color 0.2s;
+    }
+
+    .suggestion-form textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    .suggestion-form textarea:focus,
+    .suggestion-form input[type="text"]:focus,
+    .suggestion-form input[type="email"]:focus {
+        outline: none;
+        border-color: #8c7151;
+        box-shadow: 0 0 0 2px rgba(140, 113, 81, 0.1);
+    }
+
+    .form-hint {
+        font-family: 'Merriweather', serif;
+        font-size: 0.85rem;
+        color: #8a7866;
+        margin-top: 0.3rem;
+    }
+
+    .error-message {
+        color: #c44;
+        font-family: 'Merriweather', serif;
+        font-size: 0.9rem;
+        margin-top: 0.3rem;
+    }
+
+    .submit-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: #6b4f2b;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-family: 'Merriweather', serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .submit-btn:hover {
+        background: #5a432d;
+    }
+
+    .submit-btn .icon {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 2;
+    }
+
+    .success-message {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #e8f5e9;
+        border-radius: 4px;
+        color: #155724;
+        font-family: 'Merriweather', serif;
+    }
+
+    .success-message .icon {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        stroke-width: 2;
+        flex-shrink: 0;
+        margin-top: 0.1rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .half-width {
+            width: 100%;
+        }
+    }
+</style>

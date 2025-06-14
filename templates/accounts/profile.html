@@ -1,37 +1,348 @@
 {% extends "base.html" %}
-{% block title %}Профиль{% endblock %}
+{% block title %}Профиль {{ user.username }}{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h1>Привет, {{ user.first_name }}!</h1>
+<div class="profile-container">
+    <header class="profile-header">
+        <h1 class="profile-greeting">Добро пожаловать, <span class="username">{{ user.username }}</span>!</h1>
+        <p class="profile-meta">Зарегистрирован: {{ user.date_joined|date:"d.m.Y" }}</p>
+    </header>
 
-        <section class="profile-section" style="margin-top:2rem;">
-            <h2>Миры, где вы можете играть</h2>
-            {% for w in worlds %}
-                <div class="card">
-                    <a href="{% url 'worlds:detail' w.pk %}">{{ w.name }}</a>
-                </div>
-            {% endfor %}
-        </section>
-
+    <div class="profile-grid">
         <section class="profile-section">
-            <h2>Миры, которые вы создали</h2>
-            {% if created_worlds %}
-                {% for w in created_worlds %}
-                    <div class="card">
-                        <a href="{% url 'worlds:detail' w.pk %}">{{ w.name }}</a>
-                    </div>
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg class="section-icon" viewBox="0 0 24 24">
+                        <path d="M12 3l9 4.5-9 4.5-9-4.5L12 3m0 16.5l9-4.5-9-4.5-9 4.5 9 4.5m0-9l9-4.5-9-4.5-9 4.5 9 4.5"/>
+                    </svg>
+                    Ваши миры
+                </h2>
+                <p class="section-description">Миры, где вы можете играть</p>
+            </div>
+
+            {% if worlds %}
+            <div class="worlds-grid">
+                {% for world in worlds %}
+                <article class="world-card">
+                    <a href="{% url 'worlds:detail' world.pk %}" class="world-link">
+                        <h3 class="world-title">{{ world.name }}</h3>
+                        <p class="world-meta">
+                            <span class="meta-item">
+                                <svg class="meta-icon" viewBox="0 0 24 24">
+                                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Создан: {{ world.created_at|date:"d.m.Y" }}
+                            </span>
+                        </p>
+                    </a>
+                </article>
                 {% endfor %}
+            </div>
             {% else %}
-                <p>Вы ещё не создали ни одного мира.</p>
+            <div class="empty-state">
+                <svg class="empty-icon" viewBox="0 0 24 24">
+                    <path d="M3 3h18v18H3zM8 8h8v8H8z"/>
+                </svg>
+                <p>Вы пока не добавлены ни в один мир</p>
+            </div>
             {% endif %}
         </section>
 
-        <p style="margin-top:3rem;">
-            <a href="{% url 'worlds:create' %}" class="btn">Создать новый мир</a>
-        </p>
-        <p style="margin-top:1rem;">
-            <a href="{% url 'accounts:logout' %}" class="btn">Выйти</a>
-        </p>
+        <section class="profile-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg class="section-icon" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    Созданные миры
+                </h2>
+                <p class="section-description">Миры, которые вы создали</p>
+            </div>
+
+            {% if created_worlds %}
+            <div class="worlds-grid">
+                {% for world in created_worlds %}
+                <article class="world-card">
+                    <a href="{% url 'worlds:detail' world.pk %}" class="world-link">
+                        <h3 class="world-title">{{ world.name }}</h3>
+                        <p class="world-meta">
+                            <span class="meta-item">
+                                <svg class="meta-icon" viewBox="0 0 24 24">
+                                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Создан: {{ world.created_at|date:"d.m.Y" }}
+                            </span>
+                            <span class="meta-item">
+                                <svg class="meta-icon" viewBox="0 0 24 24">
+                                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/>
+                                </svg>
+                                Игроков: {{ world.participants_count }}
+                            </span>
+                        </p>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg class="empty-icon" viewBox="0 0 24 24">
+                    <path d="M3 3h18v18H3zM8 8h8v8H8z"/>
+                </svg>
+                <p>Вы ещё не создали ни одного мира</p>
+            </div>
+            {% endif %}
+        </section>
     </div>
+
+    <div class="profile-actions">
+        <a href="{% url 'worlds:create' %}" class="btn btn-primary">
+            <svg class="btn-icon" viewBox="0 0 24 24">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Создать новый мир
+        </a>
+        <a href="{% url 'accounts:logout' %}" class="btn btn-secondary">
+            <svg class="btn-icon" viewBox="0 0 24 24">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+            Выйти
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.profile-greeting {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2rem;
+    color: #3a2e1b;
+    margin-bottom: 0.5rem;
+}
+
+.username {
+    color: #6b4f2b;
+}
+
+.profile-meta {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-size: 0.9rem;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    margin-bottom: 3rem;
+}
+
+@media (min-width: 992px) {
+    .profile-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.profile-section {
+    background: #f7f1e7;
+    border: 1px solid #dac8a0;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0d6c2;
+}
+
+.section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    color: #3a2e1b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.section-icon {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.section-description {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-size: 0.95rem;
+}
+
+.worlds-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .worlds-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+.world-card {
+    background: white;
+    border: 1px solid #dac8a0;
+    border-radius: 6px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.world-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.world-link {
+    display: block;
+    padding: 1.25rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.world-title {
+    font-family: 'Merriweather', serif;
+    font-size: 1.1rem;
+    color: #3a2e1b;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.world-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-family: 'Merriweather', serif;
+    font-size: 0.85rem;
+    color: #5a432d;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.meta-icon {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: #f7f1e7;
+    border-radius: 6px;
+    border: 1px dashed #dac8a0;
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+    stroke: #dac8a0;
+    stroke-width: 1.5;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+}
+
+.profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 3rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-family: 'Merriweather', serif;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.btn-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.btn-primary {
+    background: #6b4f2b;
+    color: white;
+    border: 1px solid #5a432d;
+}
+
+.btn-primary:hover {
+    background: #5a432d;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-secondary {
+    background: #e8d8b0;
+    color: #3a2e1b;
+    border: 1px solid #dac8a0;
+}
+
+.btn-secondary:hover {
+    background: #dbc79a;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+    .profile-container {
+        padding: 0 1rem;
+    }
+
+    .profile-greeting {
+        font-size: 1.8rem;
+    }
+
+    .profile-grid {
+        gap: 2rem;
+    }
+
+    .profile-section {
+        padding: 1.25rem;
+    }
+}
+</style>
 {% endblock %}

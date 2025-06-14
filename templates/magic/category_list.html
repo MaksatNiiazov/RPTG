@@ -1,30 +1,320 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Категории заклинаний{% endblock %}
-{% block content %}
-    <div class="container-box">
-        <h1>Категории заклинаний</h1>
-        <ul class="item-list">
-            {% for cat in categories %}
-                <li>
-                    <a href="{% url 'magic:category_detail' cat.slug %}">{{ cat.name }}</a>
-                </li>
-            {% empty %}
-                <li>Нет категорий.</li>
-            {% endfor %}
-        </ul>
+{% block title %}Категории заклинаний | Deep Dark Fantasy{% endblock %}
 
-        {% if is_paginated %}
-            <nav class="pagination">
-                {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}">« Назад</a>
-                {% endif %}
-                <span>Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">Вперёд »</a>
-                {% endif %}
-            </nav>
-        {% endif %}
+{% block content %}
+<div class="spellbook-container">
+    <header class="spellbook-header">
+        <h1 class="spellbook-title">
+            <svg class="title-icon" viewBox="0 0 24 24">
+                <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>
+                <path d="M8.5 8.5v.01M16 15.5v.01M12 12v.01M11 17v.01M7 14v.01"/>
+            </svg>
+            Категории заклинаний
+        </h1>
+        <p class="spellbook-subtitle">Изучите магические дисциплины нашего мира</p>
+    </header>
+
+    <div class="categories-grid">
+        {% for cat in categories %}
+        <a href="{% url 'magic:category_detail' cat.slug %}" class="category-card">
+            <div class="category-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
+            </div>
+            <h2 class="category-name">{{ cat.name }}</h2>
+            {% if cat.short_description %}
+            <p class="category-description">{{ cat.short_description }}</p>
+            {% endif %}
+            <div class="category-meta">
+                <span class="meta-item">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>
+                    </svg>
+                    {{ cat.spell_count }} заклинаний
+                </span>
+            </div>
+        </a>
+        {% empty %}
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24">
+                <path d="M3 3h18v18H3zM8 8h8v8H8z"/>
+            </svg>
+            <p>Категории заклинаний пока не добавлены</p>
+            {% if user.is_staff %}
+            <a href="{% url 'admin:magic_category_add' %}" class="btn-add">
+                Добавить категорию
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
     </div>
+
+    {% if is_paginated %}
+    <div class="pagination-wrapper">
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="page-nav">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                    Назад
+                </a>
+            {% endif %}
+
+            <div class="page-numbers">
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="current-page">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="page-nav">
+                    Вперед
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.spellbook-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.spellbook-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.spellbook-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2.5rem;
+    color: #3a2e1b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.title-icon {
+    width: 40px;
+    height: 40px;
+    stroke: #3a2e1b;
+    stroke-width: 1.5;
+}
+
+.spellbook-subtitle {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.category-card {
+    background: #f7f1e7;
+    border: 1px solid #dac8a0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    border-color: #8c7151;
+}
+
+.category-icon {
+    width: 50px;
+    height: 50px;
+    background: #e8d8b0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.category-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: #5a432d;
+    stroke-width: 1.5;
+}
+
+.category-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    color: #3a2e1b;
+    margin-bottom: 0.75rem;
+}
+
+.category-description {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.category-meta {
+    display: flex;
+    align-items: center;
+    font-family: 'Merriweather', serif;
+    font-size: 0.9rem;
+    color: #8a7866;
+}
+
+.category-meta svg {
+    width: 16px;
+    height: 16px;
+    margin-right: 0.5rem;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    background: #f7f1e7;
+    border-radius: 8px;
+    border: 1px dashed #dac8a0;
+}
+
+.empty-state svg {
+    width: 48px;
+    height: 48px;
+    stroke: #dac8a0;
+    stroke-width: 1.5;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    margin-bottom: 1.5rem;
+}
+
+.btn-add {
+    display: inline-block;
+    padding: 0.6rem 1.25rem;
+    background: #6b4f2b;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    transition: background 0.2s;
+}
+
+.btn-add:hover {
+    background: #5a432d;
+}
+
+.pagination-wrapper {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: 'Merriweather', serif;
+}
+
+.page-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #dac8a0;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #5a432d;
+    transition: all 0.2s;
+}
+
+.page-nav:hover {
+    background: #e8d8b0;
+}
+
+.page-nav svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.page-number, .current-page {
+    padding: 0.5rem 0.8rem;
+    border-radius: 4px;
+}
+
+.page-number {
+    text-decoration: none;
+    color: #5a432d;
+    transition: all 0.2s;
+}
+
+.page-number:hover {
+    background: #e8d8b0;
+}
+
+.current-page {
+    background: #6b4f2b;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .spellbook-container {
+        padding: 0 1rem;
+    }
+
+    .spellbook-title {
+        font-size: 2rem;
+    }
+
+    .categories-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+</style>
 {% endblock %}

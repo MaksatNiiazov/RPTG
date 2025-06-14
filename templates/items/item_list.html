@@ -1,84 +1,253 @@
 {% extends "base.html" %}
 {% block title %}Каталог предметов{% endblock %}
+
 {% block content %}
-    <div class="container-box">
+<div class="item-catalog">
+    <div class="catalog-header">
         <h1>Каталог предметов</h1>
 
-        <form method="get" class="filters">
-            <label>
-                Тип:
-                <select name="type">
-                    <option value="">Все типы</option>
-                    {% for t in types %}
-                        <option value="{{ t.slug }}" {% if request.GET.type == t.slug %}selected{% endif %}>
-                            {{ t.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </label>
+        <form method="get" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="type-filter">Тип:</label>
+                    <select id="type-filter" name="type" class="filter-select">
+                        <option value="">Все типы</option>
+                        {% for t in types %}
+                            <option value="{{ t.slug }}" {% if request.GET.type == t.slug %}selected{% endif %}>
+                                {{ t.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <label>
-                Редкость:
-                <select name="rarity">
-                    <option value="">Все редкости</option>
-                    {% for r in rarities %}
-                        <option value="{{ r.slug }}" {% if request.GET.rarity == r.slug %}selected{% endif %}>
-                            {{ r.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </label>
+                <div class="filter-group">
+                    <label for="rarity-filter">Редкость:</label>
+                    <select id="rarity-filter" name="rarity" class="filter-select">
+                        <option value="">Все редкости</option>
+                        {% for r in rarities %}
+                            <option value="{{ r.slug }}" {% if request.GET.rarity == r.slug %}selected{% endif %}>
+                                {{ r.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <button class="btn">Фильтровать</button>
+                <button type="submit" class="filter-button">Применить фильтры</button>
+                <a href="{% url 'items:item_list' %}" class="reset-button">Сбросить</a>
+            </div>
         </form>
+    </div>
 
+    <div class="table-responsive">
         <table class="item-table">
             <thead>
-            <tr>
-                <th>Название</th>
-                <th>Тип</th>
-                <th>Редкость</th>
-                <th>Бонус</th>
-                <th>Легендарный бонус</th>
-            </tr>
+                <tr>
+                    <th>Название</th>
+                    <th>Описание</th>
+                    <th>Тип</th>
+                    <th>Редкость</th>
+                    <th>Бонус</th>
+                    <th>Легендарный бонус</th>
+                </tr>
             </thead>
             <tbody>
-            {% for item in items %}
+                {% for item in items %}
                 <tr>
-                    <td>{{ item.name }}</td>
+                    <td class="item-name">{{ item.name }}</td>
+                    <td class="item-description">
+                        {% if item.description %}
+                            {{ item.description|truncatechars:100 }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
                     <td>{{ item.type.name }}</td>
                     <td>
-            <span style="border-left: 15px solid {{ item.rarity.color }}; padding-left: 8px;">
-              {{ item.rarity.name }}
-            </span>
+                        <span class="rarity-badge" style="border-left-color: {{ item.rarity.color }};">
+                            {{ item.rarity.name }}
+                        </span>
                     </td>
                     <td>{{ item.bonus }}</td>
                     <td>{% if item.legendary_buff %}{{ item.legendary_buff }}{% else %}—{% endif %}</td>
                 </tr>
-            {% empty %}
+                {% empty %}
                 <tr>
-                    <td colspan="5">Нет предметов.</td>
+                    <td colspan="6" class="no-items">Нет предметов, соответствующих фильтрам</td>
                 </tr>
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
+    </div>
 
-        {% if is_paginated %}
-            <nav class="pagination">
-                {% if page_obj.has_previous %}
-                    <a href="?page=
-                            {{ page_obj.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.rarity %}&rarity={{ request.GET.rarity }}{% endif %}">
-                        « Назад
-                    </a>
-                {% endif %}
-                <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-                {% if page_obj.has_next %}
-                    <a href="?page=
-                            {{ page_obj.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.rarity %}&rarity={{ request.GET.rarity }}{% endif %}">
-                        Вперёд »
-                    </a>
-                {% endif %}
-            </nav>
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.rarity %}&rarity={{ request.GET.rarity }}{% endif %}"
+               class="page-link">« Назад</a>
+        {% endif %}
+
+        <span class="current-page">
+            Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.rarity %}&rarity={{ request.GET.rarity }}{% endif %}"
+               class="page-link">Вперёд »</a>
         {% endif %}
     </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.item-catalog {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.catalog-header {
+    margin-bottom: 2rem;
+}
+
+.filter-form {
+    margin-top: 1.5rem;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+}
+
+.filter-select {
+    padding: 0.5rem;
+    border: 1px solid #dac8a0;
+    border-radius: 4px;
+    background: #f7f1e7;
+    font-family: 'Merriweather', serif;
+}
+
+.filter-button {
+    padding: 0.5rem 1rem;
+    background: #6b4f2b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Merriweather', serif;
+}
+
+.reset-button {
+    padding: 0.5rem 1rem;
+    background: #e8d8b0;
+    color: #5a432d;
+    border: 1px solid #dac8a0;
+    border-radius: 4px;
+    text-decoration: none;
+    font-family: 'Merriweather', serif;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+}
+
+.item-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Merriweather', serif;
+}
+
+.item-table th {
+    background: #e8d8b0;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #3a2e1b;
+}
+
+.item-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e0d6c2;
+    vertical-align: top;
+}
+
+.item-name {
+    font-weight: 500;
+    color: #3a2e1b;
+}
+
+.item-description {
+    color: #5a432d;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.rarity-badge {
+    display: inline-block;
+    border-left: 12px solid;
+    padding-left: 8px;
+}
+
+.no-items {
+    text-align: center;
+    padding: 1.5rem;
+    color: #8a7866;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    font-family: 'Merriweather', serif;
+}
+
+.page-link {
+    color: #6b4f2b;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid #dac8a0;
+    border-radius: 4px;
+}
+
+.page-link:hover {
+    background: #f7f1e7;
+}
+
+.current-page {
+    color: #5a432d;
+}
+
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        min-width: auto;
+    }
+
+    .item-table th,
+    .item-table td {
+        padding: 0.5rem;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+</style>
 {% endblock %}

@@ -1,345 +1,696 @@
 {% extends "base.html" %}
 {% load static %}
 {% load inventory_tags %}
+
 {% block title %}Персонаж{% if show_name %}: {{ char.name }}{% endif %}{% endblock %}
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/character_detail.css' %}">
+    <style>
+        :root {
+            --primary: #6b4f2b;
+            --secondary: #d1bfa3;
+            --light-bg: #fbf6ee;
+            --dark-text: #3a2e1b;
+            --medium-text: #5a432d;
+            --border: #dac8a0;
+            --highlight: #8c7151;
+        }
+
+        .character-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Header Section */
+        .character-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            align-items: center;
+        }
+
+        .character-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 3px solid var(--highlight);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .character-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .character-name {
+            font-family: 'Cinzel', serif;
+            font-size: 2.2rem;
+            color: var(--dark-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .character-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--medium-text);
+        }
+
+        .meta-icon {
+            width: 16px;
+            height: 16px;
+            stroke: var(--highlight);
+        }
+
+        /* Controls Section */
+        .controls-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .control-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .control-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--highlight);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Stats Section */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .stat-item {
+            background: var(--light-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--medium-text);
+        }
+
+        /* Tabs */
+        .tabs-container {
+            margin-top: 2rem;
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 2px solid var(--border);
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tabs-header::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            position: relative;
+            font-weight: 500;
+            color: var(--medium-text);
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--highlight);
+        }
+
+        .tab-content {
+            padding: 1.5rem 0;
+            width: 100%;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .data-table th {
+            background: var(--secondary);
+            padding: 0.8rem 1rem;
+            text-align: left;
+            color: var(--dark-text);
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table td {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table tr:nth-child(even) {
+            background: var(--light-bg);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            background: #5a432d;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: rgba(107, 79, 43, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .character-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .character-meta {
+                justify-content: center;
+            }
+
+            .controls-section {
+                grid-template-columns: 1fr;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 0.6rem 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                gap: 0.5rem;
+            }
+
+            .stat-item {
+                padding: 0.8rem 0.5rem;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
-    <div class="container">
+    <div class="character-container">
+        <!-- Header Section -->
+        <div class="character-header">
+            <img src="
+                    {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
+                 alt="{{ char.name }}" class="character-image">
 
-        <div class="page-actions">
-            {% if is_owner or is_gm %}
-                <div>
-                    <a href="{% url 'characters:character-inventory' char.id %}" class="btn">Инвентарь</a>
-                </div>
-            {% endif %}
-            {% if is_gm %}
-                <div>
-                    <a href="{% url 'worlds:gm-grant-spell' world char.id %}" class="btn">Выдать заклинание</a>
-                </div>
-            {% endif %}
-            <a href="{% url 'worlds:detail' world %}" class="btn">⬅ Мир</a>
-        </div>
+            <div class="character-info">
+                {% if show_name %}
+                    <h1 class="character-name">{{ char.name }}</h1>
+                {% else %}
+                    <h1 class="character-name"><em>Имя неизвестно</em></h1>
+                {% endif %}
 
-        <div class="page-title">
-            <div class="image">
-                <img src="
-                    {% if char.image %}{{ char.image.url }}
-                    {% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
-                     alt="">
+                <div class="character-meta">
+                    <div class="meta-item">
+                        <svg class="meta-icon" viewBox="0 0 24 24">
+                            <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>
+                        </svg>
+                        {{ char.race|default:"Раса не указана" }}
+                    </div>
+
+                    <div class="meta-item">
+                        <svg class="meta-icon" viewBox="0 0 24 24">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                        </svg>
+                        {{ char.get_gender_display|default:"Пол не указан" }}
+                    </div>
+                </div>
+
+                <div class="character-actions">
+                    <a href="{% url 'worlds:detail' world %}" class="btn btn-outline">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        Назад к миру
+                    </a>
+
+                    {% if is_owner or is_gm %}
+                        <a href="{% url 'characters:character-inventory' char.id %}" class="btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                                <path d="M3 6h18"/>
+                                <path d="M16 10a4 4 0 0 1-8 0"/>
+                            </svg>
+                            Инвентарь
+                        </a>
+                    {% endif %}
+
+                    {% if is_gm %}
+                        <a href="{% url 'worlds:gm-grant-spell' world char.id %}" class="btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            Выдать заклинание
+                        </a>
+                    {% endif %}
+                </div>
             </div>
-            {% if show_name %}
-                <h1>{{ char.name }}</h1>
-            {% else %}
-                <h1><em>Имя неизвестно</em></h1>
-            {% endif %}
         </div>
-        <div class="main_info">
-            <div class="control">
-                <!-- Управление HP -->
+
+        <!-- Stats Controls -->
+        <div class="controls-section">
+            <div class="control-card">
+                <h3 class="control-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--highlight)">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                    </svg>
+                    Здоровье
+                </h3>
                 {% include "includes/hp_control.html" %}
-                <!-- Управление CP -->
+            </div>
+
+            <div class="control-card">
+                <h3 class="control-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--highlight)">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4l3 3"/>
+                    </svg>
+                    Концентрация
+                </h3>
                 {% include "includes/cp_control.html" %}
             </div>
-            <br>
-            <div class="stats">
-                <ul class="stats-list">
-                    {% if show_stats %}
-                        <li><strong>Раса:</strong> {{ char.race|default:"—" }}</li>
-                        <li><strong>Пол:</strong> {{ char.get_gender_display|default:"—" }}</li>
-                        <li><strong>Max HP:</strong> {{ char.max_hp }}</li>
-                        <li><strong>Максимальная концентрация:</strong> {{ char.concentration }}</li>
+        </div>
 
-                        <li><strong>Общая броня:</strong> {{ char.get_total_defense }}</li>
-                        <li><strong>Общий урон:</strong> {{ char.get_total_attack }}</li>
-                        <li><strong>Крит урон:</strong> {{ char.get_critical_hit }}</li>
-
-                        <li><strong>Грузоподъёмность:</strong> {{ char.carry_capacity }} кг</li>
-                        <li><strong>Макс. вес оружия:</strong> {{ char.max_weapon_weight }} кг</li>
-                        <li><strong>Макс. вес доспехов:</strong> {{ char.max_armor_weight }} кг</li>
-                    {% else %}
-                        <li><em>Характеристики скрыты</em></li>
-                    {% endif %}
-                </ul>
+        <!-- Main Stats -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value">{{ char.get_total_defense }}</div>
+                <div class="stat-label">Общая броня</div>
             </div>
 
+            <div class="stat-item">
+                <div class="stat-value">{{ char.get_total_attack }}</div>
+                <div class="stat-label">Общий урон</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-value">{{ char.get_critical_hit }}</div>
+                <div class="stat-label">Крит. урон</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-value">{{ char.carry_capacity }} кг</div>
+                <div class="stat-label">Грузоподъемность</div>
+            </div>
         </div>
-        {% if is_owner %}
-            <a href="{% url 'characters:character_update' char.id %}">Редактировать</a>
-        {% endif %}
 
-        <div class="tabs">
-            <div class="tab active" data-tab="pane-stats">Характеристики</div>
-            {% if show_equipment %}
-                <div class="tab" data-tab="pane-equip">Экипировка</div>{% endif %}
-            {% if show_background or show_notes %}
-                <div class="tab" data-tab="pane-story">История</div>{% endif %}
-            {% if is_owner or is_gm %}
-                <div class="tab" data-tab="pane-spells">Заклинания</div>
-            {% endif %}
-        </div>
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <div class="tab active" data-tab="stats">Характеристики</div>
+                {% if show_equipment %}
+                    <div class="tab" data-tab="equipment">Экипировка</div>{% endif %}
+                {% if show_background or show_notes %}
+                    <div class="tab" data-tab="story">История</div>{% endif %}
+                {% if is_owner or is_gm %}
+                    <div class="tab" data-tab="spells">Заклинания</div>{% endif %}
+            </div>
 
-        <div class="tab-content">
-            <!-- Вкладка «Характеристики» -->
-            <div id="pane-stats" class="tab-pane active">
-                {% if show_stats %}
-                    {% if is_owner %}
-                        <br>
-                        <span><strong>Доступные очки:</strong> {{ char.ability_points }}</span>
-                        <br>
-                        <br>
-                        <a href="{% url 'characters:level-up' char.id %}" class="btn">Повысить уровень</a>
-                        <br>
-                        <br>
+            <div class="tab-content">
+                <!-- Stats Tab -->
+                <div id="stats" class="tab-pane active">
+                    {% if show_stats %}
+                        {% if is_owner %}
+                            <div style="margin-bottom: 1.5rem;">
+                                <span style="font-weight: 500;">Доступные очки: </span>
+                                <span style="font-weight: bold; color: var(--primary);">{{ char.ability_points }}</span>
+                                <a href="{% url 'characters:level-up' char.id %}" class="btn"
+                                   style="margin-left: 1rem;">
+                                    Повысить уровень
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                <tr>
+                                    <th>Характеристика</th>
+                                    <th>Значение</th>
+                                    <th>Бонус</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>Сила</td>
+                                    <td>{{ char.str_stat }}</td>
+                                    <td>{{ stat_roll_bonuses.str }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Ловкость</td>
+                                    <td>{{ char.dex_stat }}</td>
+                                    <td>{{ stat_roll_bonuses.dex }}</td>
+                                </tr>
+
+                                <tr>
+                                    <td>Выносливость</td>
+                                    <td>{{ char.con_stat }}</td>
+                                    <td>{{ stat_roll_bonuses.con }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Интеллект</td>
+                                    <td>{{ char.int_stat }}</td>
+                                    <td>{{ stat_roll_bonuses.int }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Мудрость</td>
+                                    <td>{{ char.wis_stat }}</td>
+                                    <td>{{ stat_roll_bonuses.wis }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Харизма</td>
+                                    <td>{{ char.cha_stat }}</td>
+                                    <td>{{ stat_roll_bonuses.cha }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Удача</td>
+                                    <td>{{ char.luck_stat }}</td>
+                                    <td>{{ stat_roll_bonuses.luck }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Меткость</td>
+                                    <td>{{ char.acc_stat }}</td>
+                                    <td>{{ stat_roll_bonuses.acc }}</td>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if legendary_bonuses %}
+                            <div style="margin-top: 2rem;">
+                                <h3 style="color: var(--highlight);">Легендарные бонусы</h3>
+                                <ul style="list-style-type: none; padding: 0;">
+                                    {% for bonus in legendary_bonuses %}
+                                        <li style="padding: 0.5rem 0; border-bottom: 1px dashed var(--border);">
+                                            {{ bonus }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <p style="text-align: center; color: var(--medium-text);">Характеристики скрыты</p>
                     {% endif %}
-                    <table class="item-table">
-                        <thead>
-                        <tr>
-                            <th></th>
-                            <th>Очки</th>
-                            <th>Бонус</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <th>Сила</th>
-                            <td>{{ char.str_stat }}</td>
-                            <td>{{ stat_roll_bonuses.str }}</td>
-                        </tr>
-                        <tr>
-                            <th>Ловкость</th>
-                            <td>{{ char.dex_stat }}</td>
-                            <td>{{ stat_roll_bonuses.str }}</td>
+                </div>
 
-                        </tr>
-                        <tr>
-                            <th>Телосложение</th>
-                            <td>{{ char.con_stat }}</td>
-                            <td>{{ stat_roll_bonuses.con }}</td>
+                <!-- Equipment Tab -->
+                {% if show_equipment %}
+                    <div id="equipment" class="tab-pane">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                <tr>
+                                    <th>Слот</th>
+                                    <th>Предмет</th>
+                                    <th>Бонус</th>
+                                    <th>Вес</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for slot_dict in slot_names %}
+                                    {% for slot,label in slot_dict.items %}
+                                        {% with item=equipment|get_attr:slot %}
+                                            <tr>
+                                                <td>{{ label }}</td>
+                                                {% if item %}
+                                                    <td>{{ item.name }}</td>
+                                                    <td>+{{ item.bonus }}</td>
+                                                    <td>{{ item.weight }} кг</td>
+                                                {% else %}
+                                                    <td colspan="3" style="color: var(--medium-text);">Пусто</td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endwith %}
+                                    {% endfor %}
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% endif %}
 
-                        </tr>
-                        <tr>
-                            <th>Интеллект</th>
-                            <td>{{ char.int_stat }}</td>
-                            <td>{{ stat_roll_bonuses.int }}</td>
-                        </tr>
-                        <tr>
-                            <th>Мудрость</th>
-                            <td>{{ char.wis_stat }}</td>
-                            <td>{{ stat_roll_bonuses.wis }}</td>
-                        </tr>
-                        <tr>
-                            <th>Харизма</th>
-                            <td>{{ char.cha_stat }}</td>
-                            <td>{{ stat_roll_bonuses.cha }}</td>
-                        </tr>
-                        <tr>
-                            <th>Меткость</th>
-                            <td>{{ char.acc_stat }}</td>
-                            <td>{{ stat_roll_bonuses.acc }}</td>
-                        </tr>
-                        <tr>
-                            <th>Удача</th>
-                            <td>{{ char.lck_stat }}</td>
-                            <td>{{ stat_roll_bonuses.lck }}</td>
-                        </tr>
-                    </table>
+                <!-- Story Tab -->
+                {% if show_background or show_notes %}
+                    <div id="story" class="tab-pane">
+                        {% if show_background %}
+                            <div style="margin-bottom: 2rem;">
+                                <h3 style="color: var(--highlight);">Предыстория</h3>
+                                {% if char.background %}
+                                    <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 6px; line-height: 1.6;">
+                                        {{ char.background|linebreaks }}
+                                    </div>
+                                {% else %}
+                                    <p style="text-align: center; color: var(--medium-text);">Предыстория
+                                        отсутствует</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
 
-                    {% if legendary_bonuses %}
-                        <h3>Легендарные бонусы</h3>
-                        <ul style="padding:5px">
-                            {% for bonus in legendary_bonuses %}
-                                <li>{{ bonus }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                {% else %}
-                    <p><em>Данные характеристик недоступны.</em></p>
+                        {% if show_notes %}
+                            <div>
+                                <h3 style="color: var(--highlight);">Заметки</h3>
+                                {% if char.notes %}
+                                    <div style="background: var(--light-bg); padding: 1.5rem; border-radius: 6px; line-height: 1.6;">
+                                        {{ char.notes|linebreaks }}
+                                    </div>
+                                {% else %}
+                                    <p style="text-align: center; color: var(--medium-text);">Заметки отсутствуют</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <!-- Spells Tab -->
+                {% if is_owner or is_gm %}
+                    <div id="spells" class="tab-pane">
+                        {% if spells %}
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Уровень</th>
+                                        <th>Название</th>
+                                        <th>Школа</th>
+                                        <th>Тип</th>
+                                        <th>Концентрация</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for spell in spells %}
+                                        <tr>
+                                            <td>{{ spell.level }}</td>
+                                            <td>{{ spell.name }}</td>
+                                            <td>{{ spell.school.name }}</td>
+                                            <td>{{ spell.get_action_cost_display }}</td>
+                                            <td>{% if spell.requires_check %}Да{% else %}Нет{% endif %}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p style="text-align: center; color: var(--medium-text);">Заклинания не выучены</p>
+                        {% endif %}
+                    </div>
                 {% endif %}
             </div>
-
-            {% if show_equipment %}
-                <!-- Вкладка «Экипировка» -->
-                <div id="pane-equip" class="tab-pane">
-                    <table class="item-table">
-                        <tr>
-                            <th>Слот</th>
-                            <th>Предмет</th>
-                            <th>Бонус</th>
-                            <th>Вес</th>
-                        </tr>
-                        {% for slot_dict in slot_names %}
-                            {% for slot,label in slot_dict.items %}
-                                {% with item=equipment|get_attr:slot %}
-                                    <tr>
-                                        <td>{{ label }}</td>
-                                        {% if item %}
-                                            <td>{{ item.name }}</td>
-                                            <td>+{{ item.bonus }}</td>
-                                            <td>{{ item.weight }} кг</td>
-                                        {% else %}
-                                            <td colspan="3"><em>Пусто</em></td>
-                                        {% endif %}
-                                    </tr>
-                                {% endwith %}
-                            {% endfor %}
-                        {% endfor %}
-                    </table>
-                </div>
-            {% endif %}
-
-            {% if show_background or show_notes %}
-                <div id="pane-story" class="tab-pane">
-                    {% if show_background %}
-                        <h2>Предыстория</h2>
-                        {% if char.background %}
-                            <div class="story-block">{{ char.background|linebreaks }}</div>
-                        {% else %}
-                            <p><em>Предыстория отсутствует.</em></p>
-                        {% endif %}
-                    {% endif %}
-                    {% if show_notes %}
-                        <h2>Заметки</h2>
-                        {% if char.notes %}
-                            <div class="notes-block">{{ char.notes|linebreaks }}</div>
-                        {% else %}
-                            <p><em>Заметки отсутствуют.</em></p>
-                        {% endif %}
-                    {% endif %}
-                </div>
-            {% endif %}
-            {% if is_owner or is_gm %}
-                <div id="pane-spells" class="tab-pane">
-                    {% if spells %}
-                        <table class="item-table">
-                            <thead>
-                            <tr>
-                                <th>Уровень</th>
-                                <th>Название</th>
-                                <th>Школа</th>
-                                <th>Тип</th>
-                                <th>Concentration</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for spell in spells %}
-                                <tr>
-                                    <td>{{ spell.level }}</td>
-                                    <td>{{ spell.name }}</td>
-                                    <td>{{ spell.school.name }}</td>
-                                    <td>{{ spell.get_action_cost_display }}</td>
-                                    <td>{% if spell.requires_check %}Да{% else %}Нет{% endif %}</td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <p><em>Заклинания не выучены.</em></p>
-                    {% endif %}
-                </div>
-            {% endif %}
         </div>
 
-        {# Только ГМ для NPC #}
+        <!-- NPC Settings -->
         {% if is_gm and char.is_npc %}
-            <div class="npc-settings">
-                <h2>Настройки NPC</h2>
-                <ul class="npc-flags">
-                    {# 1) Разовый переключатель видимости #}
-                    <li>
-                        <label>
-                            <input type="checkbox"
-                                   class="npc-flag-toggle"
-                                   data-flag="visible_to_players"
-                                   {% if char.visible_to_players %}checked{% endif %}>
-                            Виден всем игрокам
-                        </label>
-                    </li>
+            <div class="control-card" style="margin-top: 2rem;">
+                <h3 class="control-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--highlight)">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    Настройки NPC
+                </h3>
 
-                    {# 2) Цикл по known_* флагам #}
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" class="npc-flag-toggle" data-flag="visible_to_players"
+                               {% if char.visible_to_players %}checked{% endif %}>
+                        Виден всем игрокам
+                    </label>
+
                     {% for fld, val in npc_flags.items %}
-                        <li>
-                            <label>
-                                <input type="checkbox"
-                                       class="npc-flag-toggle"
-                                       data-flag="{{ fld }}"
-                                       {% if val %}checked{% endif %}>
-                                {% comment %}Выводим понятное название{% endcomment %}
-                                {% if fld == 'known_name' %}Знают имя{% endif %}
-                                {% if fld == 'known_background' %}Знают предысторию{% endif %}
-                                {% if fld == 'known_stats' %}Знают характеристики{% endif %}
-                                {% if fld == 'known_equipment' %}Знают экипировку{% endif %}
-                                {% if fld == 'known_notes' %}Знают заметки{% endif %}
-                            </label>
-                        </li>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" class="npc-flag-toggle" data-flag="{{ fld }}"
+                                   {% if val %}checked{% endif %}>
+                            {% if fld == 'known_name' %}Знают имя{% endif %}
+                            {% if fld == 'known_background' %}Знают предысторию{% endif %}
+                            {% if fld == 'known_stats' %}Знают характеристики{% endif %}
+                            {% if fld == 'known_equipment' %}Знают экипировку{% endif %}
+                            {% if fld == 'known_notes' %}Знают заметки{% endif %}
+                        </label>
                     {% endfor %}
-                </ul>
+                </div>
             </div>
-
-            {# чтобы получить CSRF-токен без полей формы #}
         {% endif %}
-
-
     </div>
-    <form id="csrf-form">{% csrf_token %}</form>
 
+    <form id="csrf-form">{% csrf_token %}</form>
 {% endblock %}
 
 {% block js %}
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            document.querySelectorAll(".tab").forEach(tab => {
+            // Tab switching
+            const tabs = document.querySelectorAll(".tab");
+            const tabPanes = document.querySelectorAll(".tab-pane");
+
+            // Activate first tab by default
+            if (tabs.length > 0 && tabPanes.length > 0) {
+                tabs[0].classList.add("active");
+                document.getElementById(tabs[0].dataset.tab)?.classList.add("active");
+            }
+
+            tabs.forEach(tab => {
                 tab.addEventListener("click", () => {
-                    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                    // Remove active class from all tabs and panes
+                    tabs.forEach(t => t.classList.remove("active"));
+                    tabPanes.forEach(p => p.classList.remove("active"));
+
+                    // Add active class to clicked tab and corresponding pane
                     tab.classList.add("active");
-                    const pane = tab.dataset.tab;
-                    document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
-                    document.getElementById(pane).classList.add("active");
+                    const targetPane = document.getElementById(tab.dataset.tab);
+                    if (targetPane) targetPane.classList.add("active");
                 });
             });
-        });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const charId = "{{ char.id }}";
-            const csrfToken = document
-                .getElementById("csrf-form")
-                .querySelector('input[name="csrfmiddlewaretoken"]').value;
 
-            document.querySelectorAll(".npc-flag-toggle").forEach(cb => {
-                cb.addEventListener("change", async () => {
-                    const flag = cb.dataset.flag;
-                    const url = "{% url 'characters:toggle-npc-flag' char.id %}";
+            // NPC flag toggles
+            const csrfToken = document.querySelector("#csrf-form [name=csrfmiddlewaretoken]")?.value;
+            if (csrfToken) {
+                document.querySelectorAll(".npc-flag-toggle").forEach(checkbox => {
+                    checkbox.addEventListener("change", async () => {
+                        try {
+                            const response = await fetch("{% url 'characters:toggle-npc-flag' char.id %}", {
+                                method: "POST",
+                                headers: {
+                                    "X-CSRFToken": csrfToken,
+                                    "Content-Type": "application/x-www-form-urlencoded",
+                                },
+                                body: `flag=${checkbox.dataset.flag}`
+                            });
 
-                    try {
-                        const res = await fetch(url, {
-                            method: "POST",
-                            headers: {
-                                "X-CSRFToken": csrfToken,
-                                "X-Requested-With": "XMLHttpRequest",
-                                "Content-Type": "application/x-www-form-urlencoded"
-                            },
-                            body: new URLSearchParams({flag})
-                        });
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                        const json = await res.json();
-                        if (json.status !== "ok") throw new Error(json.message);
-                        // успешно переключено — ничего не делаем, чекбокс уже в нужном состоянии
-                    } catch (err) {
-                        // при ошибке откатываем чекбокс
-                        cb.checked = !cb.checked;
-                        alert("Не удалось сохранить настройку:\n" + err.message);
-                    }
+                            if (!response.ok) throw new Error("Ошибка сервера");
+                            const data = await response.json();
+                            if (data.status !== "ok") throw new Error(data.message || "Неизвестная ошибка");
+                        } catch (error) {
+                            checkbox.checked = !checkbox.checked;
+                            alert("Не удалось сохранить настройку: " + error.message);
+                        }
+                    });
                 });
-            });
+            }
         });
     </script>
-
-
-
-
-
 {% endblock %}

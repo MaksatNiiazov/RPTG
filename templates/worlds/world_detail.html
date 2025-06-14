@@ -1,177 +1,752 @@
-{# templates/worlds/world_detail.html #}
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}Мир: {{ world.name }}{% endblock %}
 
 {% block content %}
-    <div class="container">
+<div class="world-container">
+    <header class="world-header">
         <h1>{{ world.name }}</h1>
-        <p><strong>GM:</strong> {{ world.creator.email }}</p>
-        <p><strong>Сеттинг:</strong> {{ world.setting|default:"—" }}</p>
-        <p><strong>История:</strong> {{ world.history|default:"—" }}</p>
+        <div class="world-meta">
+            <span class="meta-item">
+                <svg class="meta-icon" viewBox="0 0 24 24">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="8.5" cy="7" r="4"/>
+                    <path d="M20 8v6M23 11h-6"/>
+                </svg>
+                GM: {{ world.creator.get_full_name|default:world.creator.email }}
+            </span>
+            {% if world.setting %}
+            <span class="meta-item">
+                <svg class="meta-icon" viewBox="0 0 24 24">
+                    <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+                    <path d="M12 2v4M6.6 6.6l2.8 2.8M2 12h4M6.6 17.4l2.8-2.8M12 22v-4M17.4 17.4l-2.8-2.8M22 12h-4M17.4 6.6l-2.8 2.8"/>
+                </svg>
+                {{ world.setting }}
+            </span>
+            {% endif %}
+        </div>
 
-        {% if is_gm %}
-            <div class="invite-block" style="margin:1em 0;">
-                <label>Приглашение (копируйте и отправляйте игрокам):</label>
-                <input type="text" readonly
-                       value="{{ invite_link }}"
-                       onclick="this.select()"
-                       style="width:100%;padding:.5em;font-family:monospace;">
-            </div>
+        {% if world.history %}
+        <div class="world-description">
+            <h3>История мира</h3>
+            <p>{{ world.history }}</p>
+        </div>
         {% endif %}
+    </header>
 
-        <h2>Персонажи</h2>
-        {% if world.creator == request.user %}
-            <a href="{% url 'worlds:quick-give-chest' world.pk %}" class="btn btn-sm">
+    {% if is_gm %}
+    <section class="invite-section">
+        <h2>Приглашение в мир</h2>
+        <div class="invite-box">
+            <input type="text" readonly value="{{ invite_link }}" id="invite-link">
+            <button onclick="copyInviteLink()" class="btn-copy">
+                <svg viewBox="0 0 24 24">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                </svg>
+                Копировать
+            </button>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="characters-section">
+        <div class="section-header">
+            <h2>Персонажи игроков</h2>
+            {% if is_gm %}
+            <a href="{% url 'worlds:quick-give-chest' world.pk %}" class="btn-action">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 6h18M12 6v12M8 10v6m8-6v6m4-12l-2 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L4 10"/>
+                </svg>
                 Выдать сундук
             </a>
-        {% endif %}
-        {% if player_chars %}
-            <div class="cards">
-                {% for c in player_chars %}
-                    <div class="card">
-                        <h3>{{ c.name }}</h3>
-                        <p><strong>HP:</strong> <span class="char-hp" data-char-id="{{ c.id }}">
-        {{ c.current_hp }} / {{ c.max_hp }}
-    </span></p>
-                        <p><strong>Владелец:</strong> {{ c.owner.first_name }} {{ c.owner.last_name }}</p>
-                        <a href="{% url 'characters:character_detail' c.pk %}" class="btn">Открыть</a>
-                        {% if world.creator == request.user %}
-                            <a href="{% url 'worlds:world-grant-points' world.pk c.pk %}"
-                               class="btn btn-sm">
-                                Выдать очки
-                            </a>
-                            <a href="{% url 'worlds:world-grant-item' world.pk c.pk %}" class="btn btn-sm">
-                                Выдать предмет
-                            </a>
+            {% endif %}
+        </div>
 
+        {% if player_chars %}
+        <div class="cards-grid">
+            {% for char in player_chars %}
+            <div class="character-card">
+                <div class="card-header">
+                    <h3>{{ char.name }}</h3>
+                    <div class="hp-indicator" data-char-id="{{ char.id }}">
+                        <div class="hp-bar" style="width: {% widthratio char.current_hp char.max_hp 100 %}%"></div>
+                        <span>{{ char.current_hp }} / {{ char.max_hp }}</span>
+                    </div>
+                </div>
+                <p class="char-owner">{{ char.owner.get_full_name|default:char.owner.email }}</p>
+                <div class="card-actions">
+                    <a href="{% url 'characters:character_detail' char.pk %}" class="btn-view">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        Подробнее
+                    </a>
+                    {% if is_gm %}
+                    <div class="gm-actions">
+                        <a href="{% url 'worlds:world-grant-points' world.pk char.pk %}" class="btn-gm">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                            Очки
+                        </a>
+                        <a href="{% url 'worlds:world-grant-item' world.pk char.pk %}" class="btn-gm">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M20 12v10H4V12M2 7h20v5H2zM12 7v5"/>
+                            </svg>
+                            Предмет
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <p>Нет персонажей игроков</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="npcs-section">
+        <h2>Неигровые персонажи</h2>
+        {% if npc_chars %}
+        <div class="cards-grid">
+            {% for char in npc_chars %}
+                {% if is_gm or char.visible_to_players %}
+                <div class="npc-card">
+                    <h3>
+                        {% if is_gm or char.known_name %}
+                            {{ char.name }}
+                        {% else %}
+                            <span class="unknown">Неизвестный NPC</span>
+                        {% endif %}
+                    </h3>
+
+                    {% if is_gm or char.known_background %}
+                    <p class="npc-info">
+                        <strong>Предыстория:</strong>
+                        {{ char.background|truncatechars:80|default:"—" }}
+                    </p>
+                    {% endif %}
+
+                    {% if is_gm or char.known_notes %}
+                    <p class="npc-info">
+                        <strong>Заметки:</strong>
+                        {{ char.notes|truncatechars:60|default:"—" }}
+                    </p>
+                    {% endif %}
+
+                    <div class="card-actions">
+                        <a href="{% url 'characters:character_detail' char.pk %}" class="btn-view">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            Подробнее
+                        </a>
+                        {% if is_gm %}
+                        <div class="gm-actions">
+                            <a href="{% url 'worlds:world-grant-points' world.pk char.pk %}" class="btn-gm">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                                Очки
+                            </a>
+                            <a href="{% url 'worlds:world-grant-item' world.pk char.pk %}" class="btn-gm">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M20 12v10H4V12M2 7h20v5H2zM12 7v5"/>
+                                </svg>
+                                Предмет
+                            </a>
+                        </div>
                         {% endif %}
                     </div>
-
-                {% endfor %}
-            </div>
-        {% else %}
-            <p><em>Игровых персонажей нет.</em></p>
-        {% endif %}
-
-        <h2>NPC</h2>
-        {% if npc_chars %}
-            <div class="cards">
-                {% for c in npc_chars %}
-                    {% if is_gm or c.visible_to_players %}
-                        <div class="card">
-                            <h3>
-                                {% if is_gm or c.known_name %}
-                                    {{ c.name }}
-                                {% else %}
-                                    <em>Имя неизвестно</em>
-                                {% endif %}
-                            </h3>
-
-                            {% if is_gm or c.known_background %}
-                                <p><strong>Предыстория:</strong> {{ c.background|truncatechars:80|default:"—" }}</p>
-                            {% endif %}
-
-                            {% if is_gm or c.known_notes %}
-                                <p><strong>Заметки:</strong> {{ c.notes|truncatechars:60|default:"—" }}</p>
-                            {% endif %}
-
-                            <a href="{% url 'characters:character_detail' c.pk %}" class="btn">Открыть</a>
-                            {% if world.creator == request.user %}
-                                <a href="{% url 'worlds:world-grant-points' world.pk c.pk %}"
-                                   class="btn btn-sm">
-                                    Выдать очки
-                                </a>
-                                <a href="{% url 'worlds:world-grant-item' world.pk c.pk %}" class="btn btn-sm">
-                                    Выдать предмет
-                                </a>
-                            {% endif %}
-                        </div>
-                    {% else %}
-                        <p><em>Вы не знаете ничего об этом NPC.</em></p>
-
-                    {% endif %}
-                {% endfor %}
-            </div>
-        {% else %}
-            <p><em>NPC нет.</em></p>
-        {% endif %}
-        <h2>Locations</h2>
-        {% if locations %}
-            <div class="cards">
-                {% for c in locations %}
-                    {% if is_gm or c.visible_to_players %}
-                        <div class="card">
-                            <h3>
-                                {% if is_gm or c.known_name %}
-                                    {{ c.name }}
-                                {% else %}
-                                    <em>Имя неизвестно</em>
-                                {% endif %}
-                            </h3>
-
-
-                            <a href="{% url 'maps:map_view' c.pk %}" class="btn btn-sm">
-                                Открыть
-                            </a>
-                            {% if is_gm %}
-                                <a href="{% url 'maps:update' c.pk world.pk %}" class="btn btn-sm">
-                                    Редактировать
-                                </a>
-                            {% endif %}
-
-                        </div>
-
-                    {% endif %}
-                {% endfor %}
-            </div>
-        {% else %}
-            <p><em>NPC нет.</em></p>
-        {% endif %}
-
-
-        <div class="actions">
-            {% if is_gm %}
-                <a href="{% url 'maps:create' world.pk %}" class="btn">Создать локацию</a>
-            {% endif %}
-            <a href="{% url 'characters:character_create' world.pk %}" class="btn">Создать персонажа</a>
-            <a href="{% url 'accounts:profile' %}" class="btn">← Назад</a>
+                </div>
+                {% endif %}
+            {% endfor %}
         </div>
+        {% else %}
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <p>Нет NPC</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="locations-section">
+        <div class="section-header">
+            <h2>Локации</h2>
+            {% if is_gm %}
+            <a href="{% url 'maps:create' world.pk %}" class="btn-action">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2v20M2 12h20"/>
+                </svg>
+                Создать локацию
+            </a>
+            {% endif %}
+        </div>
+
+        {% if locations %}
+        <div class="cards-grid">
+            {% for location in locations %}
+                {% if is_gm or location.visible_to_players %}
+                <div class="location-card">
+                    <h3>
+                        {% if is_gm or location.known_name %}
+                            {{ location.name }}
+                        {% else %}
+                            <span class="unknown">Неизвестная локация</span>
+                        {% endif %}
+                    </h3>
+                    <div class="card-actions">
+                        <a href="{% url 'maps:map_view' location.pk %}" class="btn-view">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/>
+                                <path d="M8 2v16M16 6v16"/>
+                            </svg>
+                            Открыть карту
+                        </a>
+                        {% if is_gm %}
+                        <a href="{% url 'maps:update' location.pk world.pk %}" class="btn-edit">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            Редактировать
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <svg viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <p>Нет локаций</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <div class="world-actions">
+        <a href="{% url 'characters:character_create' world.pk %}" class="btn-primary">
+            <svg viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/>
+                <line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+            Создать персонажа
+        </a>
+        <a href="{% url 'accounts:profile' %}" class="btn-secondary">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Назад в профиль
+        </a>
     </div>
+</div>
 {% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static 'css/world_detail.css' %}">
+<style>
+.world-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.world-header {
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e0d6c2;
+}
+
+.world-header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 2.5rem;
+    color: #3a2e1b;
+    margin-bottom: 1rem;
+}
+
+.world-meta {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-size: 0.95rem;
+}
+
+.meta-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+.world-description {
+    background: #f7f1e7;
+    padding: 1.5rem;
+    border-radius: 6px;
+    border-left: 3px solid #8c7151;
+}
+
+.world-description h3 {
+    font-family: 'Merriweather', serif;
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #3a2e1b;
+}
+
+.world-description p {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.invite-section {
+    margin-bottom: 3rem;
+    background: #f7f1e7;
+    padding: 1.5rem;
+    border-radius: 6px;
+}
+
+.invite-section h2 {
+    font-family: 'Merriweather', serif;
+    font-size: 1.3rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #3a2e1b;
+}
+
+.invite-box {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#invite-link {
+    flex-grow: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid #dac8a0;
+    border-radius: 4px;
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 0.9rem;
+    background: white;
+}
+
+.btn-copy {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    background: #d1bfa3    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Merriweather', serif;
+    transition: background 0.2s;
+}
+
+.btn-copy:hover {
+    background: #5a432d;
+}
+
+.btn-copy svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.section-header h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    color: #3a2e1b;
+    margin: 0;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #e8d8b0;
+    color: #3a2e1b;
+    text-decoration: none;
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    transition: background 0.2s;
+}
+
+.btn-action:hover {
+    background: #d1bfa3;
+    text-decoration: none;
+}
+
+.btn-action svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.character-card,
+.npc-card,
+.location-card {
+    background: white;
+    border: 1px solid #e0d6c2;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.character-card:hover,
+.npc-card:hover,
+.location-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.character-card h3,
+.npc-card h3,
+.location-card h3 {
+    font-family: 'Merriweather', serif;
+    font-size: 1.2rem;
+    color: #3a2e1b;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    margin-bottom: 1rem;
+}
+
+.hp-indicator {
+    height: 24px;
+    background: #f3eada;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.hp-bar {
+    height: 100%;
+    background: #c44;
+    transition: width 0.5s ease;
+}
+
+.hp-indicator span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Merriweather', serif;
+    font-size: 0.8rem;
+    color: white;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.char-owner {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.npc-info {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.unknown {
+    color: #8a7866;
+    font-style: italic;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-view,
+.btn-edit,
+.btn-gm {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.5rem 0.8rem;
+    font-family: 'Merriweather', serif;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.btn-view {
+    background: #e8d8b0;
+    color: #3a2e1b;
+}
+
+.btn-view:hover {
+    background: #d1bfa3;
+    text-decoration: none;
+}
+
+.btn-edit {
+    background: #d1bfa3;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #5a432d;
+    text-decoration: none;
+}
+
+.btn-gm {
+    background: #f3eada;
+    color: #3a2e1b;
+    font-size: 0.8rem;
+}
+
+.btn-gm:hover {
+    background: #e0d6c2;
+    text-decoration: none;
+}
+
+.btn-view svg,
+.btn-edit svg,
+.btn-gm svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.gm-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.empty-state {
+    background: #f7f1e7;
+    border: 1px dashed #dac8a0;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.empty-state svg {
+    width: 48px;
+    height: 48px;
+    stroke: #dac8a0;
+    stroke-width: 1.5;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    margin: 0;
+}
+
+.world-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    font-family: 'Merriweather', serif;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #d1bfa3;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5a432d;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-secondary {
+    background: white;
+    color: #d1bfa3;
+    border: 1px solid #dac8a0;
+}
+
+.btn-secondary:hover {
+    background: #f7f1e7;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.btn-primary svg,
+.btn-secondary svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+@media (max-width: 768px) {
+    .world-container {
+        padding: 0 1rem;
+    }
+
+    .world-header h1 {
+        font-size: 2rem;
+    }
+
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .world-actions {
+        flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
 {% endblock %}
 
 {% block js %}
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const worldId = "{{ world.id }}";
-            const pollUrl = `/worlds/${worldId}/character-hp/`;
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Функция для копирования ссылки приглашения
+    function copyInviteLink() {
+        const inviteInput = document.getElementById('invite-link');
+        inviteInput.select();
+        document.execCommand('copy');
 
-            function updateHP() {
-                fetch(pollUrl, {
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.status !== "ok") return;
-                        for (const [id, info] of Object.entries(data.characters)) {
-                            const el = document.querySelector(`.char-hp[data-char-id="${id}"]`);
-                            if (el) {
-                                el.textContent = `${info.current_hp} / ${info.max_hp}`;
-                            }
-                        }
-                    })
-                    .catch(err => console.error("Ошибка при обновлении HP:", err));
+        const copyBtn = document.querySelector('.btn-copy');
+        const originalText = copyBtn.innerHTML;
+
+        copyBtn.innerHTML = `
+            <svg viewBox="0 0 24 24">
+                <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            Скопировано!
+        `;
+
+        setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+        }, 2000);
+    }
+
+    // Обработчик кнопки копирования
+    const copyBtn = document.querySelector('.btn-copy');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', copyInviteLink);
+    }
+
+    // Функция для обновления HP персонажей
+    function updateCharacterHP() {
+        const worldId = "{{ world.id }}";
+        const pollUrl = `/worlds/${worldId}/character-hp/`;
+
+        fetch(pollUrl, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
             }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status !== "ok") return;
 
-            // Запускем раз в 10 секунд
-            setInterval(updateHP, 10000);
-            updateHP(); // сразу при загрузке
-        });
-    </script>
+            for (const [id, info] of Object.entries(data.characters)) {
+                const hpElement = document.querySelector(`.hp-indicator[data-char-id="${id}"] .hp-bar`);
+                const hpText = document.querySelector(`.hp-indicator[data-char-id="${id}"] span`);
+
+                if (hpElement && hpText) {
+                    hpElement.style.width = `${(info.current_hp / info.max_hp) * 100}%`;
+                    hpText.textContent = `${info.current_hp} / ${info.max_hp}`;
+
+                    // Изменение цвета в зависимости от % HP
+                    const percent = (info.current_hp / info.max_hp) * 100;
+                    if (percent > 60) {
+                        hpElement.style.backgroundColor = '#4a8';
+                    } else if (percent > 30) {
+                        hpElement.style.backgroundColor = '#ca4';
+                    } else {
+                        hpElement.style.backgroundColor = '#c44';
+                    }
+                }
+            }
+        })
+        .catch(err => console.error("Ошибка при обновлении HP:", err));
+    }
+
+    // Запускаем обновление HP каждые 10 секунд
+    setInterval(updateCharacterHP, 10000);
+    updateCharacterHP(); // Сразу при загрузке
+});
+</script>
 {% endblock %}

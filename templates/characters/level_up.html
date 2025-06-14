@@ -7,7 +7,6 @@
         <p>Осталось очков: <strong id="remaining-points">{{ char.ability_points }}</strong></p>
 
     <div class="table-responsive">
-
         <table class="item-table" style="max-width: 90%">
             <thead>
             <tr>
@@ -20,7 +19,7 @@
             {% for key,label in form.fields.stat.choices %}
                 <tr data-stat="{{ key }}">
                     <td>{{ label }}</td>
-                    <td class="value-cell">{{ char|get_attr:key }}</td>
+                    <td class="value-cell">{{ char|get_attr:key }} / 10</td> <!-- Добавлено ограничение 10 -->
                     <td>
                         <button
                                 type="button"
@@ -57,15 +56,23 @@
         document.addEventListener("DOMContentLoaded", () => {
             const csrftoken = getCookie('csrftoken');
             const charId = "{{ char.id }}";
-            // Собираем URL из именованного маршрута:
             const levelUpUrl = "{% url 'characters:level-up' char.id %}";
 
             document.querySelectorAll('.btn-levelup').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const stat = btn.dataset.stat;
-                    if (!confirm(`Потратить 1 очко на повышение ${stat.toUpperCase()}?`)) {
+                    const currentValue = parseInt(btn.closest('tr').querySelector('.value-cell').textContent);
+
+                    // Проверка на максимальное значение
+                    if (currentValue >= 10) {
+                        alert('Максимальное значение характеристики достигнуто (10)');
                         return;
                     }
+
+                    if (!confirm(`Потратить 1 очко на повышение ${stat.toUpperCase()} с ${currentValue} до ${currentValue + 1}?`)) {
+                        return;
+                    }
+
                     try {
                         const res = await fetch(levelUpUrl, {
                             method: 'POST',
@@ -83,14 +90,15 @@
                         }
                         // Обновляем значение в таблице
                         document.querySelector(`tr[data-stat="${stat}"] .value-cell`)
-                            .textContent = json.new_value;
+                            .textContent = json.new_value + ' / 10'; // Добавлено ограничение 10
                         // Обновляем оставшиеся очки
                         const rem = json.remaining;
                         document.getElementById('remaining-points').textContent = rem;
-                        if (rem < 1) {
-                            document.querySelectorAll('.btn-levelup')
-                                .forEach(b => b.disabled = true);
-                        }
+                        // Отключаем кнопки если закончились очки или достигнут максимум
+                        document.querySelectorAll('.btn-levelup').forEach(b => {
+                            const rowValue = parseInt(b.closest('tr').querySelector('.value-cell').textContent);
+                            b.disabled = rem < 1 || rowValue >= 10;
+                        });
                     } catch (err) {
                         console.error(err);
                         alert('Не удалось повысить: ' + err.message);

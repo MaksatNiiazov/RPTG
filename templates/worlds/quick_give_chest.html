@@ -1,36 +1,290 @@
 {% extends "base.html" %}
 {% block title %}Выдать сундук в {{ world.name }}{% endblock %}
+
 {% block content %}
-  <div class="container">
-    <h1>Выдать сундук в «{{ world.name }}»</h1>
+<div class="chest-container">
+    <div class="chest-header">
+        <nav class="breadcrumbs">
+            <a href="{% url 'worlds:detail' world.pk %}">{{ world.name }}</a>
+            <span> / </span>
+            <span>Выдать сундук</span>
+        </nav>
 
-    <form method="post">
-      {% csrf_token %}
-      {{ form.non_field_errors }}
-      <div class="grid-2">
-        <div>
-          {{ form.character.label_tag }} {{ form.character }}
-          {{ form.chest_rarity.label_tag }} {{ form.chest_rarity }}
-          {{ form.count.label_tag }}     {{ form.count }}
-          {{ form.rare_count.label_tag }}    {{ form.rare_count }}
+        <h1 class="chest-title">Выдать сундук в «{{ world.name }}»</h1>
+    </div>
+
+    <form method="post" class="chest-form">
+        {% csrf_token %}
+
+        <div class="form-errors">
+            {{ form.non_field_errors }}
         </div>
-      </div>
 
-      <button type="submit" class="btn">Создать и выдать</button>
-      <a href="{% url 'worlds:detail' world.pk %}" class="btn">Отмена</a>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.character.id_for_label }}">
+                    <svg class="form-icon" viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    {{ form.character.label }}
+                </label>
+                {{ form.character }}
+                {{ form.character.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.chest_rarity.id_for_label }}">
+                    <svg class="form-icon" viewBox="0 0 24 24">
+                        <rect x="3" y="8" width="18" height="12" rx="1"/>
+                        <path d="M3 11h18M12 8v4m-3-1h6"/>
+                    </svg>
+                    {{ form.chest_rarity.label }}
+                </label>
+                {{ form.chest_rarity }}
+                {{ form.chest_rarity.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.count.id_for_label }}">
+                    <svg class="form-icon" viewBox="0 0 24 24">
+                        <path d="M8 12h4m0 0h4m-4 0v4m0-4V8"/>
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    </svg>
+                    {{ form.count.label }}
+                </label>
+                {{ form.count }}
+                {{ form.count.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.rare_count.id_for_label }}" class="js-rare-count-label">
+                    <svg class="form-icon" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    {{ form.rare_count.label }}
+                </label>
+                {{ form.rare_count }}
+                {{ form.rare_count.errors }}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <svg class="btn-icon" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+                Создать и выдать
+            </button>
+            <a href="{% url 'worlds:detail' world.pk %}" class="btn btn-secondary">
+                <svg class="btn-icon" viewBox="0 0 24 24">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Отмена
+            </a>
+        </div>
     </form>
-  </div>
+</div>
 
-  <script>
-    // простая логика: включаем/выключаем rare_rarity
-    document.addEventListener("DOMContentLoaded", () => {
-      const rc = document.querySelector(".js-rare-count");
-      const rr = document.querySelector(".js-rare-rarity");
-      function toggleRare() {
-        rr.disabled = ! (parseInt(rc.value,10) > 0);
-      }
-      rc.addEventListener("input", toggleRare);
-      toggleRare();
-    });
-  </script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const rareCount = document.getElementById("{{ form.rare_count.id_for_label }}");
+    const rareRarity = document.getElementById("{{ form.rare_rarity.id_for_label }}");
+
+    function updateRareRarity() {
+        rareRarity.disabled = parseInt(rareCount.value) <= 0;
+        rareRarity.closest('.form-group').style.opacity = rareRarity.disabled ? '0.6' : '1';
+    }
+
+    rareCount.addEventListener("input", updateRareRarity);
+    updateRareRarity();
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.chest-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.chest-header {
+    margin-bottom: 2rem;
+}
+
+.breadcrumbs {
+    font-family: 'Merriweather', serif;
+    color: #6b4f2b;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.breadcrumbs a {
+    color: #6b4f2b;
+    text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+.chest-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    color: #3a2e1b;
+    margin-bottom: 1rem;
+}
+
+.chest-form {
+    background: #f7f1e7;
+    border: 1px solid #dac8a0;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.form-errors {
+    color: #721c24;
+    background: #f8d7da;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Merriweather', serif;
+    font-weight: 500;
+    color: #3a2e1b;
+    margin-bottom: 0.5rem;
+}
+
+.form-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.form-group select,
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #c5ad8a;
+    border-radius: 4px;
+    background: #fff;
+    font-family: 'Merriweather', serif;
+    color: #4a3723;
+    transition: border-color 0.2s;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+    outline: none;
+    border-color: #8c7151;
+    box-shadow: 0 0 0 2px rgba(140, 113, 81, 0.2);
+}
+
+.form-group .errorlist {
+    color: #721c24;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    list-style: none;
+    padding-left: 0;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.btn-primary {
+    background: #6b4f2b;
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #5a432d;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #e8d8b0;
+    color: #3a2e1b;
+    border: 1px solid #c5ad8a;
+}
+
+.btn-secondary:hover {
+    background: #dbc79a;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+    .chest-container {
+        padding: 0 1rem;
+    }
+
+    .chest-title {
+        font-size: 1.8rem;
+    }
+
+    .chest-form {
+        padding: 1rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
 {% endblock %}

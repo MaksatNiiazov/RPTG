@@ -8,6 +8,8 @@
 
 /* === Секции экипировки и инвентаря === */
 .inventory-section {
+  max-width: 47%;
+  overflow: auto;
   flex: 1 1 480px;
   background: #fbf6ee;        /* светлый пергамент */
   border: 1px solid #dac8a0;  /* бежевый кант */

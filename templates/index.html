@@ -3,26 +3,146 @@
 {% load suggestion_tags %}
 
 {% block title %}Deep Dark Fantasy{% endblock %}
+
 {% block css %}
-    <link rel="stylesheet" href="{% static 'css/style_index.css' %}">
+<style>
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        max-width: 800px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .page-header {
+        text-align: center;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e0d6c2;
+    }
+
+    .page-title {
+        font-family: 'Cinzel', serif;
+        font-size: 2.2rem;
+        color: #3a2e1b;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        font-family: 'Merriweather', serif;
+        color: #5a432d;
+        font-size: 1.1rem;
+    }
+
+    .nav-section {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .nav-card {
+        padding: 1.5rem;
+        border-left: 4px solid #8c7151;
+        background: #f7f1e7;
+        transition: transform 0.2s;
+    }
+
+    .nav-card:hover {
+        transform: translateX(5px);
+    }
+
+    .nav-title {
+        font-family: 'Cinzel', serif;
+        font-size: 1.3rem;
+        color: #3a2e1b;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-title svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+    }
+
+    .nav-desc {
+        font-family: 'Merriweather', serif;
+        color: #5a432d;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .nav-link {
+        display: inline-block;
+        font-family: 'Merriweather', serif;
+        color: #6b4f2b;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .nav-link:hover {
+        text-decoration: underline;
+    }
+
+    @media (min-width: 600px) {
+        .main-grid {
+            margin: 5rem auto;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-    <div class="home-hero">
-        <div class="container">
-            <h1 class="hero-title">Deep Dark Fantasy</h1>
-            <p class="hero-subtitle">Пробуем сделать что-то годное</p>
-            <ul class="home-nav">
-                <li><a href="{% url 'rulebook:folder_list' %}">Rulebook (Правила)</a></li>
+<div class="main-grid">
+    <header class="page-header">
+        <h1 class="page-title">Deep Dark Fantasy</h1>
+        <p class="page-subtitle">Система для настольных ролевых игр</p>
+    </header>
 
+    <section class="nav-section">
+        <article class="nav-card">
+            <h2 class="nav-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
+                Правила
+            </h2>
+            <p class="nav-desc">Полное описание игровой системы, механик и характеристик персонажей</p>
+            <a href="{% url 'rulebook:folder_list' %}" class="nav-link">Перейти к правилам →</a>
+        </article>
 
-                <li><a href="{% url 'items:items_main' %}">Items (Предметы)</a></li>
-                <li><a href="{% url 'magic:magic_main' %}">Magic (Магия)</a></li>
+        <article class="nav-card">
+            <h2 class="nav-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                    <path d="M8.43 8.43L3 11l8 2 2 8 2.57-5.43"/>
+                    <path d="M17.39 11.73L22 2l-9.73 4.61M8.43 8.43l-3.82 3.82a2 2 0 0 0-.5.94l-.96 3.52a2 2 0 0 0 1.08 2.32l2.34.98"/>
+                </svg>
+                Предметы
+            </h2>
+            <p class="nav-desc">Каталог оружия, брони, снаряжения и других игровых предметов</p>
+            <a href="{% url 'items:items_main' %}" class="nav-link">Перейти к предметам →</a>
+        </article>
 
+        <article class="nav-card">
+            <h2 class="nav-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                    <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>
+                    <path d="M8.5 8.5v.01M16 15.5v.01M12 12v.01M11 17v.01M7 14v.01"/>
+                </svg>
+                Магия
+            </h2>
+            <p class="nav-desc">Заклинания, ритуалы, магические артефакты и мистические знания</p>
+            <a href="{% url 'magic:magic_main' %}" class="nav-link">Перейти к магии →</a>
+        </article>
+    </section>
+</div>
 
-            </ul>
-        </div>
-    </div>
-    {% suggestion_form %}
-
+{% suggestion_form %}
 {% endblock %}

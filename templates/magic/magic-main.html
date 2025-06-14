@@ -2,24 +2,243 @@
 {% load static %}
 {% load suggestion_tags %}
 
-{% block title %}Deep Dark Fantasy{% endblock %}
+{% block title %}Магия | Deep Dark Fantasy{% endblock %}
+
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/style_index.css' %}">
+    <style>
+        /* Специальные стили для страницы магии */
+        .magic-portal {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .spell-gate {
+            background: rgba(247, 241, 231, 0.7);
+            border: 1px solid #a38b6a;
+            border-radius: 8px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(3px);
+        }
+
+        .spell-gate::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #8a6d3b, #d4b483);
+        }
+
+        .spell-gate:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(139, 107, 70, 0.2);
+        }
+
+        .gate-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .gate-icon {
+            width: 50px;
+            height: 50px;
+            margin-right: 1rem;
+            background: rgba(212, 180, 131, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #8a6d3b;
+        }
+
+        .gate-icon svg {
+            width: 26px;
+            height: 26px;
+            stroke: #5a432d;
+            stroke-width: 1.5;
+        }
+
+        .gate-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            color: #3a2e1b;
+            margin-bottom: 0.25rem;
+        }
+
+        .gate-subtitle {
+            font-family: 'Merriweather', serif;
+            color: #8a7866;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .gate-description {
+            font-family: 'Merriweather', serif;
+            color: #5a432d;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .spell-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.6rem 1.25rem;
+            background: linear-gradient(to right, #8a6d3b, #a38b6a);
+            color: white;
+            border-radius: 4px;
+            font-family: 'Merriweather', serif;
+            text-decoration: none;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .spell-link::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.1) 50%,
+                rgba(255,255,255,0) 100%
+            );
+            transform: rotate(30deg);
+        }
+
+        .spell-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(139, 107, 70, 0.3);
+        }
+
+        .spell-link:hover::after {
+            animation: shine 1.5s infinite;
+        }
+
+        .spell-link svg {
+            width: 18px;
+            height: 18px;
+            margin-left: 0.5rem;
+            stroke: white;
+        }
+
+        @keyframes shine {
+            0% { left: -60%; }
+            100% { left: 140%; }
+        }
+
+        @media (max-width: 768px) {
+            .magic-portal {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .spell-gate {
+                padding: 1.5rem;
+            }
+
+            .gate-icon {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
-    <div class="home-hero">
+    <div class="home-hero magic-hero">
         <div class="container">
-            <h1 class="hero-title">Магия</h1>
-            <p class="hero-subtitle">Справочник заклинаний и всего что может быть с ними связанно</p>
-            <ul class="home-nav">
-                <li><a href="{% url 'magic:category_list' %}">Categories (Категории)</a></li>
-                <li><a href="{% url 'magic:school_list' %}">Schools (Школы)</a></li>
-                <li><a href="{% url 'magic:spell_list' %}">Spells (Заклинания)</a></li>
-                {#      <li><a href="{% url 'items:loot_config' %}">Loot (Генератор лута)</a></li>#}
-            </ul>
+            <h1 class="hero-title">Архивы Магии</h1>
+            <p class="hero-subtitle">Тайные знания и мистические искусства мира Deep Dark Fantasy</p>
+
+            <div class="magic-portal">
+                <div class="spell-gate">
+                    <div class="gate-header">
+                        <div class="gate-icon">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>
+                                <path d="M8.5 8.5v.01M16 15.5v.01M12 12v.01M11 17v.01M7 14v.01"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="gate-title">Категории магии</h2>
+                            <p class="gate-subtitle">Классификация мистических искусств</p>
+                        </div>
+                    </div>
+                    <p class="gate-description">
+                        Систематизация магических дисциплин по их природе и воздействию на мир.
+                        Изучите различные направления магического знания.
+                    </p>
+                    <a href="{% url 'magic:category_list' %}" class="spell-link">
+                        Войти в раздел
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="spell-gate">
+                    <div class="gate-header">
+                        <div class="gate-icon">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="gate-title">Школы магии</h2>
+                            <p class="gate-subtitle">Традиции и методы обучения</p>
+                        </div>
+                    </div>
+                    <p class="gate-description">
+                        Различные подходы к изучению и применению магии.
+                        Узнайте о философских различиях между магическими школами.
+                    </p>
+                    <a href="{% url 'magic:school_list' %}" class="spell-link">
+                        Войти в раздел
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="spell-gate">
+                    <div class="gate-header">
+                        <div class="gate-icon">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="gate-title">Заклинания</h2>
+                            <p class="gate-subtitle">Полный реестр магических формул</p>
+                        </div>
+                    </div>
+                    <p class="gate-description">
+                        Каталог всех известных заклинаний с подробным описанием их эффектов,
+                        компонентов и условий применения.
+                    </p>
+                    <a href="{% url 'magic:spell_list' %}" class="spell-link">
+                        Войти в раздел
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-    {% suggestion_form %}
 
+    {% suggestion_form %}
 {% endblock %}

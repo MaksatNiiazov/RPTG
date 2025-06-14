@@ -1,33 +1,287 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Категория {{ category.name }}{% endblock %}
-{% block content %}
-    <div class="container-box">
-        <h1>Категория: {{ category.name }}</h1>
-        <p>Заклинания данной категории:</p>
+{% block title %}{{ category.name }} | Категория заклинаний{% endblock %}
 
-        <table class="item-table">
-            <thead>
-            <tr>
-                <th>Уровень</th>
-                <th>Название</th>
-                <th>Школа</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for spell in spells %}
-                <tr>
-                    <td>{{ spell.level }}</td>
-                    <td><a href="{% url 'magic:spell_detail' spell.slug %}">{{ spell.name }}</a></td>
-                    <td>{{ spell.school.name }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="3">Нет заклинаний.</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+{% block content %}
+<div class="spell-category-container">
+    <div class="spell-category-header">
+        <nav class="breadcrumbs">
+            <a href="{% url 'magic:magic_main' %}">Магия</a>
+            <span> / </span>
+            <span>{{ category.name }}</span>
+        </nav>
+
+        <h1 class="spell-category-title">{{ category.name }}</h1>
+
+        {% if category.description %}
+        <div class="category-description">
+            {{ category.description }}
+        </div>
+        {% endif %}
     </div>
+
+    <div class="spell-list-container">
+        {% if spells %}
+        <div class="spell-table">
+            <div class="table-header">
+                <div class="header-cell level-cell">Уровень</div>
+                <div class="header-cell name-cell">Название</div>
+                <div class="header-cell school-cell">Школа</div>
+            </div>
+
+            {% for spell in spells %}
+            <a href="{% url 'magic:spell_detail' spell.slug %}" class="spell-row">
+                <div class="spell-cell level-cell">
+                    <span class="spell-level">{{ spell.level }}</span>
+                </div>
+                <div class="spell-cell name-cell">
+                    <span class="spell-name">{{ spell.name }}</span>
+                    {% if spell.is_ritual %}
+                    <span class="spell-tag ritual">Ритуал</span>
+                    {% endif %}
+                    {% if spell.concentration %}
+                    <span class="spell-tag concentration">Концентрация</span>
+                    {% endif %}
+                </div>
+                <div class="spell-cell school-cell">
+                    <span class="spell-school">{{ spell.school.name }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-spells">
+            <svg class="empty-icon" viewBox="0 0 24 24">
+                <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>
+                <path d="M8.5 8.5v.01M16 15.5v.01M12 12v.01M11 17v.01M7 14v.01"/>
+            </svg>
+            <p>В этой категории пока нет заклинаний</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.spell-category-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.breadcrumbs {
+    font-family: 'Merriweather', serif;
+    color: #6b4f2b;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.breadcrumbs a {
+    color: #6b4f2b;
+    text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+.spell-category-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    color: #3a2e1b;
+    margin-bottom: 1rem;
+}
+
+.category-description {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #f7f1e7;
+    border-radius: 6px;
+    border-left: 3px solid #8c7151;
+}
+
+.spell-table {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #dac8a0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-header {
+    display: flex;
+    background: #e8d8b0;
+    font-family: 'Cinzel', serif;
+    font-weight: 500;
+    color: #3a2e1b;
+}
+
+.header-cell {
+    padding: 1rem;
+    font-size: 0.95rem;
+}
+
+.spell-row {
+    display: flex;
+    text-decoration: none;
+    color: inherit;
+    background: #f7f1e7;
+    transition: background 0.2s;
+    border-bottom: 1px solid #e0d6c2;
+}
+
+.spell-row:last-child {
+    border-bottom: none;
+}
+
+.spell-row:hover {
+    background: #e8d8b0;
+}
+
+.spell-cell {
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    font-family: 'Merriweather', serif;
+}
+
+.level-cell {
+    width: 100px;
+    flex-shrink: 0;
+}
+
+.name-cell {
+    flex-grow: 1;
+}
+
+.school-cell {
+    width: 150px;
+    flex-shrink: 0;
+}
+
+.spell-level {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background: #6b4f2b;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
+    font-size: 0.9rem;
+}
+
+.spell-name {
+    color: #3a2e1b;
+    font-weight: 500;
+}
+
+.spell-school {
+    color: #5a432d;
+}
+
+.spell-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+    background: #e8d8b0;
+    color: #5a432d;
+}
+
+.spell-tag.ritual {
+    background: #d4edda;
+    color: #155724;
+}
+
+.spell-tag.concentration {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.empty-spells {
+    text-align: center;
+    padding: 3rem;
+    background: #f7f1e7;
+    border-radius: 8px;
+    border: 1px dashed #dac8a0;
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+    stroke: #dac8a0;
+    stroke-width: 1.5;
+    margin-bottom: 1rem;
+}
+
+.empty-spells p {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+}
+
+@media (max-width: 768px) {
+    .spell-category-container {
+        padding: 0 1rem;
+    }
+
+    .header-cell, .spell-cell {
+        padding: 0.75rem;
+    }
+
+    .level-cell {
+        width: 70px;
+    }
+
+    .school-cell {
+        width: 120px;
+    }
+
+    .spell-tag {
+        display: block;
+        margin: 0.25rem 0 0 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .spell-category-title {
+        font-size: 1.8rem;
+    }
+
+    .table-header {
+        display: none;
+    }
+
+    .spell-row {
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    .spell-cell {
+        padding: 0.25rem 0;
+        width: 100% !important;
+    }
+
+    .level-cell {
+        order: 1;
+    }
+
+    .name-cell {
+        order: 2;
+        font-size: 1.1rem;
+    }
+
+    .school-cell {
+        order: 3;
+        color: #8a7866;
+        font-size: 0.9rem;
+    }
+}
+</style>
 {% endblock %}

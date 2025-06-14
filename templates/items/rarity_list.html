@@ -1,30 +1,203 @@
 {% extends "base.html" %}
-{% block title %}Редкости{% endblock %}
-{% block content %}
-    <div class="container-box">
-        <h1>Редкости</h1>
+{% block title %}Редкости предметов | Deep Dark Fantasy{% endblock %}
 
+{% block content %}
+<div class="rarity-container">
+    <div class="rarity-header">
+        <h1 class="rarity-title">Система редкостей</h1>
+        <p class="rarity-subtitle">Классификация предметов по уровню редкости</p>
+    </div>
+
+    <div class="table-responsive">
         <table class="rarity-table">
             <thead>
-            <tr>
-                <th>Название</th>
-                <th>Уровень</th>
-                <th>Легендарная</th>
-            </tr>
+                <tr>
+                    <th class="col-name">Название</th>
+                    <th class="col-level">Уровень</th>
+                    <th class="col-legendary">Легендарная</th>
+                    <th class="col-color">Цвет</th>
+                </tr>
             </thead>
             <tbody>
-            {% for r in rarities %}
-                <tr style="border-left: 4px solid {{ r.color }};">
-                    <td>{{ r.name }}</td>
-                    <td>{{ r.lvl }}</td>
-                    <td>{% if r.legendary %}Да ⭐{% else %}Нет{% endif %}</td>
+                {% for r in rarities %}
+                <tr class="rarity-row" style="--rarity-color: {{ r.color }};">
+                    <td class="rarity-name">
+                        <span class="color-badge" style="background-color: {{ r.color }};"></span>
+                        {{ r.name }}
+                    </td>
+                    <td class="rarity-level">{{ r.lvl }}</td>
+                    <td class="rarity-legendary">
+                        {% if r.legendary %}
+                        <span class="legendary-badge">⭐ Легендарная</span>
+                        {% else %}
+                        <span class="common-badge">Обычная</span>
+                        {% endif %}
+                    </td>
+                    <td class="rarity-color">
+                        <span class="color-value">{{ r.color }}</span>
+                    </td>
                 </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="3">Редкости не найдены.</td>
+                {% empty %}
+                <tr class="empty-row">
+                    <td colspan="4">
+                        <div class="empty-state">
+                            <svg class="empty-icon" viewBox="0 0 24 24">
+                                <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>
+                                <path d="M8.5 8.5v.01M16 15.5v.01M12 12v.01M11 17v.01M7 14v.01"/>
+                            </svg>
+                            <p>Редкости не найдены</p>
+                        </div>
+                    </td>
                 </tr>
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
     </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.rarity-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.rarity-header {
+    margin-bottom: 2.5rem;
+    text-align: center;
+}
+
+.rarity-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2rem;
+    color: #3a2e1b;
+    margin-bottom: 0.5rem;
+}
+
+.rarity-subtitle {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-size: 1.1rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+    background: #f7f1e7;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.rarity-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Merriweather', serif;
+}
+
+.rarity-table th {
+    background: #e8d8b0;
+    color: #3a2e1b;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.rarity-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e0d6c2;
+    color: #4a3723;
+}
+
+.rarity-row {
+    transition: background 0.2s;
+}
+
+.rarity-row:hover {
+    background: rgba(220, 201, 161, 0.2);
+}
+
+.rarity-row:last-child td {
+    border-bottom: none;
+}
+
+.color-badge {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: middle;
+    box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
+.rarity-name {
+    font-weight: 500;
+    min-width: 200px;
+}
+
+.rarity-level {
+    font-family: 'Cinzel', serif;
+    text-align: center;
+}
+
+.legendary-badge {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    background: rgba(255, 215, 0, 0.1);
+    color: #b8860b;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.common-badge {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    background: rgba(0, 0, 0, 0.05);
+    color: #5a432d;
+    border-radius: 4px;
+}
+
+.color-value {
+    font-family: monospace;
+    font-size: 0.9rem;
+    padding: 0.3rem 0.6rem;
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+.empty-state {
+    padding: 2rem;
+    text-align: center;
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+    stroke: #dac8a0;
+    stroke-width: 1.5;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+}
+
+@media (max-width: 768px) {
+    .rarity-container {
+        padding: 0 1rem;
+    }
+
+    .rarity-title {
+        font-size: 1.8rem;
+    }
+
+    .rarity-table th,
+    .rarity-table td {
+        padding: 0.75rem;
+    }
+}
+</style>
 {% endblock %}

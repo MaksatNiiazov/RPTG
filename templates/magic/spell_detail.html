@@ -1,22 +1,245 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ spell.name }}{% endblock %}
+{% block title %}{{ spell.name }} | Deep Dark Fantasy{% endblock %}
+
 {% block content %}
-    <div class="container-box">
-        <h1>{{ spell.name }}</h1>
-        <p><strong>Уровень:</strong> {{ spell.level }}</p>
-        <p><strong>Школа:</strong> <a
-                href="{% url 'magic:school_detail' spell.school.slug %}">{{ spell.school.name }}</a></p>
-        <p><strong>Категория:</strong> <a
-                href="{% url 'magic:category_detail' spell.category.slug %}">{{ spell.category.name }}</a></p>
-        <p><strong>Тип действия:</strong> {{ spell.get_action_cost_display }}</p>
-        <p><strong>Concentration Check:</strong> {% if spell.requires_check %}Да{% else %}Нет{% endif %}</p>
+<div class="spell-container">
+    <div class="spell-header">
+        <nav class="spell-breadcrumbs">
+            <a href="{% url 'magic:magic_main' %}">Магия</a>
+            <span> / </span>
+            <a href="{% url 'magic:school_detail' spell.school.slug %}">{{ spell.school.name }}</a>
+            <span> / </span>
+            <span>{{ spell.name }}</span>
+        </nav>
 
-        <hr>
-
-        <div class="article-content">
-            {{ spell.description|linebreaks }}
+        <div class="spell-title-block">
+            <h1 class="spell-title">{{ spell.name }}</h1>
+            <div class="spell-level">
+                <span class="level-badge">{{ spell.level|default:"0" }} уровень</span>
+                <span class="school-badge">{{ spell.school.name }}</span>
+            </div>
         </div>
     </div>
+
+    <div class="spell-details">
+        <div class="spell-attributes">
+            <div class="attribute">
+                <span class="attr-name">Категория:</span>
+                <span class="attr-value">
+                    <a href="{% url 'magic:category_detail' spell.category.slug %}">{{ spell.category.name }}</a>
+                </span>
+            </div>
+
+            <div class="attribute">
+                <span class="attr-name">Тип действия:</span>
+                <span class="attr-value">{{ spell.get_action_cost_display }}</span>
+            </div>
+
+            <div class="attribute">
+                <span class="attr-name">Концентрация:</span>
+                <span class="attr-value">
+                    {% if spell.requires_check %}
+                        <span class="requires-check">Требуется проверка</span>
+                    {% else %}
+                        <span class="no-check">Не требуется</span>
+                    {% endif %}
+                </span>
+            </div>
+
+            {% if spell.range %}
+            <div class="attribute">
+                <span class="attr-name">Дистанция:</span>
+                <span class="attr-value">{{ spell.range }}</span>
+            </div>
+            {% endif %}
+
+            {% if spell.duration %}
+            <div class="attribute">
+                <span class="attr-name">Длительность:</span>
+                <span class="attr-value">{{ spell.duration }}</span>
+            </div>
+            {% endif %}
+
+            {% if spell.components %}
+            <div class="attribute">
+                <span class="attr-name">Компоненты:</span>
+                <span class="attr-value">{{ spell.components }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="spell-description">
+            <h2 class="description-title">Описание заклинания</h2>
+            <div class="description-content">
+                {{ spell.description|linebreaks }}
+            </div>
+        </div>
+
+        {% if spell.higher_levels %}
+        <div class="spell-upcasting">
+            <h3>Улучшенные уровни</h3>
+            <div class="upcasting-content">
+                {{ spell.higher_levels|linebreaks }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.spell-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.spell-breadcrumbs {
+    font-family: 'Merriweather', serif;
+    color: #6b4f2b;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.spell-breadcrumbs a {
+    color: #6b4f2b;
+    text-decoration: none;
+}
+
+.spell-breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+.spell-title-block {
+    margin-bottom: 2rem;
+}
+
+.spell-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2rem;
+    color: #3a2e1b;
+    margin-bottom: 0.5rem;
+}
+
+.spell-level {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.level-badge, .school-badge {
+    font-family: 'Merriweather', serif;
+    font-size: 0.9rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+}
+
+.level-badge {
+    background: #3a2e1b;
+    color: white;
+}
+
+.school-badge {
+    background: #e8d8b0;
+    color: #5a432d;
+    border: 1px solid #dac8a0;
+}
+
+.spell-attributes {
+    background: #f7f1e7;
+    border: 1px solid #dac8a0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.attribute {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    margin-bottom: 0.8rem;
+    font-family: 'Merriweather', serif;
+}
+
+.attribute:last-child {
+    margin-bottom: 0;
+}
+
+.attr-name {
+    color: #5a432d;
+    font-weight: 500;
+}
+
+.attr-value {
+    color: #3a2e1b;
+}
+
+.requires-check {
+    color: #a04545;
+    font-weight: 500;
+}
+
+.no-check {
+    color: #457a45;
+    font-weight: 500;
+}
+
+.description-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    color: #3a2e1b;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e0d6c2;
+}
+
+.description-content {
+    font-family: 'Merriweather', serif;
+    color: #3a2e1b;
+    line-height: 1.7;
+}
+
+.spell-upcasting {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0d6c2;
+}
+
+.spell-upcasting h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+    color: #3a2e1b;
+    margin-bottom: 1rem;
+}
+
+.upcasting-content {
+    font-family: 'Merriweather', serif;
+    color: #3a2e1b;
+    line-height: 1.7;
+    background: #f9f5eb;
+    padding: 1rem;
+    border-left: 3px solid #8c7151;
+    border-radius: 0 4px 4px 0;
+}
+
+@media (max-width: 768px) {
+    .spell-container {
+        padding: 0 1rem;
+    }
+
+    .attribute {
+        grid-template-columns: 1fr;
+        margin-bottom: 1rem;
+    }
+
+    .attr-name {
+        margin-bottom: 0.2rem;
+    }
+
+    .spell-title {
+        font-size: 1.8rem;
+    }
+}
+</style>
 {% endblock %}

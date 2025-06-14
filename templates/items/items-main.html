@@ -2,25 +2,206 @@
 {% load static %}
 {% load suggestion_tags %}
 
-{% block title %}Deep Dark Fantasy{% endblock %}
+{% block title %}Предметы | Deep Dark Fantasy{% endblock %}
+
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/style_index.css' %}">
+    <style>
+        /* Специфичные стили для страницы предметов */
+        .items-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .dashboard-card {
+            background: rgba(247, 241, 231, 0.8);
+            border: 1px solid #dac8a0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(2px);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 1rem;
+            background: #e8d8b0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: #5a432d;
+            stroke-width: 1.5;
+        }
+
+        .card-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            color: #3a2e1b;
+        }
+
+        .card-count {
+            font-family: 'Merriweather', serif;
+            color: #8a7866;
+            font-size: 0.9rem;
+        }
+
+        .card-description {
+            font-family: 'Merriweather', serif;
+            color: #5a432d;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: #6b4f2b;
+            color: white;
+            border-radius: 4px;
+            font-family: 'Merriweather', serif;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .card-link:hover {
+            background: #5a432d;
+        }
+
+        .card-link svg {
+            width: 16px;
+            height: 16px;
+            margin-left: 0.5rem;
+            stroke: white;
+        }
+
+        @media (max-width: 768px) {
+            .items-dashboard {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .dashboard-card {
+                padding: 1.25rem;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
     <div class="home-hero">
         <div class="container">
-            <h1 class="hero-title">Предметы</h1>
-            <p class="hero-subtitle">Справочник предметов и всего что может быть с ними связанно</p>
-            <ul class="home-nav">
-                <li><a href="{% url 'items:type_list' %}">Types (Типы предметов {{ types.count }})</a></li>
-                <li><a href="{% url 'items:rarity_list' %}">Rares (Редкости {{ rarities.count }})</a></li>
-                <li><a href="{% url 'items:item_list' %}">Items (Предметы {{ items.count }})</a></li>
-                <li><a href="{% url 'items:loot_config' %}">Loot (Генератор лута)</a></li>
+            <h1 class="hero-title">Каталог предметов</h1>
+            <p class="hero-subtitle">Полный справочник игровых предметов и связанных систем</p>
 
-            </ul>
+            <div class="items-dashboard">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M3 6l9-4 9 4m-9-4v20m-7-3l7-3 7 3"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="card-title">Типы предметов</h2>
+                            <p class="card-count">{{ types.count }} категорий</p>
+                        </div>
+                    </div>
+                    <p class="card-description">Классификация всех предметов по типам и категориям</p>
+                    <a href="{% url 'items:type_list' %}" class="card-link">
+                        Перейти
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="card-title">Редкости</h2>
+                            <p class="card-count">{{ rarities.count }} уровней</p>
+                        </div>
+                    </div>
+                    <p class="card-description">Система редкости предметов и их характеристик</p>
+                    <a href="{% url 'items:rarity_list' %}" class="card-link">
+                        Перейти
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="card-title">Все предметы</h2>
+                            <p class="card-count">{{ items.count }} предметов</p>
+                        </div>
+                    </div>
+                    <p class="card-description">Полный каталог предметов с фильтрами и поиском</p>
+                    <a href="{% url 'items:item_list' %}" class="card-link">
+                        Перейти
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M8 17l4 4 4-4m-4-5v9M5.88 15.88l-2.42-2.42a1.12 1.12 0 0 1 0-1.59l5.34-5.34a1.12 1.12 0 0 1 1.59 0l2.42 2.42"/>
+                                <path d="M11.88 5.88l2.42-2.42a1.12 1.12 0 0 1 1.59 0l5.34 5.34a1.12 1.12 0 0 1 0 1.59l-2.42 2.42"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="card-title">Генератор лута</h2>
+                            <p class="card-count">Настройка добычи</p>
+                        </div>
+                    </div>
+                    <p class="card-description">Настройка и генерация предметов для игровых событий</p>
+                    <a href="{% url 'items:loot_config' %}" class="card-link">
+                        Перейти
+                        <svg viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-    {% suggestion_form %}
 
+    {% suggestion_form %}
 {% endblock %}

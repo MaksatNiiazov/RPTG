@@ -2,89 +2,359 @@
 {% load static %}
 
 {% block title %}Список заклинаний{% endblock %}
-{% block content %}
-    <div class="container-box">
-        <h1>Заклинания</h1>
 
-        <form method="get" class="filters">
-            <label>Школа:
-                <select name="school">
-                    <option value="">Все</option>
+{% block content %}
+    <div class="spells-container">
+        <div class="spells-header">
+            <h1 class="spells-title">Каталог заклинаний</h1>
+            <p class="spells-count">Всего заклинаний: {{ spells.paginator.count }}</p>
+        </div>
+
+        <form method="get" class="spells-filters">
+            <div class="filter-group">
+                <label class="filter-label">Школа:</label>
+                <select name="school" class="filter-select">
+                    <option value="">Все школы</option>
                     {% for s in schools %}
                         <option value="{{ s.slug }}" {% if request.GET.school == s.slug %}selected{% endif %}>
                             {{ s.name }}
                         </option>
                     {% endfor %}
                 </select>
-            </label>
-            <label>Категория:
-                <select name="category">
-                    <option value="">Все</option>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Категория:</label>
+                <select name="category" class="filter-select">
+                    <option value="">Все категории</option>
                     {% for c in categories %}
                         <option value="{{ c.slug }}" {% if request.GET.category == c.slug %}selected{% endif %}>
                             {{ c.name }}
                         </option>
                     {% endfor %}
                 </select>
-            </label>
-            <label>Уровень:
-                <select name="level">
-                    <option value="">Все</option>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Уровень:</label>
+                <select name="level" class="filter-select">
+                    <option value="">Все уровни</option>
                     {% for lv in levels %}
                         <option value="{{ lv }}" {% if request.GET.level == lv|stringformat:"s" %}selected{% endif %}>
                             {{ lv }}
                         </option>
                     {% endfor %}
                 </select>
-            </label>
-            <button class="btn" type="submit">Фильтровать</button>
+            </div>
+
+            <button class="filter-button" type="submit">
+                <svg class="filter-icon" viewBox="0 0 24 24">
+                    <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                </svg>
+                Применить
+            </button>
+
+            <a href="{% url 'magic:spell_list' %}" class="filter-reset">
+                Сбросить
+            </a>
         </form>
 
-        <table class="item-table">
-            <thead>
-            <tr>
-                <th>Ур.</th>
-                <th>Название</th>
-                <th>Школа</th>
-                <th>Категория</th>
-                <th>Стоимость</th>
-                <th>Действие</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for spell in spells %}
-                <tr>
-                    <td>{{ spell.level }}</td>
-                    <td><a href="{% url 'magic:spell_detail' spell.slug %}">{{ spell.name }}</a></td>
-                    <td>{{ spell.school.name }}</td>
-                    <td>{{ spell.category.name }}</td>
-                    <td>{{ spell.get_action_cost_display }}</td>
-                    <td>{{ spell.description }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="5">Нет совпадений.</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="spells-table">
+                <thead>
+                    <tr>
+                        <th class="level-col">Ур.</th>
+                        <th class="name-col">Название</th>
+                        <th class="school-col">Школа</th>
+                        <th class="category-col">Категория</th>
+                        <th class="cost-col">Стоимость</th>
+                        <th class="action-col">Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for spell in spells %}
+                        <tr class="spell-row">
+                            <td class="level-cell">{{ spell.level }}</td>
+                            <td class="name-cell">
+                                <a href="{% url 'magic:spell_detail' spell.slug %}" class="spell-link">
+                                    {{ spell.name }}
+                                </a>
+                            </td>
+                            <td class="school-cell">
+                                <span class="school-badge" style="background-color: {{ spell.school.color }};">
+                                    {{ spell.school.name }}
+                                </span>
+                            </td>
+                            <td class="category-cell">{{ spell.category.name }}</td>
+                            <td class="cost-cell">{{ spell.get_action_cost_display }}</td>
+                            <td class="action-cell">{{ spell.get_short_description }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr class="empty-row">
+                            <td colspan="6">Заклинаний не найдено. Попробуйте изменить параметры фильтрации.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
         {% if is_paginated %}
-            <nav class="pagination">
+            <div class="pagination">
                 {% if page_obj.has_previous %}
-                    <a href="?page=
-                            {{ page_obj.previous_page_number }}{% if request.GET.school %}&school={{ request.GET.school }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}">
-                        « Назад
+                    <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.school %}&school={{ request.GET.school }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}"
+                       class="page-link">
+                        &larr; Назад
                     </a>
                 {% endif %}
-                <span>Стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+
+                <span class="current-page">
+                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                </span>
+
                 {% if page_obj.has_next %}
-                    <a href="?page=
-                            {{ page_obj.next_page_number }}{% if request.GET.school %}&school={{ request.GET.school }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}">
-                        Вперёд »
+                    <a href="?page={{ page_obj.next_page_number }}{% if request.GET.school %}&school={{ request.GET.school }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}"
+                       class="page-link">
+                        Вперёд &rarr;
                     </a>
                 {% endif %}
-            </nav>
+            </div>
         {% endif %}
     </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.spells-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.spells-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.spells-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2rem;
+    color: #3a2e1b;
+    margin-bottom: 0.5rem;
+}
+
+.spells-count {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-size: 1rem;
+}
+
+.spells-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #f7f1e7;
+    border-radius: 8px;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 150px;
+}
+
+.filter-label {
+    display: block;
+    font-family: 'Merriweather', serif;
+    font-size: 0.9rem;
+    color: #5a432d;
+    margin-bottom: 0.5rem;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #dac8a0;
+    border-radius: 4px;
+    background: #fff;
+    font-family: 'Merriweather', serif;
+    color: #3a2e1b;
+}
+
+.filter-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: #6b4f2b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.filter-button:hover {
+    background: #5a432d;
+}
+
+.filter-icon {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+}
+
+.filter-reset {
+    padding: 0.5rem 1rem;
+    color: #6b4f2b;
+    font-family: 'Merriweather', serif;
+    text-decoration: none;
+    border-bottom: 1px dashed #6b4f2b;
+    align-self: center;
+}
+
+.filter-reset:hover {
+    color: #5a432d;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.spells-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Merriweather', serif;
+}
+
+.spells-table th {
+    background: #e8d8b0;
+    color: #3a2e1b;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+.spells-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3eada;
+    color: #4a3723;
+}
+
+.spells-table tr:nth-child(even) {
+    background: #fbf6ee;
+}
+
+.spells-table tr:hover {
+    background: #f3eada;
+}
+
+.level-col {
+    width: 50px;
+    text-align: center;
+}
+
+.name-col {
+    min-width: 200px;
+}
+
+.school-col {
+    min-width: 120px;
+}
+
+.category-col {
+    min-width: 120px;
+}
+
+.cost-col {
+    width: 100px;
+}
+
+.spell-link {
+    color: #3a2e1b;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.spell-link:hover {
+    text-decoration: underline;
+    color: #5a432d;
+}
+
+.school-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: #252525;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+}
+
+.empty-row td {
+    text-align: center;
+    padding: 2rem;
+    color: #8a7866;
+    font-style: italic;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    font-family: 'Merriweather', serif;
+}
+
+.page-link {
+    color: #6b4f2b;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.page-link:hover {
+    background: #f3eada;
+    text-decoration: none;
+}
+
+.current-page {
+    color: #5a432d;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .spells-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        min-width: 100%;
+    }
+
+    .filter-button, .filter-reset {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .spells-table th, .spells-table td {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+</style>
 {% endblock %}

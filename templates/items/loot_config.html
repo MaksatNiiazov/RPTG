@@ -1,42 +1,300 @@
 {% extends "base.html" %}
 {% block title %}Настройка сундука{% endblock %}
+
 {% block content %}
-    <div class="container container-box">
-        <h1>Настройка сундука</h1>
-        <form method="post">
-            {% csrf_token %}
-
-            <div class="field-luck">
-                <label class="field-label">Удача:</label>
-                <div class="radios-inline">
-                    {% for radio in form.luck %}
-                        <div class="radio-item">
-                            <!-- цифра над инпутом -->
-                            <div class="radio-label">{{ radio.choice_label }}</div>
-                            <!-- сам инпут -->
-                            <div class="radio-input">{{ radio.tag }}</div>
-                        </div>
-                    {% endfor %}
-                </div>
-                {{ form.luck.errors }}
-            </div>
-
-            {# остальные поля формы #}
-            {{ form.chest_rarity.label_tag }}
-            {{ form.chest_rarity }}
-            {{ form.count.label_tag }}
-            {{ form.count }}
-            {{ form.rare_count.label_tag }}
-            {{ form.rare_count }}
-            {{ form.rare_rarity.label_tag }}
-            {{ form.rare_rarity }}
-            {{ form.type_bias.label_tag }}
-            {{ form.type_bias }}
-            {{ form.type_bias_count.label_tag }}
-            {{ form.type_bias_count }}
-
-            <button class="btn" type="submit">Сгенерировать</button>
-        </form>
-
+<div class="chest-config-container">
+    <div class="chest-header">
+        <h1 class="chest-title">Настройка генерации лута</h1>
+        <p class="chest-description">Настройте параметры генерации предметов из сундука</p>
     </div>
+
+    <form method="post" class="chest-form">
+        {% csrf_token %}
+
+        <!-- Блок удачи -->
+        <div class="form-section luck-section">
+            <h2 class="section-title">
+                <svg class="section-icon" viewBox="0 0 24 24">
+                    <path d="M14.5 9.5L16 12m-5.01.5l1.01 2.5 1.01-2.5m4.5-3l-2.5-1.01L12 8m-2.5-.5L12 6l2.5 1.5m-6.99 4.5l1.01-2.5L8 12m4.5 3.5L12 18l-1.5-2.5m6.99-4.5l-2.5 1.01L12 16m-7-4a7 7 0 1 0 14 0 7 7 0 0 0-14 0z"/>
+                </svg>
+                Удача персонажа
+            </h2>
+            <div class="luck-radios">
+                {% for radio in form.luck %}
+                <label class="luck-radio">
+                    {{ radio.tag }}
+                    <span class="radio-label">{{ radio.choice_label }}</span>
+                    <span class="radio-dot"></span>
+                </label>
+                {% endfor %}
+            </div>
+            {{ form.luck.errors }}
+        </div>
+
+        <!-- Основные параметры -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <svg class="section-icon" viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
+                </svg>
+                Основные параметры
+            </h2>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    {{ form.chest_rarity.label_tag }}
+                    {{ form.chest_rarity }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.count.label_tag }}
+                    {{ form.count }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.rare_count.label_tag }}
+                    {{ form.rare_count }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.rare_rarity.label_tag }}
+                    {{ form.rare_rarity }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Дополнительные настройки -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <svg class="section-icon" viewBox="0 0 24 24">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
+                Дополнительные настройки
+            </h2>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    {{ form.type_bias.label_tag }}
+                    {{ form.type_bias }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.type_bias_count.label_tag }}
+                    {{ form.type_bias_count }}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="generate-btn">
+                <svg class="btn-icon" viewBox="0 0 24 24">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+                Сгенерировать лут
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.chest-config-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.chest-header {
+    margin-bottom: 2.5rem;
+    text-align: center;
+}
+
+.chest-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    color: #3a2e1b;
+    margin-bottom: 0.5rem;
+}
+
+.chest-description {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-size: 1.1rem;
+}
+
+.chest-form {
+    background: #f7f1e7;
+    border: 1px solid #dac8a0;
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(139, 115, 85, 0.2);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+    color: #3a2e1b;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-icon {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+}
+
+.luck-section {
+    text-align: center;
+}
+
+.luck-radios {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.luck-radio {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    padding-left: 28px;
+    margin-bottom: 0;
+}
+
+.luck-radio input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.radio-dot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: #f7f1e7;
+    border: 2px solid #8c7151;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.luck-radio:hover .radio-dot {
+    border-color: #6b4f2b;
+}
+
+.luck-radio input:checked ~ .radio-dot {
+    background-color: #6b4f2b;
+    border-color: #6b4f2b;
+}
+
+.radio-label {
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    margin-left: 8px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-family: 'Merriweather', serif;
+    color: #5a432d;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-group select,
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #c7b091;
+    border-radius: 4px;
+    background: #fff;
+    font-family: 'Merriweather', serif;
+    color: #3a2e1b;
+    transition: border-color 0.2s;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+    border-color: #8c7151;
+    outline: none;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.generate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.75rem;
+    background: #6b4f2b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.generate-btn:hover {
+    background: #5a432d;
+}
+
+.btn-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+@media (max-width: 600px) {
+    .chest-config-container {
+        padding: 0 1rem;
+    }
+
+    .chest-form {
+        padding: 1.5rem;
+    }
+
+    .luck-radios {
+        gap: 1rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}

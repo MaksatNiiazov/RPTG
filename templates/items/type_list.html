@@ -1,32 +1,132 @@
 {% extends "base.html" %}
 {% block title %}Типы предметов{% endblock %}
-{% block content %}
-    <div class="container-box">
-        <h1>Типы предметов</h1>
 
-        <table class="type-table">
+{% block content %}
+<div class="types-container">
+    <div class="types-header">
+        <h1 class="types-title">Типы предметов</h1>
+    </div>
+
+    <div class="table-responsive">
+        <table class="types-table">
             <thead>
-            <tr>
-                <th>Тип предмета</th>
-                <th>Редкость</th>
-            </tr>
+                <tr>
+                    <th class="type-name-header">Тип предмета</th>
+                    <th class="type-rarity-header">Редкость</th>
+                </tr>
             </thead>
             <tbody>
-            {% for t in types %}
-                <tr>
-                    <td>{{ t.name }}</td>
-                    <td>
-            <span style="border-left: 15px solid {{ t.rarity.color }}; padding-left: 8px;">
-              {{ t.rarity.name }}
-            </span>
+                {% for t in types %}
+                <tr class="type-row">
+                    <td class="type-name">{{ t.name }}</td>
+                    <td class="type-rarity">
+                        <span class="rarity-badge" style="border-left-color: {{ t.rarity.color }};">
+                            {{ t.rarity.name }}
+                        </span>
                     </td>
                 </tr>
-            {% empty %}
+                {% empty %}
                 <tr>
-                    <td colspan="2">Типы предметов не найдены.</td>
+                    <td colspan="2" class="empty-message">Типы предметов не найдены.</td>
                 </tr>
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
     </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.types-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.types-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dac8a0;
+}
+
+.types-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    color: #3a2e1b;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+}
+
+.types-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Merriweather', serif;
+}
+
+.types-table th {
+    background: #e8d8b0;
+    color: #3a2e1b;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 500;
+}
+
+.type-name-header {
+    width: 60%;
+}
+
+.type-rarity-header {
+    width: 40%;
+}
+
+.types-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e0d6c2;
+    color: #4a3723;
+}
+
+.type-row:hover {
+    background-color: #f9f5eb;
+}
+
+.rarity-badge {
+    display: inline-block;
+    padding-left: 0.8rem;
+    border-left-width: 12px;
+    border-left-style: solid;
+    font-size: 0.95rem;
+}
+
+.empty-message {
+    text-align: center;
+    padding: 1.5rem;
+    color: #8a7866;
+    font-style: italic;
+}
+
+@media (max-width: 600px) {
+    .types-container {
+        padding: 0 0.5rem;
+    }
+
+    .types-title {
+        font-size: 1.5rem;
+    }
+
+    .types-table th,
+    .types-table td {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .rarity-badge {
+        border-left-width: 8px;
+        padding-left: 0.5rem;
+    }
+}
+</style>
 {% endblock %}
