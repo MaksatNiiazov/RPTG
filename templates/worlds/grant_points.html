@@ -1,22 +1,65 @@
-{# templates/worlds/grant_points.html #}
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}Выдать очки: {{ char.name }}{% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/forms.css' %}">
+{% endblock %}
+
 {% block content %}
-  <div class="container">
-    <h1>Выдать очки персонажу «{{ char.name }}»</h1>
-    <form method="post">
-      {% csrf_token %}
-      {{ form.non_field_errors }}
-      <div>
-        {{ form.points.label_tag }}<br>
-        {{ form.points }}<br>
-        {% for err in form.points.errors %}
-          <p class="error">{{ err }}</p>
-        {% endfor %}
-      </div>
-      <button type="submit" class="btn">Выдать</button>
-      <a href="{% url 'worlds:detail' world.pk %}" class="btn">Отмена</a>
+<div class="grant-points-container">
+    <div class="form-header">
+        <div class="header-with-avatar">
+            <div class="avatar-container">
+                <img src="{% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
+                     alt="{{ char.name }}" class="character-avatar">
+            </div>
+            <div>
+                <h1><i class="fas fa-star"></i> Выдать очки персонажу</h1>
+                <h2 class="character-name">{{ char.name }}</h2>
+            </div>
+        </div>
+        <a href="{% url 'worlds:detail' world.pk %}" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Назад к миру
+        </a>
+    </div>
+
+    <div class="current-stats">
+        <div class="stat-card">
+            <span class="stat-label">Текущие очки</span>
+            <span class="stat-value">{{ char.ability_points }}</span>
+        </div>
+    </div>
+
+    <form method="post" class="grant-points-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-group {% if form.points.errors %}has-error{% endif %}">
+            <label for="{{ form.points.id_for_label }}">
+                <i class="fas fa-plus-circle"></i> {{ form.points.label }}
+            </label>
+            <div class="input-with-addons">
+                {{ form.points }}
+                <span class="input-addon">очков</span>
+            </div>
+            {% for error in form.points.errors %}
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                </div>
+            {% endfor %}
+            <small class="form-hint">Можно указать отрицательное значение для изъятия очков</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check"></i> Подтвердить
+            </button>
+            <a href="{% url 'worlds:detail' world.pk %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Отмена
+            </a>
+        </div>
     </form>
-  </div>
+</div>
 {% endblock %}

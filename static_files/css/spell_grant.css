@@ -1,0 +1,260 @@
+:root {
+    --primary-color: #8c7151;
+    --secondary-color: #dac8a0;
+    --background-light: #f7f1e7;
+    --background-dark: #3e2f1b;
+    --text-color: #4a3723;
+    --error-color: #c4554d;
+    --success-color: #5a8f5a;
+}
+
+.spell-grant-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    font-family: 'Merriweather', serif;
+    color: var(--text-color);
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.breadcrumb-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.breadcrumb-link:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-separator {
+    color: var(--secondary-color);
+}
+
+.breadcrumb-current {
+    font-weight: 500;
+}
+
+h1 {
+    font-family: 'Cinzel', serif;
+    color: var(--background-dark);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.spell-grant-form {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    font-size: 1rem;
+    background-color: white;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234a3723' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    appearance: none;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(140, 113, 81, 0.2);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+    font-family: 'Merriweather', serif;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--background-dark);
+}
+
+.learned-spells {
+    margin-top: 2rem;
+}
+
+.section-title {
+    font-family: 'Cinzel', serif;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.badge {
+    background: var(--secondary-color);
+    color: var(--text-color);
+    border-radius: 12px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.spells-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.spell-card {
+    background: white;
+    border: 1px solid var(--secondary-color);
+    border-radius: 8px;
+    padding: 1.25rem;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.spell-card.highlighted {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(140, 113, 81, 0.2);
+}
+
+.spell-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--secondary-color);
+}
+
+.spell-card[data-school="1"]::before { background: #ff6b6b; } /* Пример для разных школ */
+.spell-card[data-school="2"]::before { background: #4ecdc4; }
+.spell-card[data-school="3"]::before { background: #45aaf2; }
+
+.spell-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.spell-level {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.spell-school {
+    font-style: italic;
+}
+
+.spell-name {
+    margin: 0 0 0.75rem;
+    font-family: 'Cinzel', serif;
+    color: var(--background-dark);
+}
+
+.spell-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.spell-concentration {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.spell-description {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-color);
+    opacity: 0.9;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--secondary-color);
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .spells-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .spell-grant-form {
+        padding: 1rem;
+    }
+}

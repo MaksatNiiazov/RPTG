@@ -1,0 +1,220 @@
+:root {
+    --primary-color: #8c7151;
+    --secondary-color: #dac8a0;
+    --background-light: #f7f1e7;
+    --background-dark: #3e2f1b;
+    --text-color: #4a3723;
+    --error-color: #c4554d;
+    --success-color: #5a8f5a;
+}
+
+.grant-item-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    font-family: 'Merriweather', serif;
+    color: var(--text-color);
+}
+
+.grant-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.grant-item-header h1 {
+    font-family: 'Cinzel', serif;
+    color: var(--background-dark);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.grant-item-form {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--background-dark);
+}
+
+.form-group label i {
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+}
+
+.search-input-container {
+    position: relative;
+}
+
+.search-input-container .form-control {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    transition: all 0.2s;
+}
+
+.search-input-container .form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(140, 113, 81, 0.2);
+}
+
+.search-clear {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #999;
+    transition: color 0.2s;
+}
+
+.search-clear:hover {
+    color: var(--error-color);
+}
+
+.select-container {
+    position: relative;
+}
+
+.select-container select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    appearance: none;
+    background-color: white;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--primary-color);
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.quantity-btn:hover {
+    background: var(--background-light);
+}
+
+.quantity-btn i {
+    font-size: 0.8rem;
+}
+
+.quantity-control input {
+    flex: 1;
+    text-align: center;
+    padding: 0.75rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--background-dark);
+}
+
+.btn-secondary {
+    background: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.btn-secondary:hover {
+    background: #c7b091;
+}
+
+.btn-back {
+    background: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.errorlist {
+    color: var(--error-color);
+    margin: 0.25rem 0 0;
+    padding-left: 1rem;
+    list-style: none;
+    font-size: 0.85rem;
+}
+
+/* Оптимизация для мобильных */
+@media (max-width: 600px) {
+    .grant-item-container {
+        padding: 0;
+    }
+
+    .grant-item-form {
+        padding: 1.5rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

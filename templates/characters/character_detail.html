@@ -6,299 +6,24 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/character_detail.css' %}">
-    <style>
-        :root {
-            --primary: #6b4f2b;
-            --secondary: #d1bfa3;
-            --light-bg: #fbf6ee;
-            --dark-text: #3a2e1b;
-            --medium-text: #5a432d;
-            --border: #dac8a0;
-            --highlight: #8c7151;
-        }
 
-        .character-container {
-            max-width: 1000px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        /* Header Section */
-        .character-header {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-            margin-bottom: 2rem;
-            align-items: center;
-        }
-
-        .character-image {
-            width: 150px;
-            height: 150px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 3px solid var(--highlight);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .character-info {
-            flex: 1;
-            min-width: 300px;
-        }
-
-        .character-name {
-            font-family: 'Cinzel', serif;
-            font-size: 2.2rem;
-            color: var(--dark-text);
-            margin-bottom: 0.5rem;
-        }
-
-        .character-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.95rem;
-            color: var(--medium-text);
-        }
-
-        .meta-icon {
-            width: 16px;
-            height: 16px;
-            stroke: var(--highlight);
-        }
-
-        /* Controls Section */
-        .controls-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .control-card {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border);
-        }
-
-        .control-title {
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            color: var(--highlight);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        /* Stats Section */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        @media (min-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        .stat-item {
-            background: var(--light-bg);
-            padding: 1rem;
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: var(--medium-text);
-        }
-
-        /* Tabs */
-        .tabs-container {
-            margin-top: 2rem;
-            overflow: hidden;
-        }
-
-        .tabs-header {
-            display: flex;
-            border-bottom: 2px solid var(--border);
-            overflow-x: auto;
-            white-space: nowrap;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        .tabs-header::-webkit-scrollbar {
-            display: none;
-        }
-
-        .tab {
-            padding: 0.8rem 1.5rem;
-            cursor: pointer;
-            position: relative;
-            font-weight: 500;
-            color: var(--medium-text);
-            transition: all 0.2s;
-        }
-
-        .tab:hover {
-            color: var(--primary);
-        }
-
-        .tab.active {
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: var(--highlight);
-        }
-
-        .tab-content {
-            padding: 1.5rem 0;
-            width: 100%;
-        }
-
-        .tab-pane {
-            display: none;
-        }
-
-        .tab-pane.active {
-            display: block;
-        }
-
-        /* Tables */
-        .table-container {
-            overflow-x: auto;
-            margin-bottom: 1.5rem;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-
-        .data-table th {
-            background: var(--secondary);
-            padding: 0.8rem 1rem;
-            text-align: left;
-            color: var(--dark-text);
-            position: sticky;
-            top: 0;
-        }
-
-        .data-table td {
-            padding: 0.8rem 1rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .data-table tr:nth-child(even) {
-            background: var(--light-bg);
-        }
-
-        /* Buttons */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1.2rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            font-size: 0.95rem;
-        }
-
-        .btn:hover {
-            background: #5a432d;
-            transform: translateY(-1px);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-        }
-
-        .btn-outline:hover {
-            background: rgba(107, 79, 43, 0.1);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .character-header {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .character-meta {
-                justify-content: center;
-            }
-
-            .controls-section {
-                grid-template-columns: 1fr;
-            }
-
-            .data-table th,
-            .data-table td {
-                padding: 0.6rem 0.8rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                gap: 0.5rem;
-            }
-
-            .stat-item {
-                padding: 0.8rem 0.5rem;
-            }
-
-            .stat-value {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
 {% endblock %}
 
 {% block content %}
     <div class="character-container">
         <!-- Header Section -->
         <div class="character-header">
+        <div>
             <img src="
+
                     {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
                  alt="{{ char.name }}" class="character-image">
+            <br>
+        {% if is_owner or is_gm %}
+        	            <a style="font-size: 12px;" href="{% url 'characters:character_update' char.pk %}">редактировать</a>
 
+        {% endif %}
+        </div>
             <div class="character-info">
                 {% if show_name %}
                     <h1 class="character-name">{{ char.name }}</h1>
@@ -348,6 +73,19 @@
                                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                             </svg>
                             Выдать заклинание
+                        </a>
+
+                        <a href="{% url 'worlds:world-grant-points' world char.pk %}" class="btn">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                            Очки
+                        </a>
+                        <a href="{% url 'worlds:world-grant-item' world char.pk %}" class="btn">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M20 12v10H4V12M2 7h20v5H2zM12 7v5"/>
+                            </svg>
+                            Предмет
                         </a>
                     {% endif %}
                 </div>

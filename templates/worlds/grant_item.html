@@ -1,51 +1,142 @@
-{# templates/worlds/grant_item.html #}
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %}Выдать предмет{% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/grant_item.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
 {% block content %}
-<div class="container" style="max-width:480px; margin-top:1rem;">
-  <h1>Выдать предмет</h1>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    <div style="margin-bottom:1rem;">
-      <label for="item-search">Поиск по названию:</label>
-      <input type="text" id="item-search" class="form-control" placeholder="Начните вводить…">
+<div class="grant-item-container">
+    <div class="grant-item-header">
+        <h1><i class="fas fa-gift"></i> Выдать предмет</h1>
+        <a href="{% url 'worlds:detail' world.pk %}" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Назад к миру
+        </a>
     </div>
-    <div style="margin-bottom:1rem;">
-      {{ form.item.label_tag }}<br>
-      {{ form.item }}
-      {{ form.item.errors }}
-    </div>
-    <div style="margin-bottom:1rem;">
-      {{ form.quantity.label_tag }}<br>
-      {{ form.quantity }}
-      {{ form.quantity.errors }}
-    </div>
-    <button type="submit" class="btn">Выдать</button>
-    <a href="{% url 'worlds:detail' world.pk %}" class="btn">Отмена</a>
-  </form>
+
+    <form method="post" class="grant-item-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-group search-group">
+            <label for="item-search">
+                <i class="fas fa-search"></i> Поиск предмета
+            </label>
+            <div class="search-input-container">
+                <input type="text" id="item-search" class="form-control"
+                       placeholder="Введите название предмета..." autocomplete="off">
+                <span class="search-clear" id="clear-search"><i class="fas fa-times"></i></span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.item.id_for_label }}">
+                <i class="fas fa-cube"></i> {{ form.item.label }}
+            </label>
+            <div class="select-container">
+                {{ form.item }}
+                <div class="select-arrow"><i class="fas fa-chevron-down"></i></div>
+            </div>
+            {{ form.item.errors }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.quantity.id_for_label }}">
+                <i class="fas fa-hashtag"></i> {{ form.quantity.label }}
+            </label>
+            <div class="quantity-control">
+                <button type="button" class="quantity-btn minus" id="quantity-minus">
+                    <i class="fas fa-minus"></i>
+                </button>
+                {{ form.quantity }}
+                <button type="button" class="quantity-btn plus" id="quantity-plus">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            {{ form.quantity.errors }}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check"></i> Выдать предмет
+            </button>
+            <a href="{% url 'worlds:detail' world.pk %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Отмена
+            </a>
+        </div>
+    </form>
 </div>
 {% endblock %}
 
 {% block js %}
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const input = document.getElementById("item-search");
-  const select = document.getElementById("id_item_select");
-  input.addEventListener("input", () => {
-    const term = input.value.trim().toLowerCase();
-    // каждую optgroup мы прячем/показываем, а каждую option внутри — тоже
-    Array.from(select.querySelectorAll("optgroup")).forEach(group => {
-      let anyVisible = false;
-      Array.from(group.querySelectorAll("option")).forEach(opt => {
-        const ok = !term || opt.text.toLowerCase().includes(term);
-        opt.style.display = ok ? "" : "none";
-        if (ok) anyVisible = true;
-      });
-      group.style.display = anyVisible ? "" : "none";
+    const searchInput = document.getElementById("item-search");
+    const clearSearch = document.getElementById("clear-search");
+    const itemSelect = document.getElementById("{{ form.item.id_for_label }}");
+    const quantityInput = document.getElementById("{{ form.quantity.id_for_label }}");
+    const quantityMinus = document.getElementById("quantity-minus");
+    const quantityPlus = document.getElementById("quantity-plus");
+
+    // Функция для фильтрации предметов
+    function filterItems() {
+        const term = searchInput.value.trim().toLowerCase();
+        let anyVisible = false;
+
+        Array.from(itemSelect.querySelectorAll("option")).forEach(option => {
+            if (option.value === "") return; // Пропускаем пустую опцию
+
+            const matches = !term || option.text.toLowerCase().includes(term);
+            option.style.display = matches ? "" : "none";
+            option.hidden = !matches;
+
+            if (matches) anyVisible = true;
+        });
+
+        // Показываем/скрываем optgroups
+        Array.from(itemSelect.querySelectorAll("optgroup")).forEach(group => {
+            const hasVisibleOptions = Array.from(group.querySelectorAll("option"))
+                .some(opt => !opt.hidden && opt.value !== "");
+            group.style.display = hasVisibleOptions ? "" : "none";
+        });
+
+        // Автоматически выбираем первый видимый предмет
+        if (term && anyVisible) {
+            const firstVisible = Array.from(itemSelect.querySelectorAll("option"))
+                .find(opt => opt.style.display !== "none" && opt.value !== "");
+            if (firstVisible) {
+                itemSelect.value = firstVisible.value;
+            }
+        }
+    }
+
+    // Обработчики событий
+    searchInput.addEventListener("input", filterItems);
+
+    clearSearch.addEventListener("click", () => {
+        searchInput.value = "";
+        filterItems();
+        searchInput.focus();
     });
-  });
+
+    // Управление количеством
+    quantityMinus.addEventListener("click", () => {
+        let value = parseInt(quantityInput.value) || 1;
+        if (value > 1) {
+            quantityInput.value = value - 1;
+        }
+    });
+
+    quantityPlus.addEventListener("click", () => {
+        let value = parseInt(quantityInput.value) || 1;
+        quantityInput.value = value + 1;
+    });
+
+    // Инициализация фильтра при загрузке
+    filterItems();
 });
 </script>
 {% endblock %}

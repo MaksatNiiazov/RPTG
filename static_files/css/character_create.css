@@ -1,0 +1,424 @@
+:root {
+    --primary-color: #8c7151;
+    --secondary-color: #dac8a0;
+    --background-light: #f7f1e7;
+    --background-dark: #3e2f1b;
+    --text-color: #4a3723;
+    --error-color: #c4554d;
+    --success-color: #5a8f5a;
+    --warning-color: #d4a017;
+    --info-color: #4a7b9d;
+}
+
+.character-create-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    font-family: 'Merriweather', serif;
+    color: var(--text-color);
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.form-header h1 {
+    font-family: 'Cinzel', serif;
+    color: var(--background-dark);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.character-form {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.rp-column, .stats-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+h2 {
+    font-family: 'Cinzel', serif;
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Стили для загрузки изображения */
+.image-upload {
+    text-align: center;
+}
+
+.image-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+}
+
+.image-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: var(--background-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 3px solid var(--secondary-color);
+}
+
+.default-avatar {
+    font-size: 5rem;
+    color: var(--secondary-color);
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.btn-upload {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.image-upload input[type="file"] {
+    display: none;
+}
+
+/* Общие стили формы */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.required {
+    color: var(--error-color);
+    margin-left: 0.25rem;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    font-family: 'Merriweather', serif;
+    transition: border-color 0.2s;
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.char-counter {
+    display: block;
+    text-align: right;
+    color: var(--text-color);
+    opacity: 0.7;
+    font-size: 0.85rem;
+}
+
+/* Стили для распределения характеристик */
+.points-counter {
+    background: var(--background-light);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.points-left {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.points-label {
+    font-weight: 500;
+}
+
+.points-value {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-left: 0.5rem;
+}
+
+.points-total {
+    color: var(--text-color);
+    opacity: 0.7;
+    font-size: 0.9rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid var(--secondary-color);
+    border-radius: 6px;
+    padding: 1rem;
+    transition: all 0.2s;
+}
+
+.stat-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.stat-name {
+    font-weight: 500;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.stat-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-stat {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-add {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-remove {
+    background: var(--error-color);
+    color: white;
+}
+
+.btn-stat:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.stat-hint {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Настройки ГМа */
+.gm-settings {
+    background: #f0e8d8;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+}
+
+.gm-settings h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toggle-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.toggle-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+
+.toggle-slider {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    background: #ccc;
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.toggle-slider:before {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
+}
+
+.toggle-item input {
+    display: none;
+}
+
+.toggle-item input:checked + .toggle-slider {
+    background: var(--primary-color);
+}
+
+.toggle-item input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+}
+
+.toggle-label {
+    font-size: 0.95rem;
+}
+
+/* Кнопки формы */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--secondary-color);
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--background-dark);
+}
+
+.btn-secondary {
+    background: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.btn-secondary:hover {
+    background: #c7b091;
+}
+
+.btn-back {
+    background: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.errorlist {
+    color: var(--error-color);
+    margin: 0.25rem 0 0;
+    padding-left: 1rem;
+    list-style: none;
+    font-size: 0.85rem;
+}
+
+/* Адаптивность */
+@media (max-width: 900px) {
+    .form-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

@@ -1,40 +1,130 @@
 {% extends "base.html" %}
-{% block title %}Создать персонажа{% endblock %}
-{% block content %}
-    <div class="container">
-        <h1>Редактировать персонажа</h1>
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.non_field_errors }}
+{% load static %}
+{% block title %}Редактировать персонажа{% endblock %}
 
-            <div class="grid-2">
-                <!-- Левая колонка: основные поля -->
-                <div>
-                    <label for="{{ from.image.label }}">
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/character_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="character-form-container">
+    <div class="form-header">
+        <h1><i class="fas fa-user-edit"></i> Редактировать персонажа</h1>
+        <a href="{% url 'worlds:detail' world %}" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Назад к миру
+        </a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="character-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-grid">
+            <!-- Колонка с изображением -->
+            <div class="image-column">
+                <div class="image-upload">
+                    <div class="image-preview">
+                        {% if form.instance.image %}
+                            <img id="avatar-preview" src="{{ form.instance.image.url }}" alt="Текущий аватар">
+                        {% else %}
+                            <img id="avatar-preview" src="{% static 'images/characters/placeholder.png' %}" alt="Аватар по умолчанию">
+                        {% endif %}
+                    </div>
+                    <label for="{{ form.image.id_for_label }}" class="image-upload-btn">
+                        <i class="fas fa-camera"></i> Выбрать изображение
                         {{ form.image }}
                     </label>
-                    <label>{{ form.name.label }}{% if form.name.field.required %}*{% endif %}</label>
-                    {{ form.name }} {{ form.name.errors }}
-
-                    <label>{{ form.race.label }}</label>
-                    {{ form.race }}
-
-                    <label>{{ form.gender.label }}</label>
-                    {{ form.gender }}
-
-                    <label>{{ form.background.label }}</label>
-                    {{ form.background }}
-
-                    <label>{{ form.notes.label }}</label>
-                    {{ form.notes }}
+                    <small>Рекомендуемый размер: 500x500px</small>
+                    {{ form.image.errors }}
                 </div>
             </div>
 
-            <button type="submit" class="btn">Сохранить</button>
-            <a href="{% url 'worlds:detail' world %}">
-                <button type="button" class="btn">Назад</button>
-            </a>
+            <!-- Колонка с основной информацией -->
+            <div class="info-column">
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}">
+                        {{ form.name.label }}
+                        {% if form.name.field.required %}<span class="required">*</span>{% endif %}
+                    </label>
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
 
-        </form>
-    </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.race.id_for_label }}">{{ form.race.label }}</label>
+                        {{ form.race }}
+                        {{ form.race.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.gender.id_for_label }}">{{ form.gender.label }}</label>
+                        {{ form.gender }}
+                        {{ form.gender.errors }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.background.id_for_label }}">{{ form.background.label }}</label>
+                    {{ form.background }}
+                    {{ form.background.errors }}
+                    <small class="char-counter"><span id="bg-counter">0</span>/500 символов</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+                    {{ form.notes }}
+                    {{ form.notes.errors }}
+                    <small class="char-counter"><span id="notes-counter">0</span>/1000 символов</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-save">
+                <i class="fas fa-save"></i> Сохранить изменения
+            </button>
+            <a href="{% url 'characters:character_detail' form.instance.id %}" class="btn btn-cancel">
+                <i class="fas fa-times"></i> Отменить
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Превью загружаемого изображения
+    const imageInput = document.getElementById('{{ form.image.id_for_label }}');
+    const imagePreview = document.getElementById('avatar-preview');
+
+    imageInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // Счетчики символов
+    const bgField = document.getElementById('{{ form.background.id_for_label }}');
+    const notesField = document.getElementById('{{ form.notes.id_for_label }}');
+    const bgCounter = document.getElementById('bg-counter');
+    const notesCounter = document.getElementById('notes-counter');
+
+    function updateCounters() {
+        bgCounter.textContent = bgField.value.length;
+        notesCounter.textContent = notesField.value.length;
+    }
+
+    bgField.addEventListener('input', updateCounters);
+    notesField.addEventListener('input', updateCounters);
+
+    // Инициализация при загрузке
+    updateCounters();
+});
+</script>
 {% endblock %}

@@ -1,0 +1,201 @@
+/* Общие стили для контейнера */
+.grant-points-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Шапка формы */
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-with-avatar {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.avatar-container {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #8c7151;
+}
+
+.character-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.character-name {
+    margin: 0.5rem 0 0;
+    color: #3e2f1b;
+    font-weight: normal;
+}
+
+/* Карточка текущих очков */
+.current-stats {
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #f7f1e7;
+    border-radius: 6px;
+    padding: 1rem;
+    text-align: center;
+    max-width: 200px;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #6c5b49;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #8c7151;
+}
+
+/* Стили формы */
+.grant-points-form {
+    margin-top: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #3e2f1b;
+}
+
+.form-group label i {
+    margin-right: 0.5rem;
+    color: #8c7151;
+}
+
+.input-with-addons {
+    display: flex;
+    align-items: stretch;
+}
+
+.input-with-addons input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #dac8a0;
+    border-radius: 4px 0 0 4px;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.input-addon {
+    background: #e8d8b0;
+    color: #3e2f1b;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    border-radius: 0 4px 4px 0;
+    border: 1px solid #dac8a0;
+    border-left: none;
+}
+
+.form-hint {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #6c5b49;
+}
+
+/* Ошибки */
+.has-error input {
+    border-color: #c4554d;
+}
+
+.error-message {
+    color: #c4554d;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Кнопки */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e8d8b0;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #5a8f5a;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #4a7f4a;
+}
+
+.btn-secondary {
+    background: #dac8a0;
+    color: #3e2f1b;
+}
+
+.btn-secondary:hover {
+    background: #c7b091;
+}
+
+.btn-back {
+    background: #dac8a0;
+    color: #3e2f1b;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+    .form-header {
+        flex-direction: column;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}

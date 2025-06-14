@@ -1,27 +1,196 @@
-{# templates/worlds/world_form.html #}
 {% extends "base.html" %}
-{% block title %}Создать новый мир{% endblock %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Редактировать мир{% else %}Создать новый мир{% endif %}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/world_form.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-  <h1>Создать мир</h1>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    <div class="form-group">
-      {{ form.name.label_tag }}<br>
-      {{ form.name }} {{ form.name.errors }}
+<div class="world-form-container">
+    <div class="form-header">
+        <h1>
+            <i class="fas fa-globe"></i>
+            {% if form.instance.pk %}
+                Редактировать мир "{{ form.instance.name }}"
+            {% else %}
+                Создать новый мир
+            {% endif %}
+        </h1>
+        <a href="{% if form.instance.pk %}{% url 'worlds:detail' form.instance.pk %}{% else %}{% url 'accounts:profile' %}{% endif %}"
+           class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Назад
+        </a>
     </div>
-    <div class="form-group">
-      {{ form.setting.label_tag }}<br>
-      {{ form.setting }} {{ form.setting.errors }}
-    </div>
-    <div class="form-group">
-      {{ form.history.label_tag }}<br>
-      {{ form.history }} {{ form.history.errors }}
-    </div>
-    <button type="submit" class="btn">Создать мир</button>
-      <br>
-    <a href="{% url 'accounts:profile' %}" class="btn">Отмена</a>
-  </form>
+
+    <form method="post" class="world-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <!-- Блок с основной информацией -->
+        <div class="form-section">
+            <h2><i class="fas fa-info-circle"></i> Основная информация</h2>
+
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">
+                    Название мира
+                    <span class="required">*</span>
+                </label>
+                {{ form.name }}
+                {{ form.name.errors }}
+                <small class="form-hint">Уникальное название вашего мира</small>
+            </div>
+
+            {% if form.image %}
+            <div class="form-group image-upload">
+                <label>Изображение мира</label>
+                <div class="image-preview">
+                    {% if form.instance.image %}
+                        <img src="{{ form.instance.image.url }}" alt="Текущее изображение мира" id="world-image-preview">
+                    {% else %}
+                        <div class="no-image">
+                            <i class="fas fa-image"></i>
+                            <span>Нет изображения</span>
+                        </div>
+                    {% endif %}
+                </div>
+                {{ form.image }}
+                {{ form.image.errors }}
+                <small class="form-hint">Рекомендуемый размер: 1200×600px</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Блок с настройками мира -->
+        <div class="form-section">
+            <h2><i class="fas fa-cog"></i> Настройки мира</h2>
+
+            <div class="form-group">
+                <label for="{{ form.setting.id_for_label }}">
+                    Сеттинг
+                    <span class="required">*</span>
+                </label>
+                {{ form.setting }}
+                {{ form.setting.errors }}
+                <small class="form-hint">Основные характеристики вашего мира</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.rules.id_for_label }}">
+                    Правила мира
+                </label>
+                {{ form.rules }}
+                {{ form.rules.errors }}
+                <small class="form-hint">Особые правила для этого мира</small>
+                <div class="char-counter"><span id="rules-counter">0</span>/2000 символов</div>
+            </div>
+        </div>
+
+        <!-- Блок с историей мира -->
+        <div class="form-section">
+            <h2><i class="fas fa-book"></i> История мира</h2>
+
+            <div class="form-group">
+                <label for="{{ form.history.id_for_label }}">
+                    История
+                </label>
+                {{ form.history }}
+                {{ form.history.errors }}
+                <small class="form-hint">Хронология важных событий</small>
+                <div class="char-counter"><span id="history-counter">0</span>/5000 символов</div>
+            </div>
+        </div>
+
+        <!-- Дополнительные настройки (только для ГМа) -->
+        {% if request.user.is_gm %}
+        <div class="form-section">
+            <h2><i class="fas fa-user-shield"></i> Настройки ГМа</h2>
+
+            <div class="form-group">
+                <label for="{{ form.is_public.id_for_label }}">
+                    {{ form.is_public.label }}
+                </label>
+                <div class="toggle-switch">
+                    {{ form.is_public }}
+                    <span class="toggle-slider"></span>
+                </div>
+                {{ form.is_public.errors }}
+                <small class="form-hint">Сделать мир доступным для всех игроков</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.access_level.id_for_label }}">
+                    Уровень доступа
+                </label>
+                {{ form.access_level }}
+                {{ form.access_level.errors }}
+                <small class="form-hint">Кто может просматривать и редактировать мир</small>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                {% if form.instance.pk %}Сохранить изменения{% else %}Создать мир{% endif %}
+            </button>
+            {% if form.instance.pk %}
+            <a href="{% url 'worlds:delete' form.instance.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash-alt"></i> Удалить мир
+            </a>
+            {% endif %}
+            <a href="{% if form.instance.pk %}{% url 'worlds:detail' form.instance.pk %}{% else %}{% url 'accounts:profile' %}{% endif %}"
+               class="btn btn-secondary">
+                <i class="fas fa-times"></i> Отмена
+            </a>
+        </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Счетчики символов
+    const initCounter = (fieldId, counterId) => {
+        const field = document.getElementById(fieldId);
+        const counter = document.getElementById(counterId);
+        if (field && counter) {
+            const update = () => counter.textContent = field.value.length;
+            field.addEventListener('input', update);
+            update(); // Инициализация
+        }
+    };
+
+    initCounter('{{ form.history.id_for_label }}', 'history-counter');
+    initCounter('{{ form.rules.id_for_label }}', 'rules-counter');
+
+    // Подсветка обязательных полей
+    document.querySelectorAll('.required').forEach(el => {
+        el.closest('.form-group').querySelector('label').classList.add('required-label');
+    });
+
+    // Превью изображения
+    const imageInput = document.getElementById('{{ form.image.id_for_label }}');
+    const imagePreview = document.getElementById('world-image-preview');
+    if (imageInput) {
+        imageInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (!imagePreview) {
+                        const previewContainer = document.querySelector('.image-preview');
+                        previewContainer.innerHTML = `<img src="${e.target.result}" id="world-image-preview" alt="Превью изображения">`;
+                    } else {
+                        imagePreview.src = e.target.result;
+                    }
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

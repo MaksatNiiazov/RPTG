@@ -1,33 +1,114 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Выдать заклинание: {{ char.name }}{% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/spell_grant.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-  <div class="page-actions">
-    <a href="{% url 'worlds:detail' world.pk %}" class="btn">← Назад в мир</a>
-    <a href="{% url 'characters:character_detail' char.pk %}" class="btn">← К персонажу</a>
-  </div>
+<div class="spell-grant-container">
+    <div class="page-header">
+        <div class="breadcrumbs">
+            <a href="{% url 'worlds:detail' world.pk %}" class="breadcrumb-link">
+                <i class="fas fa-globe"></i> {{ world.name }}
+            </a>
+            <span class="breadcrumb-separator">/</span>
+            <a href="{% url 'characters:character_detail' char.pk %}" class="breadcrumb-link">
+                <i class="fas fa-user"></i> {{ char.name }}
+            </a>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-current">Выдать заклинание</span>
+        </div>
 
-  <h1>Выдать заклинание: {{ char.name }}</h1>
-  <form method="post">
-    {% csrf_token %}
-    <label for="spell">Заклинание:</label>
-    <select name="spell_id" id="spell" required>
-      <option value="">— выберите —</option>
-      {% for sp in spells %}
-        <option value="{{ sp.id }}">[{{ sp.level }}] {{ sp.name }}</option>
-      {% endfor %}
-    </select>
-    <button type="submit" class="btn">Выдать</button>
-  </form>
+        <h1><i class="fas fa-magic"></i> Выдать заклинание: {{ char.name }}</h1>
+    </div>
 
-  {% if char.spells.exists %}
-    <h2>Уже выученные:</h2>
-    <ul>
-      {% for sp in char.spells.all %}
-        <li>[{{ sp.level }}] {{ sp.name }} ({{ sp.school }}, {{ sp.get_action_cost_display }})</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
+    <div class="spell-grant-content">
+        <form method="post" class="spell-grant-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="spell-select" class="form-label">
+                    <i class="fas fa-spell-check"></i> Выберите заклинание:
+                </label>
+                <select name="spell_id" id="spell-select" class="form-select" required>
+                    <option value="">— Выберите заклинание —</option>
+                    {% for spell in spells %}
+                    <option value="{{ spell.id }}" data-level="{{ spell.level }}" data-school="{{ spell.school.id }}">
+                        [{{ spell.level }}] {{ spell.name }} ({{ spell.school }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Выдать заклинание
+                </button>
+            </div>
+        </form>
+
+        {% if char.spells.exists %}
+        <div class="learned-spells">
+            <h2 class="section-title">
+                <i class="fas fa-scroll"></i> Уже выученные заклинания
+                <span class="badge">{{ char.spells.count }}</span>
+            </h2>
+
+            <div class="spells-grid">
+                {% for spell in char.spells.all|dictsort:"level" %}
+                <div class="spell-card" data-school="{{ spell.school.id }}">
+                    <div class="spell-header">
+                        <span class="spell-level">Ур. {{ spell.level }}</span>
+                        <span class="spell-school">{{ spell.school }}</span>
+                    </div>
+                    <h3 class="spell-name">{{ spell.name }}</h3>
+                    <div class="spell-meta">
+                        <span class="spell-action">{{ spell.get_action_cost_display }}</span>
+                        {% if spell.requires_concentration %}
+                        <span class="spell-concentration"><i class="fas fa-brain"></i> Концентрация</span>
+                        {% endif %}
+                    </div>
+                    <div class="spell-description">{{ spell.description|truncatewords:20 }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-book-open"></i>
+            <p>Персонаж пока не знает ни одного заклинания</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Подсветка выбранной школы магии
+    const spellSelect = document.getElementById('spell-select');
+    const spellCards = document.querySelectorAll('.spell-card');
+
+    spellSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const schoolId = selectedOption.getAttribute('data-school');
+
+        // Сбрасываем подсветку
+        spellCards.forEach(card => {
+            card.classList.remove('highlighted');
+        });
+
+        // Подсвечиваем заклинания выбранной школы
+        if (schoolId) {
+            document.querySelectorAll(`.spell-card[data-school="${schoolId}"]`).forEach(card => {
+                card.classList.add('highlighted');
+            });
+        }
+    });
+});
+</script>
 {% endblock %}

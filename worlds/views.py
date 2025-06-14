@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.urls import reverse_lazy, reverse
 from django.views import View
-from django.views.generic import ListView, DetailView, CreateView, FormView, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, FormView, TemplateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect, render
 
 from character.models import Character, InventoryItem, ChestInstance
@@ -64,6 +64,22 @@ class WorldCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy("worlds:detail", kwargs={"pk": self.object.pk})
+
+
+class WorldUpdateView(LoginRequiredMixin, UpdateView):
+    model = World
+    form_class = WorldForm
+    template_name = "worlds/world_form.html"
+    login_url = reverse_lazy("accounts:login")
+
+    def get_success_url(self):
+        return reverse_lazy("worlds:detail", kwargs={"pk": self.object.pk})
+
+
+class WorldDeleteView(LoginRequiredMixin, DeleteView):
+    model = World
+    success_url = reverse_lazy("worlds:list")
+
 
 
 class GrantAbilityPointsView(LoginRequiredMixin, View):
