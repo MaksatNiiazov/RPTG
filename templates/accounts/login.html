@@ -1,23 +1,72 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Вход{% endblock %}
+{% block title %}Вход в систему{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
 {% block content %}
-  <div class="form-box">
-    <h1>Вход</h1>
-    <form method="post">
-      {% csrf_token %}
-      {{ form.non_field_errors }}
-      <div>
-        {{ form.username.label_tag }}<br>
-        {{ form.username }} {{ form.username.errors }}
-      </div>
-      <div>
-        {{ form.password.label_tag }}<br>
-        {{ form.password }} {{ form.password.errors }}
-      </div>
-      <button type="submit" class="btn">Войти</button>
-    </form>
-    <p>Нет аккаунта? <a href="{% url 'accounts:register' %}">Зарегистрироваться</a></p>
-  </div>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1><i class="fas fa-sign-in-alt"></i> Вход в систему</h1>
+            <p>Пожалуйста, введите свои учетные данные</p>
+        </div>
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="auth-errors">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">
+                    <i class="fas fa-user"></i> {{ form.username.label }}
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                <div class="field-errors">
+                    {{ form.username.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">
+                    <i class="fas fa-lock"></i> {{ form.password.label }}
+                </label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                <div class="field-errors">
+                    {{ form.password.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="form-options">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember_me"> Запомнить меня
+                </label>
+{#                <a href="{% url 'accounts:password_reset' %}" class="forgot-password">#}
+{#                    Забыли пароль?#}
+{#                </a>#}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-sign-in-alt"></i> Войти
+            </button>
+
+            <div class="auth-footer">
+                <p>Нет аккаунта? <a href="{% url 'accounts:register' %}">Создать учетную запись</a></p>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
