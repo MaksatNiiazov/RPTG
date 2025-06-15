@@ -94,5 +94,73 @@
 
 {% block js %}{% endblock %}
 {% block extra_js %}{% endblock %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Элементы
+    const header = document.querySelector('.site-header');
+    const mainContent = document.querySelector('.main-content');
+
+    // Переменные для отслеживания скролла
+    let lastScroll = 0;
+    const scrollThreshold = 200; // Минимальное расстояние скролла для срабатывания
+
+    // Добавляем отступ для main-content равный высоте хедера
+    if (header && mainContent) {
+        const headerHeight = header.offsetHeight;
+        mainContent.style.paddingTop = headerHeight + 'px';
+    }
+
+    // Функция для обработки скролла
+    function handleScroll() {
+        const currentScroll = window.pageYOffset;
+
+        // Только для мобильных устройств
+        if (window.innerWidth <= 768) {
+            if (currentScroll <= 0) {
+                // В самом верху - показываем хедер
+                header.classList.remove('hidden');
+            } else if (currentScroll > lastScroll && currentScroll > scrollThreshold) {
+                // Скроллим вниз - скрываем
+                header.classList.add('hidden');
+            } else if (currentScroll < lastScroll) {
+                // Скроллим вверх - показываем
+                header.classList.remove('hidden');
+            }
+        } else {
+            // На десктопах всегда показываем хедер
+            header.classList.remove('hidden');
+        }
+
+        lastScroll = currentScroll;
+    }
+
+    // Добавляем обработчик события
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Инициализация при загрузке
+    handleScroll();
+});
+// Добавьте это в тот же script
+let touchStart = 0;
+
+document.addEventListener('touchstart', function(e) {
+    touchStart = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchmove', function(e) {
+    const touchY = e.touches[0].clientY;
+    const touchDiff = touchStart - touchY;
+
+    if (Math.abs(touchDiff) > 10) {
+        if (touchDiff > 0) {
+            // Свайп вниз - скрываем
+            header.classList.add('hidden');
+        } else {
+            // Свайп вверх - показываем
+            header.classList.remove('hidden');
+        }
+    }
+}, { passive: true });
+</script>
 </body>
 </html>

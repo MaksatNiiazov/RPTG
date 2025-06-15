@@ -13,8 +13,8 @@
     --color-card: #f7f1e7;
     --color-button: #e8d8b0;
     --color-button-hover: #dbc79a;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 *,
@@ -49,12 +49,29 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
 }
 
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.75rem; }
-h4 { font-size: 1.5rem; }
-h5 { font-size: 1.25rem; }
-h6 { font-size: 1rem; }
+h1 {
+    font-size: 2.5rem;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+h3 {
+    font-size: 1.75rem;
+}
+
+h4 {
+    font-size: 1.5rem;
+}
+
+h5 {
+    font-size: 1.25rem;
+}
+
+h6 {
+    font-size: 1rem;
+}
 
 p {
     margin-bottom: 1em;
@@ -82,16 +99,23 @@ a:hover {
 
 .main-content {
     flex: 1;
-    padding: 2rem 0;
+    padding: 50px 0;
 }
 
 /* 4. HEADER & NAVIGATION */
 .site-header {
     background: var(--color-secondary);
     border-bottom: 1px solid var(--color-border);
+    transition: transform 0.3s ease-in-out;
     position: sticky;
     top: 0;
     z-index: 100;
+}
+
+.site-header.hidden {
+    transform: translateY(-100%);
+    /*opacity: 0;*/
+
 }
 
 .site-nav {
@@ -125,7 +149,7 @@ a:hover {
 }
 
 .nav-back:hover {
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
 }
 
 .nav-back svg {
@@ -162,7 +186,7 @@ a:hover {
 }
 
 .nav-link:hover {
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
     text-decoration: none;
 }
 
@@ -255,11 +279,11 @@ a:hover {
 }
 
 .item-table tr:nth-child(even) {
-    background: rgba(0,0,0,0.02);
+    background: rgba(0, 0, 0, 0.02);
 }
 
 .item-table tr:hover {
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
 }
 
 /* 7. BUTTONS & FORMS */
@@ -325,17 +349,39 @@ a:hover {
 }
 
 /* 9. UTILITY CLASSES */
-.text-center { text-align: center; }
-.mt-1 { margin-top: 0.5rem; }
-.mt-2 { margin-top: 1rem; }
-.mt-3 { margin-top: 1.5rem; }
-.mb-1 { margin-bottom: 0.5rem; }
-.mb-2 { margin-bottom: 1rem; }
-.mb-3 { margin-bottom: 1.5rem; }
+.text-center {
+    text-align: center;
+}
+
+.mt-1 {
+    margin-top: 0.5rem;
+}
+
+.mt-2 {
+    margin-top: 1rem;
+}
+
+.mt-3 {
+    margin-top: 1.5rem;
+}
+
+.mb-1 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-2 {
+    margin-bottom: 1rem;
+}
+
+.mb-3 {
+    margin-bottom: 1.5rem;
+}
 
 /* 10. MEDIA QUERIES */
 @media (max-width: 768px) {
-    html { font-size: 15px; }
+    html {
+        font-size: 15px;
+    }
 
     .site-nav {
         flex-direction: column;
@@ -350,9 +396,17 @@ a:hover {
         justify-content: center;
     }
 
-    .nav-left { order: 2; }
-    .nav-center { order: 1; }
-    .nav-right { order: 3; }
+    .nav-left {
+        order: 2;
+    }
+
+    .nav-center {
+        order: 1;
+    }
+
+    .nav-right {
+        order: 3;
+    }
 
     .container {
         padding: 0 1rem;
