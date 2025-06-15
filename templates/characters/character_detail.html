@@ -13,17 +13,20 @@
     <div class="character-container">
         <!-- Header Section -->
         <div class="character-header">
-        <div>
-            <img src="
+            <div>
+                <img src="
 
-                    {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
-                 alt="{{ char.name }}" class="character-image">
-            <br>
-        {% if is_owner or is_gm %}
-        	            <a style="font-size: 12px;" href="{% url 'characters:character_update' char.pk %}">редактировать</a>
 
-        {% endif %}
-        </div>
+
+
+                        {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
+                     alt="{{ char.name }}" class="character-image">
+                <br>
+                {% if is_owner or is_gm %}
+                    <a style="font-size: 12px;" href="{% url 'characters:character_update' char.pk %}">редактировать</a>
+
+                {% endif %}
+            </div>
             <div class="character-info">
                 {% if show_name %}
                     <h1 class="character-name">{{ char.name }}</h1>
@@ -207,15 +210,17 @@
                                     <td>{{ char.cha_stat }}</td>
                                     <td>{{ stat_roll_bonuses.cha }}</td>
                                 </tr>
-                                <tr>
-                                    <td>Удача</td>
-                                    <td>{{ char.luck_stat }}</td>
-                                    <td>{{ stat_roll_bonuses.luck }}</td>
-                                </tr>
+
                                 <tr>
                                     <td>Меткость</td>
                                     <td>{{ char.acc_stat }}</td>
                                     <td>{{ stat_roll_bonuses.acc }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Удача</td>
+                                    <td>{{ char.lck_stat }}</td>
+                                    <td>{{ stat_roll_bonuses.lck }}</td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -380,55 +385,57 @@
 
 {% block js %}
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // Tab switching
-            const tabs = document.querySelectorAll(".tab");
-            const tabPanes = document.querySelectorAll(".tab-pane");
+document.addEventListener("DOMContentLoaded", () => {
+    // NPC flag toggles - this is the critical part
+    document.querySelectorAll(".npc-flag-toggle").forEach(checkbox => {
+        checkbox.addEventListener("change", async function() {
+            const csrfToken = getCookie('csrftoken'); // Use Django's cookie method
 
-            // Activate first tab by default
-            if (tabs.length > 0 && tabPanes.length > 0) {
-                tabs[0].classList.add("active");
-                document.getElementById(tabs[0].dataset.tab)?.classList.add("active");
-            }
+            try {
+                const formData = new FormData();
+                formData.append('flag', this.dataset.flag);
+                formData.append('csrfmiddlewaretoken', csrfToken);
 
-            tabs.forEach(tab => {
-                tab.addEventListener("click", () => {
-                    // Remove active class from all tabs and panes
-                    tabs.forEach(t => t.classList.remove("active"));
-                    tabPanes.forEach(p => p.classList.remove("active"));
-
-                    // Add active class to clicked tab and corresponding pane
-                    tab.classList.add("active");
-                    const targetPane = document.getElementById(tab.dataset.tab);
-                    if (targetPane) targetPane.classList.add("active");
+                const response = await fetch("{% url 'characters:toggle-npc-flag' char.id %}", {
+                    method: "POST",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest", // Important for Django to recognize as AJAX
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: formData
                 });
-            });
 
-            // NPC flag toggles
-            const csrfToken = document.querySelector("#csrf-form [name=csrfmiddlewaretoken]")?.value;
-            if (csrfToken) {
-                document.querySelectorAll(".npc-flag-toggle").forEach(checkbox => {
-                    checkbox.addEventListener("change", async () => {
-                        try {
-                            const response = await fetch("{% url 'characters:toggle-npc-flag' char.id %}", {
-                                method: "POST",
-                                headers: {
-                                    "X-CSRFToken": csrfToken,
-                                    "Content-Type": "application/x-www-form-urlencoded",
-                                },
-                                body: `flag=${checkbox.dataset.flag}`
-                            });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-                            if (!response.ok) throw new Error("Ошибка сервера");
-                            const data = await response.json();
-                            if (data.status !== "ok") throw new Error(data.message || "Неизвестная ошибка");
-                        } catch (error) {
-                            checkbox.checked = !checkbox.checked;
-                            alert("Не удалось сохранить настройку: " + error.message);
-                        }
-                    });
-                });
+                const data = await response.json();
+                if (data.status !== "ok") {
+                    throw new Error(data.message || "Unknown error occurred");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                this.checked = !this.checked; // Revert the checkbox
+                alert("Failed to save setting: " + error.message);
             }
         });
+    });
+
+    // Helper function to get CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
     </script>
 {% endblock %}
