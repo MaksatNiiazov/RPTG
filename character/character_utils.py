@@ -118,3 +118,4 @@ class CharacterGetUtils:
 
     def get_some(self):
         pass
+

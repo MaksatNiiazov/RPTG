@@ -198,6 +198,7 @@ textarea:focus {
 }
 
 .btn-back {
+    margin: 20px auto;
     background: var(--secondary-color);
     color: var(--text-color);
 }

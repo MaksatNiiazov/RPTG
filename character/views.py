@@ -324,18 +324,17 @@ class ChestDetailView(LoginRequiredMixin, View):
 @method_decorator(require_POST, name="dispatch")
 class ToggleNpcFlagView(LoginRequiredMixin, View):
     def post(self, request, char_id):
-        if not request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        if request.headers.get("X-Requested-With") != "XMLHttpRequest":
             return HttpResponseBadRequest("Только AJAX")
 
         c = get_object_or_404(Character, pk=char_id)
         user = request.user
-
-        # Check permissions - user must be owner or world creator
         if not (user == c.owner or (c.world and user == c.world.creator)):
             return HttpResponseForbidden("Нет прав")
 
         flag = request.POST.get("flag")
-        valid_flags = {
+        # Добавляем visible_to_players
+        valid = {
             'known_name',
             'known_background',
             'known_stats',
@@ -343,11 +342,9 @@ class ToggleNpcFlagView(LoginRequiredMixin, View):
             'known_notes',
             'visible_to_players',
         }
-
-        if flag not in valid_flags:
+        if flag not in valid:
             return JsonResponse({'status': 'error', 'message': 'Неверный флаг'}, status=400)
 
-        # Toggle the flag
         current = getattr(c, flag)
         setattr(c, flag, not current)
         c.save()

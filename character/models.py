@@ -31,6 +31,26 @@ EQUIPMENT_SLOT_MAP = {
     "STAFF": "two_hands",
 }
 
+class Category(models.Model):
+    name = models.CharField("Название", max_length=100)
+    action_count = models.PositiveSmallIntegerField("Количество действий", default=3)
+    reaction_count = models.PositiveSmallIntegerField("Количество реакций", default=1)
+    str_bonus = models.PositiveSmallIntegerField("Сила", default=0)
+    dex_bonus = models.PositiveSmallIntegerField("Ловкость", default=0)
+    con_bonus = models.PositiveSmallIntegerField("Телосложение", default=0)
+    int_bonus = models.PositiveSmallIntegerField("Интеллект", default=0)
+    wis_bonus = models.PositiveSmallIntegerField("Мудрость", default=0)
+    cha_bonus = models.PositiveSmallIntegerField("Харизма", default=0)
+    acc_bonus = models.PositiveSmallIntegerField("Меткость", default=0)
+    lck_bonus = models.PositiveSmallIntegerField("Удача", default=0)
+    hp_bonus = models.PositiveSmallIntegerField("Макс. HP", default=0)
+    cp_bonus = models.PositiveSmallIntegerField("Макс. CP", default=0)
+    default_armor = models.PositiveSmallIntegerField("Дефолтная броня", default=0)
+    default_damage = models.PositiveSmallIntegerField("Дефолтный урон", default=0)
+
+    def __str__(self):
+        return self.name
+
 
 class Character(models.Model, CharacterGetUtils):
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name="characters", verbose_name="Мир",
