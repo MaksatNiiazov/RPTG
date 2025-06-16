@@ -31,8 +31,10 @@ EQUIPMENT_SLOT_MAP = {
     "STAFF": "two_hands",
 }
 
-class Category(models.Model):
+
+class CharacterClass(models.Model):
     name = models.CharField("Название", max_length=100)
+
     action_count = models.PositiveSmallIntegerField("Количество действий", default=3)
     reaction_count = models.PositiveSmallIntegerField("Количество реакций", default=1)
     str_bonus = models.PositiveSmallIntegerField("Сила", default=0)
@@ -47,12 +49,27 @@ class Category(models.Model):
     cp_bonus = models.PositiveSmallIntegerField("Макс. CP", default=0)
     default_armor = models.PositiveSmallIntegerField("Дефолтная броня", default=0)
     default_damage = models.PositiveSmallIntegerField("Дефолтный урон", default=0)
+    crit_multiplier_bonus = models.PositiveSmallIntegerField("Множитель критического урона", default=0)
+    base_ability_boints = models.PositiveSmallIntegerField("Базовые очки способностей", default=16)
+
+    def __str__(self):
+        return self.name
+
+
+class Talent(models.Model):
+    name = models.CharField("Название", max_length=100)
+    description = models.TextField("Описание", blank=True)
 
     def __str__(self):
         return self.name
 
 
 class Character(models.Model, CharacterGetUtils):
+    character_class = models.ForeignKey(CharacterClass, on_delete=models.CASCADE, related_name="characters",
+                                        verbose_name="Класс", )
+    character_talent = models.ForeignKey(Talent, on_delete=models.SET_NULL, related_name="characters",
+                                         verbose_name="Талант", blank=True, null=True)
+
     world = models.ForeignKey(World, on_delete=models.CASCADE, related_name="characters", verbose_name="Мир",
                               blank=True, null=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="characters", verbose_name="Владелец",
@@ -117,6 +134,8 @@ class Character(models.Model, CharacterGetUtils):
         blank=True,
         related_name="casters"
     )
+
+    gold = models.PositiveIntegerField("Золото", default=0)
 
     def save(self, *args, **kwargs):
         self.max_hp = 10 + 10 * self.con_stat
@@ -334,8 +353,6 @@ class Character(models.Model, CharacterGetUtils):
         equipment.save()
 
         return item
-
-
 
     def __str__(self):
         return self.name
