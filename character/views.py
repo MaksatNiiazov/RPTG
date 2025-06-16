@@ -194,7 +194,7 @@ class CharacterInventoryView(LoginRequiredMixin, DetailView):
 
         context["equipment"] = equipment
         context["inventory_items"] = char.items.select_related("item")
-        context["slot_names"] = SLOT_NAMES
+        context["slot_names"] = []
         return context
 
 
