@@ -109,7 +109,7 @@
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M12 8v4l3 3"/>
                     </svg>
-                    Концентрация
+                    Концентрация и токены
                 </h3>
                 {% include "includes/cp_control.html" %}
                 {% include "includes/token_control.html" with token_type="inspiration" label="Токен вдохновения" current_value=char.inspiration_tokens max_value=char.max_inspiration_tokens %}
@@ -209,7 +209,7 @@
                                     <td>{{ stat_roll_bonuses.int }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Мудрость</td>
+                                    <td>Мудрость (восприятие)</td>
                                     <td>{{ char.wis_stat }}</td>
                                     <td>{{ stat_roll_bonuses.wis }}</td>
                                 </tr>
