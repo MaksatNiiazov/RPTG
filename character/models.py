@@ -35,8 +35,8 @@ EQUIPMENT_SLOT_MAP = {
 class CharacterClass(models.Model):
     name = models.CharField("Название", max_length=100)
 
-    action_count = models.PositiveSmallIntegerField("Количество действий", default=3)
-    reaction_count = models.PositiveSmallIntegerField("Количество реакций", default=1)
+    action_count = models.PositiveSmallIntegerField("Количество действий", default=0)
+    reaction_count = models.PositiveSmallIntegerField("Количество реакций", default=0)
     str_bonus = models.PositiveSmallIntegerField("Сила", default=0)
     dex_bonus = models.PositiveSmallIntegerField("Ловкость", default=0)
     con_bonus = models.PositiveSmallIntegerField("Телосложение", default=0)
@@ -50,7 +50,7 @@ class CharacterClass(models.Model):
     default_armor = models.PositiveSmallIntegerField("Дефолтная броня", default=0)
     default_damage = models.PositiveSmallIntegerField("Дефолтный урон", default=0)
     crit_multiplier_bonus = models.PositiveSmallIntegerField("Множитель критического урона", default=0)
-    base_ability_boints = models.PositiveSmallIntegerField("Базовые очки способностей", default=16)
+    base_ability_boints = models.IntegerField("Базовые очки способностей", default=0)
 
     def __str__(self):
         return self.name
@@ -65,17 +65,33 @@ class Talent(models.Model):
 
 
 class Character(models.Model, CharacterGetUtils):
-    character_class = models.ForeignKey(CharacterClass, on_delete=models.CASCADE, related_name="characters",
-                                        verbose_name="Класс", )
-    character_talent = models.ForeignKey(Talent, on_delete=models.SET_NULL, related_name="characters",
-                                         verbose_name="Талант", blank=True, null=True)
+    STAT_CHOICES = [
+        ('str_stat', 'Сила'),
+        ('dex_stat', 'Ловкость'),
+        ('con_stat', 'Телосложение'),
+        ('int_stat', 'Интеллект'),
+        ('wis_stat', 'Мудрость'),
+        ('cha_stat', 'Харизма'),
+        ('acc_stat', 'Меткость'),
+        ('lck_stat', 'Удача')
+    ]
 
-    world = models.ForeignKey(World, on_delete=models.CASCADE, related_name="characters", verbose_name="Мир",
-                              blank=True, null=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="characters", verbose_name="Владелец",
-                              blank=True, null=True)
     GENDER_CHOICES = [('M', 'Мужской'), ('F', 'Женский'), ('O', 'Другой')]
 
+    # Основные поля
+    character_class = models.ForeignKey(CharacterClass, on_delete=models.CASCADE,
+                                        related_name="characters", verbose_name="Класс", blank=True, null=True)
+    character_talent = models.ForeignKey(Talent, on_delete=models.SET_NULL,
+                                         related_name="characters", verbose_name="Талант",
+                                         blank=True, null=True)
+    world = models.ForeignKey(World, on_delete=models.CASCADE,
+                              related_name="characters", verbose_name="Мир",
+                              blank=True, null=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE,
+                              related_name="characters", verbose_name="Владелец",
+                              blank=True, null=True)
+
+    # Внешность и информация
     image = models.ImageField("Изображение", upload_to="characters/", blank=True, null=True)
     name = models.CharField("Имя", max_length=100)
     gender = models.CharField("Пол", max_length=1, choices=GENDER_CHOICES, blank=True)
@@ -84,7 +100,7 @@ class Character(models.Model, CharacterGetUtils):
     background = models.TextField("Предыстория", blank=True)
     notes = models.TextField("Заметки (RP)", blank=True)
 
-    # Статы 1–10
+    # Статы
     str_stat = models.PositiveSmallIntegerField("Сила", default=0,
                                                 validators=[MinValueValidator(0), MaxValueValidator(10)])
     dex_stat = models.PositiveSmallIntegerField("Ловкость", default=0,
@@ -102,32 +118,42 @@ class Character(models.Model, CharacterGetUtils):
     lck_stat = models.PositiveSmallIntegerField("Удача", default=0,
                                                 validators=[MinValueValidator(0), MaxValueValidator(10)])
 
+    # Боевые параметры
     max_hp = models.PositiveIntegerField("Макс. HP", editable=False)
-    current_hp = models.PositiveIntegerField("Текущие HP", default=0, validators=[MinValueValidator(0)])
+    current_hp = models.PositiveIntegerField("Текущие HP", default=0,
+                                             validators=[MinValueValidator(0)])
+    is_alive = models.BooleanField("Жив", default=True)
     concentration = models.IntegerField("CP", editable=False)
     current_concentration = models.IntegerField("Текущие CP", null=True, default=None)
+    inspiration_tokens = models.PositiveSmallIntegerField("Токены вдохновения", default=0)
+    precision_tokens = models.PositiveSmallIntegerField("Токены точности", default=0)
+
+    # Инвентарь
     carry_capacity = models.PositiveIntegerField("Грузоподъёмность (кг)", editable=False)
     max_weapon_weight = models.FloatField("Макс. вес оружия", editable=False)
     max_armor_weight = models.FloatField("Макс. вес доспехов", editable=False)
+    gold = models.PositiveIntegerField("Золото", default=0)
 
+    # Системные поля
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    ability_points = models.PositiveSmallIntegerField('Доступные очки прокачки', default=0)
 
-    ability_points = models.PositiveSmallIntegerField(verbose_name='Доступные очки прокачки', default=0)
-
+    # Флаги NPC
     is_npc = models.BooleanField("NPC", default=False)
     visible_to_players = models.BooleanField(
         "NPC видим всем игрокам", default=False,
         help_text="Если включено, NPC появится в списке у всех игроков"
     )
 
-    # Глобальные флаги «знания» об NPC:
+    # Флаги знаний об NPC
     known_name = models.BooleanField("Игроки знают имя", default=False)
     known_background = models.BooleanField("Игроки знают предысторию", default=False)
     known_stats = models.BooleanField("Игроки знают статы", default=False)
     known_equipment = models.BooleanField("Игроки знают экипировку", default=False)
     known_notes = models.BooleanField("Игроки знают заметки", default=False)
 
+    # Заклинания
     spells = models.ManyToManyField(
         Spell,
         verbose_name="Выученные заклинания",
@@ -135,7 +161,13 @@ class Character(models.Model, CharacterGetUtils):
         related_name="casters"
     )
 
-    gold = models.PositiveIntegerField("Золото", default=0)
+    class Meta:
+        verbose_name = "Персонаж"
+        verbose_name_plural = "Персонажи"
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({'NPC' if self.is_npc else 'PC'})"
 
     def save(self, *args, **kwargs):
         self.max_hp = 10 + 10 * self.con_stat
@@ -143,63 +175,70 @@ class Character(models.Model, CharacterGetUtils):
 
         if self.current_concentration is None:
             self.current_concentration = self.concentration
+
         self.carry_capacity = self.str_stat * 10
         self.max_weapon_weight = round(self.carry_capacity * 0.2, 1)
         self.max_armor_weight = round(self.carry_capacity * 0.5, 1)
+
+        # Автоматическая проверка жив/мертв
+        if self.current_hp <= 0 and self.is_alive:
+            self.die(silent=True)
+        elif self.current_hp > 0 and not self.is_alive:
+            self.is_alive = True
+
         super().save(*args, **kwargs)
 
-    def lvlup(self, stat: str, points: int):
-        stats = ['str_stat', 'dex_stat', 'con_stat', 'int_stat', 'wis_stat', 'cha_stat', 'acc_stat', 'lck_stat']
-        if self.ability_points - points < 0:
-            raise ValidationError("У вас недостаточно очков прокачки.")
-        if stat not in stats:
-            raise ValidationError("Попытка улучшения неизвестного стата")
-        if stat == 'str_stat':
-            self.str_stat += points
-        elif stat == 'dex_stat':
-            self.dex_stat += points
-        elif stat == 'con_stat':
-            self.con_stat += points
-        elif stat == 'int_stat':
-            self.int_stat += points
-        elif stat == 'wis_stat':
-            self.wis_stat += points
-        elif stat == 'cha_stat':
-            self.cha_stat += points
-        elif stat == 'acc_stat':
-            self.acc_stat += points
-        elif stat == 'lck_stat':
-            self.lck_stat += points
+    def clean(self):
+        """Валидация модели"""
+        if self.current_hp > self.max_hp:
+            raise ValidationError("Текущее HP не может превышать максимальное")
+        if self.current_concentration and self.current_concentration > self.concentration:
+            raise ValidationError("Концентрация превышает максимум")
+
+    def die(self, silent=False):
+        """Помечает персонажа как мертвого"""
+        if not self.is_alive:
+            return
+
+        self.is_alive = False
+        if not silent:
+            self.save(update_fields=['is_alive'])
+
+    def lvlup(self, stat: str, points: int = 1):
+        """Улучшение характеристики"""
+        if stat not in dict(self.STAT_CHOICES):
+            raise ValidationError("Неизвестная характеристика")
+
+        if self.ability_points < points:
+            raise ValidationError("Недостаточно очков прокачки")
+
+        setattr(self, stat, getattr(self, stat) + points)
         self.ability_points -= points
-        return True
+        self.save()
 
     def adjust_hp(self, delta: int) -> int:
-        """
-        Прибавляет delta (положительное или отрицательное) к current_hp,
-        не выходя за границы [0…max_hp], сохраняет и возвращает новое current_hp.
-        """
-        if not isinstance(delta, int):
-            raise ValidationError("Delta must be integer")
+        """Изменение HP с автоматической проверкой смерти"""
         self.current_hp = max(0, min(self.current_hp + delta, self.max_hp))
-        # сохраняем только поле current_hp
-        self.save(update_fields=['current_hp'])
+
+        if self.current_hp <= 0:
+            self.die()
+        elif self.current_hp > 0 and not self.is_alive:
+            self.is_alive = True
+
+        self.save(update_fields=['current_hp', 'is_alive'])
         return self.current_hp
 
     def adjust_cp(self, action: str) -> int:
-        """
-        Инкремент ('inc') или декремент ('dec') current_concentration на 1,
-        не выходя за границы [0…concentration], сохраняет и возвращает новое значение.
-        """
+        """Изменение концентрации"""
         if action not in ('inc', 'dec'):
-            raise ValidationError("Action must be 'inc' or 'dec'")
+            raise ValidationError("Действие должно быть 'inc' или 'dec'")
+
         delta = 1 if action == 'inc' else -1
-        self.current_concentration = max(
-            -5,
-            min(self.current_concentration + delta, self.concentration)
-        )
+        self.current_concentration = max(-5, min(self.current_concentration + delta, self.concentration))
         self.save(update_fields=['current_concentration'])
         return self.current_concentration
 
+    # Методы экипировки
     def can_wield_two_h_as_one(self):
         return self.str_stat >= 8
 
@@ -354,8 +393,37 @@ class Character(models.Model, CharacterGetUtils):
 
         return item
 
-    def __str__(self):
-        return self.name
+    def add_inspiration_token(self):
+        """Добавить токен вдохновения с проверкой максимума"""
+        if self.inspiration_tokens < self.max_inspiration_tokens:
+            self.inspiration_tokens += 1
+            self.save(update_fields=['inspiration_tokens'])
+            return True
+        return False
+
+    def spend_inspiration_token(self):
+        """Потратить токен вдохновения"""
+        if self.inspiration_tokens > 0:
+            self.inspiration_tokens -= 1
+            self.save(update_fields=['inspiration_tokens'])
+            return True
+        return False
+
+    def add_precision_token(self):
+        """Добавить токен точности с проверкой максимума"""
+        if self.precision_tokens < self.precision_surge_tokens:
+            self.precision_tokens += 1
+            self.save(update_fields=['precision_tokens'])
+            return True
+        return False
+
+    def spend_precision_token(self):
+        """Потратить токен точности"""
+        if self.precision_tokens > 0:
+            self.precision_tokens -= 1
+            self.save(update_fields=['precision_tokens'])
+            return True
+        return False
 
 
 class InventoryItem(models.Model):

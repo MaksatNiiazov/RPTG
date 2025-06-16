@@ -1,8 +1,18 @@
 # characters/admin.py
 
 from django.contrib import admin
-from .models import Character, InventoryItem, Equipment
+from .models import Character, InventoryItem, Equipment, CharacterClass, Talent
 from unfold.admin import ModelAdmin, TabularInline, StackedInline
+
+
+@admin.register(Talent)
+class TalentAdmin(ModelAdmin):
+    list_display = ("name", "description")
+
+
+@admin.register(CharacterClass)
+class CharacterClassAdmin(ModelAdmin):
+    pass
 
 
 class InventoryItemInline(TabularInline):
@@ -45,7 +55,7 @@ class CharacterAdmin(ModelAdmin):
         (None, {
             "fields": ("owner", "world",
                        'image',
-                       "name", "gender", "race")
+                       "name", "gender", "race", "character_class", "character_talent", "is_alive",)
         }),
         ("RP-данные", {
             "fields": ("background", "notes"),
@@ -65,7 +75,8 @@ class CharacterAdmin(ModelAdmin):
         }),
         ("Поля для НПС", {
             "fields": (
-                "is_npc", "visible_to_players", "known_name", "known_background", "known_notes", "known_equipment", "known_stats"
+                "is_npc", "visible_to_players", "known_name", "known_background", "known_notes", "known_equipment",
+                "known_stats"
             )
         }),
 

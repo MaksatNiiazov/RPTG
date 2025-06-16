@@ -1,0 +1,187 @@
+<div class="token-widget" id="{{ token_type }}-widget">
+    <div class="token-header">
+        <span class="token-label">{{ label }}</span>
+        <span class="token-max">Макс: {{ max_value }}</span>
+    </div>
+
+    <div class="token-controls">
+        <button class="token-control-btn token-decrease-btn"
+                id="{{ token_type }}-decrease-btn"
+                data-token-type="{{ token_type }}"
+                aria-label="Уменьшить"
+                {% if current_value <= 0 %}disabled{% endif %}>
+            <svg viewBox="0 0 24 24" width="18" height="18">
+                <path d="M5 12h14" stroke="currentColor" stroke-width="2"/>
+            </svg>
+        </button>
+
+        <div class="token-value">
+            <span class="token-current" id="{{ token_type }}-value">{{ current_value }}</span>
+        </div>
+
+        <button class="token-control-btn token-increase-btn"
+                id="{{ token_type }}-increase-btn"
+                data-token-type="{{ token_type }}"
+                aria-label="Увеличить"
+                {% if current_value >= max_value %}disabled{% endif %}>
+            <svg viewBox="0 0 24 24" width="18" height="18">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<style>
+    /* Обновленные стили для токенов (согласованные с концентрацией) */
+    .token-widget {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        background-color: #fff9f0;
+        border: 1px solid #e0d6c2;
+        border-radius: 8px;
+        max-width: 300px;
+        margin: 0.5rem auto;
+    }
+
+    .token-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .token-label {
+        font-family: 'Merriweather', serif;
+        font-size: 14px;
+        color: #5a4a3a;
+        font-weight: 600;
+    }
+
+    .token-max {
+        font-family: 'Merriweather', serif;
+        font-size: 12px;
+        color: #8a7866;
+    }
+
+    .token-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .token-control-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0e6d6;
+        border: 1px solid #d4c8b4;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #5a4a3a;
+        padding: 0;
+    }
+
+    .token-control-btn:hover:not(:disabled) {
+        background: #e6d9c4;
+        transform: translateY(-1px);
+    }
+
+    .token-control-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .token-decrease-btn {
+        color: #a04545;
+    }
+
+    .token-increase-btn {
+        color: #457a45;
+    }
+
+    .token-value {
+        flex-grow: 1;
+        text-align: center;
+        font-family: 'Cinzel', serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: #3e2f1b;
+        min-width: 40px;
+    }
+
+    .value-changed {
+        animation: pulse 0.3s ease;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Уникальный обработчик только для токенов
+    function handleTokenAction(tokenType, action) {
+        const url = "{% url 'characters:ajax_adjust_token' char.id %}";
+        const currentEl = document.getElementById(`${tokenType}-value`);
+        const maxValue = parseInt(document.querySelector(`#${tokenType}-widget .token-max`).textContent.replace('Макс: ', ''));
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "X-Requested-With": "XMLHttpRequest",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({
+                action,
+                token_type: tokenType
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Ошибка сети');
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === "ok") {
+                currentEl.textContent = data.current;
+                document.getElementById(`${tokenType}-decrease-btn`).disabled = data.current <= 0;
+                document.getElementById(`${tokenType}-increase-btn`).disabled = data.current >= data.max;
+
+                // Анимация
+                currentEl.parentElement.classList.add('value-changed');
+                setTimeout(() => {
+                    currentEl.parentElement.classList.remove('value-changed');
+                }, 300);
+            } else {
+                throw new Error(data.message || 'Ошибка сервера');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Не удалось изменить токены: ' + error.message);
+        });
+    }
+
+    // Назначаем обработчики для каждого типа токенов
+    ['inspiration', 'precision'].forEach(tokenType => {
+        const decreaseBtn = document.getElementById(`${tokenType}-decrease-btn`);
+        const increaseBtn = document.getElementById(`${tokenType}-increase-btn`);
+
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', () => handleTokenAction(tokenType, 'dec'));
+        }
+
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', () => handleTokenAction(tokenType, 'inc'));
+        }
+    });
+});
+</script>

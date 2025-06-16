@@ -14,17 +14,13 @@
         <!-- Header Section -->
         <div class="character-header">
             <div>
-                <img src="
-
-
-
-
-                        {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
-                     alt="{{ char.name }}" class="character-image">
+                <img
+                        src="
+                                {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
+                        alt="{{ char.name }}" class="character-image">
                 <br>
                 {% if is_owner or is_gm %}
                     <a style="font-size: 12px;" href="{% url 'characters:character_update' char.pk %}">редактировать</a>
-
                 {% endif %}
             </div>
             <div class="character-info">
@@ -116,26 +112,38 @@
                     Концентрация
                 </h3>
                 {% include "includes/cp_control.html" %}
+                {% include "includes/token_control.html" with token_type="inspiration" label="Токен вдохновения" current_value=char.inspiration_tokens max_value=char.max_inspiration_tokens %}
+
+                {% include "includes/token_control.html" with token_type="precision" label="Токен прозрения" current_value=char.precision_tokens max_value=char.precision_surge_tokens %}
             </div>
         </div>
 
         <!-- Main Stats -->
         <div class="stats-grid">
             <div class="stat-item">
-                <div class="stat-value">{{ char.get_total_defense }}</div>
+                <div class="stat-value">{{ char.total_defense }}</div>
                 <div class="stat-label">Общая броня</div>
             </div>
-
             <div class="stat-item">
-                <div class="stat-value">{{ char.get_total_attack }}</div>
+                <div class="stat-value">{{ char.total_attack }}</div>
                 <div class="stat-label">Общий урон</div>
             </div>
-
             <div class="stat-item">
-                <div class="stat-value">{{ char.get_critical_hit }}</div>
+                <div class="stat-value">{{ char.critical_hit }}</div>
                 <div class="stat-label">Крит. урон</div>
             </div>
-
+            <div class="stat-item">
+                <div class="stat-value">{{ combat_stats.possible_chain_attacks }}</div>
+                <div class="stat-label">Цепные атаки</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ combat_stats.action_points }}</div>
+                <div class="stat-label">Действий</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ combat_stats.possible_reactions }}</div>
+                <div class="stat-label">Реакций</div>
+            </div>
             <div class="stat-item">
                 <div class="stat-value">{{ char.carry_capacity }} кг</div>
                 <div class="stat-label">Грузоподъемность</div>
@@ -385,72 +393,72 @@
 
 {% block js %}
     <script>
-document.addEventListener("DOMContentLoaded", () => {
-    // NPC flag toggles - this is the critical part
-    document.querySelectorAll(".npc-flag-toggle").forEach(checkbox => {
-        checkbox.addEventListener("change", async function() {
-            const csrfToken = getCookie('csrftoken'); // Use Django's cookie method
+        document.addEventListener("DOMContentLoaded", () => {
+            // NPC flag toggles - this is the critical part
+            document.querySelectorAll(".npc-flag-toggle").forEach(checkbox => {
+                checkbox.addEventListener("change", async function () {
+                    const csrfToken = getCookie('csrftoken'); // Use Django's cookie method
 
-            try {
-                const formData = new FormData();
-                formData.append('flag', this.dataset.flag);
-                formData.append('csrfmiddlewaretoken', csrfToken);
+                    try {
+                        const formData = new FormData();
+                        formData.append('flag', this.dataset.flag);
+                        formData.append('csrfmiddlewaretoken', csrfToken);
 
-                const response = await fetch("{% url 'characters:toggle-npc-flag' char.id %}", {
-                    method: "POST",
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest", // Important for Django to recognize as AJAX
-                        "X-CSRFToken": csrfToken,
-                    },
-                    body: formData
+                        const response = await fetch("{% url 'characters:toggle-npc-flag' char.id %}", {
+                            method: "POST",
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest", // Important for Django to recognize as AJAX
+                                "X-CSRFToken": csrfToken,
+                            },
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        if (data.status !== "ok") {
+                            throw new Error(data.message || "Unknown error occurred");
+                        }
+                    } catch (error) {
+                        console.error("Error:", error);
+                        this.checked = !this.checked; // Revert the checkbox
+                        alert("Failed to save setting: " + error.message);
+                    }
                 });
+            });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            // Helper function to get CSRF token from cookies
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
                 }
-
-                const data = await response.json();
-                if (data.status !== "ok") {
-                    throw new Error(data.message || "Unknown error occurred");
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                this.checked = !this.checked; // Revert the checkbox
-                alert("Failed to save setting: " + error.message);
+                return cookieValue;
             }
         });
-    });
+        const tabs = document.querySelectorAll(".tab");
+        const tabPanes = document.querySelectorAll(".tab-pane");
 
-    // Helper function to get CSRF token from cookies
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-});
-    const tabs = document.querySelectorAll(".tab");
-    const tabPanes = document.querySelectorAll(".tab-pane");
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                // Remove active class from all tabs and panes
+                tabs.forEach(t => t.classList.remove("active"));
+                tabPanes.forEach(p => p.classList.remove("active"));
 
-    tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-            // Remove active class from all tabs and panes
-            tabs.forEach(t => t.classList.remove("active"));
-            tabPanes.forEach(p => p.classList.remove("active"));
-
-            // Add active class to clicked tab and corresponding pane
-            tab.classList.add("active");
-            const targetPane = document.getElementById(tab.dataset.tab);
-            if (targetPane) targetPane.classList.add("active");
+                // Add active class to clicked tab and corresponding pane
+                tab.classList.add("active");
+                const targetPane = document.getElementById(tab.dataset.tab);
+                if (targetPane) targetPane.classList.add("active");
+            });
         });
-    });
     </script>
 {% endblock %}

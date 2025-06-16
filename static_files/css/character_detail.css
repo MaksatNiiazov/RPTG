@@ -109,6 +109,7 @@
     padding: 1rem;
     border-radius: 6px;
     text-align: center;
+
 }
 
 .stat-value {
@@ -277,5 +278,41 @@
 
     .stat-value {
         font-size: 1.5rem;
+    }
+}
+
+/* Новые стили для токенов */
+.tokens-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.token-item {
+    background: var(--light-bg);
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.token-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.token-label {
+    font-size: 0.85rem;
+    color: var(--medium-text);
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tokens-grid {
+        grid-template-columns: 1fr;
     }
 }

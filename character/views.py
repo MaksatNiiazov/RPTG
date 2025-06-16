@@ -70,25 +70,77 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
         if not hasattr(c, "equipment"):
             Equipment.objects.create(character=c)
 
+
+        # Основные данные
         ctx["equipment"] = c.equipment
         ctx["legendary_bonuses"] = c.get_legendary_bonuses()
         ctx["spells"] = c.spells.select_related("school", "category").order_by("level", "school__name", "name")
+        ctx["slot_names"] = [
+            {"head": 'Голова'},
+            {"neck": 'Шея'},
+            {"chest": 'Туловище'},
+            {"hands": 'Руки'},
+            {"waist": 'Пояс'},
+            {"legs": 'Ноги'},
+            {"feet": 'Ступни'},
+            {"cloak": 'Мантия'},
+            {"ring_left": 'Кольцо на левую руку'},
+            {"ring_right": 'Кольцо на правую руку'},
+            {"main_hand": 'Основная рука'},
+            {"off_hand": 'Второстепенная рука'},
+            {"two_hands": 'Две руки'},
+        ]
 
-        ctx["slot_names"] = SLOT_NAMES
-
-        # Кто смотрит?
+        # Права доступа
         is_gm = (c.owner == user) or (c.world and c.world.creator == user)
         is_owner = (c.owner == user)
         ctx["is_gm"] = is_gm
         ctx["is_owner"] = is_owner
 
-        # Если NPC и смотрит не GM/владелец — скрываем неподозволенные поля
+        # Фильтрация видимости для NPC
         ctx["show_name"] = (not c.is_npc) or is_gm or c.known_name
         ctx["show_background"] = (not c.is_npc) or is_gm or c.known_background
         ctx["show_stats"] = (not c.is_npc) or is_gm or c.known_stats
         ctx["show_equipment"] = (not c.is_npc) or is_gm or c.known_equipment
         ctx["show_notes"] = (not c.is_npc) or is_gm or c.known_notes
-        ctx["world"] = c.world.pk
+
+        # === ДОБАВЛЕННЫЕ ПАРАМЕТРЫ ===
+        # Токены
+        ctx["tokens"] = {
+            'inspiration': {
+                'current': c.inspiration_tokens,
+                'max': c.max_inspiration_tokens,
+            },
+            'precision': {
+                'current': c.precision_tokens,
+                'max': c.precision_surge_tokens,
+            }
+        }
+
+        # Боевые характеристики
+        ctx["combat_stats"] = {
+            'total_attack': c.total_attack,
+            'total_defense': c.total_defense,
+            'critical_hit': c.critical_hit,
+            'action_points': c.action_points,
+            'possible_chain_attacks': c.possible_chain_attacks,
+            'possible_reactions': c.possible_reactions,
+        }
+
+        # Эффективные характеристики (с бонусами класса)
+        ctx["effective_stats"] = {
+            'str': c.effective_str,
+            'dex': c.effective_dex,
+            'con': c.effective_con,
+            'int': c.effective_int,
+            'wis': c.effective_wis,
+            'cha': c.effective_cha,
+            'acc': c.effective_acc,
+            'lck': c.effective_lck,
+        }
+
+        # Дополнительные данные
+        ctx["world"] = c.world.pk if c.world else None
         ctx["npc_flags"] = {
             'known_name': c.known_name,
             'known_background': c.known_background,
@@ -96,6 +148,8 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
             'known_equipment': c.known_equipment,
             'known_notes': c.known_notes,
         }
+
+        # Бонусы к броскам
         stat_roll_bonuses = {
             'str': c.get_stat_roll_bonus(c.str_stat),
             'dex': c.get_stat_roll_bonus(c.dex_stat),
@@ -107,24 +161,8 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
             'lck': c.get_stat_roll_bonus(c.lck_stat),
         }
         ctx['stat_roll_bonuses'] = stat_roll_bonuses
+
         return ctx
-
-
-SLOT_NAMES = [
-    {"head": 'Голова'},
-    {"neck": 'Шея'},
-    {"chest": 'Туловище'},
-    {"hands": 'Руки'},
-    {"waist": 'Пояс'},
-    {"legs": 'Ноги'},
-    {"feet": 'Ступни'},
-    {"cloak": 'Мантия'},
-    {"ring_left": 'Кольцо на левую руку'},
-    {"ring_right": 'Кольцо на правую руку'},
-    {"main_hand": 'Основная рука'},
-    {"off_hand": 'Второстепенная рука'},
-    {"two_hands": 'Две руки'},
-]
 
 
 class CharacterInventoryView(LoginRequiredMixin, DetailView):
@@ -391,3 +429,46 @@ class AjaxAdjustCpView(LoginRequiredMixin, View):
         except ValidationError as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
         return JsonResponse({'status': 'ok', 'current_concentration': new_cp})
+
+
+@method_decorator(require_POST, name="dispatch")
+class AjaxAdjustTokenView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+            return HttpResponseBadRequest("Только AJAX")
+
+        char = get_object_or_404(Character, pk=pk)
+        user = request.user
+        if not (char.owner == user or (char.world and char.world.creator == user)):
+            return HttpResponseForbidden("Нет прав")
+
+        token_type = request.POST.get('token_type')
+        action = request.POST.get('action')
+
+        try:
+            if token_type == 'inspiration':
+                if action == 'inc':
+                    success = char.add_inspiration_token()
+                else:
+                    success = char.spend_inspiration_token()
+            elif token_type == 'precision':
+                if action == 'inc':
+                    success = char.add_precision_token()
+                else:
+                    success = char.spend_precision_token()
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Неверный тип токена'})
+
+            if not success:
+                return JsonResponse({'status': 'error', 'message': 'Достигнут максимум/минимум'})
+
+            char.refresh_from_db()
+            return JsonResponse({
+                'status': 'ok',
+                'current': getattr(char, f'{token_type}_tokens'),
+                'max': getattr(char,
+                               f'max_{token_type}_tokens' if token_type == 'inspiration' else f'precision_surge_tokens')
+            })
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
