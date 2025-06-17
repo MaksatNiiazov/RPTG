@@ -15,9 +15,7 @@
         <div class="character-header">
             <div>
                 <img
-                        src="
-
-                                {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
+                        src="{% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
                         alt="{{ char.name }}" class="character-image">
                 <br>
                 {% if is_owner or is_gm %}
@@ -68,11 +66,14 @@
                     {% endif %}
 
                     {% if is_gm %}
+                        <div class="gm-actions">
+                            <br>
+                        <h5>Выдать</h5>
                         <a href="{% url 'worlds:gm-grant-spell' world char.id %}" class="btn">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                             </svg>
-                            Выдать заклинание
+                            Заклинание
                         </a>
 
                         <a href="{% url 'worlds:world-grant-points' world char.pk %}" class="btn">
@@ -87,6 +88,7 @@
                             </svg>
                             Предмет
                         </a>
+                        </div>
                     {% endif %}
                 </div>
             </div>
