@@ -32,7 +32,6 @@
 </div>
 
 <style>
-    /* Обновленные стили для токенов (согласованные с концентрацией) */
     .token-widget {
         display: flex;
         flex-direction: column;
@@ -44,33 +43,28 @@
         max-width: 300px;
         margin: 0.5rem auto;
     }
-
     .token-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
-
     .token-label {
         font-family: 'Merriweather', serif;
         font-size: 14px;
         color: #5a4a3a;
         font-weight: 600;
     }
-
     .token-max {
         font-family: 'Merriweather', serif;
         font-size: 12px;
         color: #8a7866;
     }
-
     .token-controls {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
     }
-
     .token-control-btn {
         width: 32px;
         height: 32px;
@@ -85,25 +79,20 @@
         color: #5a4a3a;
         padding: 0;
     }
-
     .token-control-btn:hover:not(:disabled) {
         background: #e6d9c4;
         transform: translateY(-1px);
     }
-
     .token-control-btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
     }
-
     .token-decrease-btn {
         color: #a04545;
     }
-
     .token-increase-btn {
         color: #457a45;
     }
-
     .token-value {
         flex-grow: 1;
         text-align: center;
@@ -113,11 +102,9 @@
         color: #3e2f1b;
         min-width: 40px;
     }
-
     .value-changed {
         animation: pulse 0.3s ease;
     }
-
     @keyframes pulse {
         0% { transform: scale(1); }
         50% { transform: scale(1.1); }
@@ -127,61 +114,60 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // Уникальный обработчик только для токенов
-    function handleTokenAction(event) {
-        const button = event.currentTarget;
-        const tokenType = button.dataset.tokenType;
-        const action = button.classList.contains('token-decrease-btn') ? 'dec' : 'inc';
+    // Объект для отслеживания состояния запросов
+    const tokenRequests = {};
 
-        const url = "{% url 'characters:ajax_adjust_token' char.id %}";
-        const currentEl = document.getElementById(`${tokenType}-value`);
-        const maxValue = parseInt(document.querySelector(`#${tokenType}-widget .token-max`).textContent.replace('Макс: ', ''));
+    // Обработчик для всех кнопок токенов
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.token-control-btn');
+        if (!btn) return;
 
-        // Блокируем кнопку на время запроса
-        button.disabled = true;
+        e.preventDefault();
 
-        fetch(url, {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": "{{ csrf_token }}",
-                "X-Requested-With": "XMLHttpRequest",
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams({
-                action,
-                token_type: tokenType
-            })
-        })
-        .then(response => {
+        const tokenType = btn.dataset.tokenType;
+        const action = btn.classList.contains('token-decrease-btn') ? 'dec' : 'inc';
+        const requestKey = `${tokenType}-${action}`;
+
+        // Если запрос уже выполняется - игнорируем
+        if (tokenRequests[requestKey]) return;
+
+        try {
+            tokenRequests[requestKey] = true;
+            btn.disabled = true;
+
+            const response = await fetch("{% url 'characters:ajax_adjust_token' char.id %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({ action, token_type: tokenType })
+            });
+
             if (!response.ok) throw new Error('Ошибка сети');
-            return response.json();
-        })
-        .then(data => {
+            const data = await response.json();
+
             if (data.status === "ok") {
+                const currentEl = document.getElementById(`${tokenType}-value`);
                 currentEl.textContent = data.current;
+
+                // Обновляем состояние кнопок
                 document.getElementById(`${tokenType}-decrease-btn`).disabled = data.current <= 0;
                 document.getElementById(`${tokenType}-increase-btn`).disabled = data.current >= data.max;
 
-                // Анимация
+                // Анимация изменения значения
                 currentEl.parentElement.classList.add('value-changed');
                 setTimeout(() => {
                     currentEl.parentElement.classList.remove('value-changed');
                 }, 300);
-            } else {
-                throw new Error(data.message || 'Ошибка сервера');
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Ошибка:', error);
-        })
-        .finally(() => {
-            button.disabled = false;
-        });
-    }
-
-    // Назначаем обработчики для всех кнопок
-    document.querySelectorAll('.token-decrease-btn, .token-increase-btn').forEach(button => {
-        button.addEventListener('click', handleTokenAction);
+        } finally {
+            tokenRequests[requestKey] = false;
+            btn.disabled = false;
+        }
     });
 });
 </script>

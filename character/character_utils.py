@@ -151,7 +151,7 @@ class CharacterGetUtils:
         return 4
 
     @property
-    def precision_surge_tokens(self):
+    def max_precision_tokens(self):
         if self.effective_wis == 0:
             return 0
         elif self.effective_wis <= 4:

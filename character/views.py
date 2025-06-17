@@ -71,7 +71,6 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
         if not hasattr(c, "equipment"):
             Equipment.objects.create(character=c)
 
-
         # Основные данные
         ctx["equipment"] = c.equipment
         ctx["legendary_bonuses"] = c.get_legendary_bonuses()
@@ -114,7 +113,7 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
             },
             'precision': {
                 'current': c.precision_tokens,
-                'max': c.precision_surge_tokens,
+                'max': c.max_precision_tokens,
             }
         }
 
@@ -195,7 +194,21 @@ class CharacterInventoryView(LoginRequiredMixin, DetailView):
 
         context["equipment"] = equipment
         context["inventory_items"] = char.items.select_related("item")
-        context["slot_names"] = []
+        context["slot_names"] = [
+            {"head": 'Голова'},
+            {"neck": 'Шея'},
+            {"chest": 'Туловище'},
+            {"hands": 'Руки'},
+            {"waist": 'Пояс'},
+            {"legs": 'Ноги'},
+            {"feet": 'Ступни'},
+            {"cloak": 'Мантия'},
+            {"ring_left": 'Кольцо на левую руку'},
+            {"ring_right": 'Кольцо на правую руку'},
+            {"main_hand": 'Основная рука'},
+            {"off_hand": 'Второстепенная рука'},
+            {"two_hands": 'Две руки'},
+        ]
         return context
 
 
@@ -439,38 +452,32 @@ class AjaxAdjustTokenView(LoginRequiredMixin, View):
             return HttpResponseBadRequest("Только AJAX")
 
         char = get_object_or_404(Character, pk=pk)
-        user = request.user
-        if not (char.owner == user or (char.world and char.world.creator == user)):
+        if not (char.owner == request.user or
+                (char.world and char.world.creator == request.user)):
             return HttpResponseForbidden("Нет прав")
 
         token_type = request.POST.get('token_type')
         action = request.POST.get('action')
 
-        if token_type not in ['inspiration', 'precision']:
-            return JsonResponse({'status': 'error', 'message': 'Неверный тип токена'})
 
-        # Блокировка для избежания race condition
-        with transaction.atomic():
-            char = Character.objects.select_for_update().get(pk=pk)
 
-            current = getattr(char, token_type)
-            max_value = getattr(char, f'max_{token_type}')
+        current = getattr(char, f'{token_type}_tokens')
+        max_value = getattr(char, f'max_{token_type}_tokens')
 
-            if action == 'inc':
-                if current >= max_value:
-                    return JsonResponse({'status': 'error', 'message': 'Достигнут максимум'})
-                setattr(char, token_type, current + 1)
-            elif action == 'dec':
-                if current <= 0:
-                    return JsonResponse({'status': 'error', 'message': 'Достигнут минимум'})
-                setattr(char, token_type, current - 1)
-            else:
-                return JsonResponse({'status': 'error', 'message': 'Неверное действие'})
-
+        if action == 'inc' and current < max_value:
+            setattr(char, f'{token_type}_tokens', current + 1)
             char.save()
+        elif action == 'dec' and current > 0:
+            setattr(char, f'{token_type}_tokens', current - 1)
+            char.save()
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Достигнут максимум/минимум'
+            })
 
         return JsonResponse({
             'status': 'ok',
-            'current': getattr(char, token_type),
+            'current': getattr(char, f'{token_type}_tokens'),
             'max': max_value
         })

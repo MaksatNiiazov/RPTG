@@ -411,7 +411,7 @@ class Character(models.Model, CharacterGetUtils):
 
     def add_precision_token(self):
         """Добавить токен точности с проверкой максимума"""
-        if self.precision_tokens < self.precision_surge_tokens:
+        if self.precision_tokens < self.max_precision_tokens:
             self.precision_tokens += 1
             self.save(update_fields=['precision_tokens'])
             return True
