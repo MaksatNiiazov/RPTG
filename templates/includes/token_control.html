@@ -113,61 +113,65 @@
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    // Объект для отслеживания состояния запросов
-    const tokenRequests = {};
+// Глобальный флаг для отслеживания инициализации
+if (!window.tokenWidgetInitialized) {
+    window.tokenWidgetInitialized = true;
 
-    // Обработчик для всех кнопок токенов
-    document.addEventListener('click', async (e) => {
-        const btn = e.target.closest('.token-control-btn');
-        if (!btn) return;
+    document.addEventListener("DOMContentLoaded", () => {
+        // Объект для блокировки повторных запросов
+        const activeRequests = {};
 
-        e.preventDefault();
+        // Делегирование событий
+        document.body.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.token-control-btn');
+            if (!btn) return;
 
-        const tokenType = btn.dataset.tokenType;
-        const action = btn.classList.contains('token-decrease-btn') ? 'dec' : 'inc';
-        const requestKey = `${tokenType}-${action}`;
+            e.preventDefault();
 
-        // Если запрос уже выполняется - игнорируем
-        if (tokenRequests[requestKey]) return;
+            const tokenType = btn.dataset.tokenType;
+            const action = btn.classList.contains('token-decrease-btn') ? 'dec' : 'inc';
+            const requestKey = `${tokenType}-${action}-${Date.now()}`;
 
-        try {
-            tokenRequests[requestKey] = true;
-            btn.disabled = true;
+            // Если уже есть активный запрос для этой кнопки
+            if (activeRequests[btn.id]) return;
+            activeRequests[btn.id] = true;
 
-            const response = await fetch("{% url 'characters:ajax_adjust_token' char.id %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                    "X-Requested-With": "XMLHttpRequest",
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: new URLSearchParams({ action, token_type: tokenType })
-            });
+            try {
+                btn.disabled = true;
+                const response = await fetch("{% url 'characters:ajax_adjust_token' char.id %}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({ action, token_type: tokenType })
+                });
 
-            if (!response.ok) throw new Error('Ошибка сети');
-            const data = await response.json();
+                if (!response.ok) throw new Error('Ошибка сети');
+                const data = await response.json();
 
-            if (data.status === "ok") {
-                const currentEl = document.getElementById(`${tokenType}-value`);
-                currentEl.textContent = data.current;
+                if (data.status === "ok") {
+                    const currentEl = document.getElementById(`${tokenType}-value`);
+                    currentEl.textContent = data.current;
 
-                // Обновляем состояние кнопок
-                document.getElementById(`${tokenType}-decrease-btn`).disabled = data.current <= 0;
-                document.getElementById(`${tokenType}-increase-btn`).disabled = data.current >= data.max;
+                    // Обновляем обе кнопки
+                    document.getElementById(`${tokenType}-decrease-btn`).disabled = data.current <= 0;
+                    document.getElementById(`${tokenType}-increase-btn`).disabled = data.current >= data.max;
 
-                // Анимация изменения значения
-                currentEl.parentElement.classList.add('value-changed');
-                setTimeout(() => {
-                    currentEl.parentElement.classList.remove('value-changed');
-                }, 300);
+                    // Анимация
+                    currentEl.parentElement.classList.add('value-changed');
+                    setTimeout(() => {
+                        currentEl.parentElement.classList.remove('value-changed');
+                    }, 300);
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+            } finally {
+                delete activeRequests[btn.id];
+                btn.disabled = false;
             }
-        } catch (error) {
-            console.error('Ошибка:', error);
-        } finally {
-            tokenRequests[requestKey] = false;
-            btn.disabled = false;
-        }
+        });
     });
-});
+}
 </script>

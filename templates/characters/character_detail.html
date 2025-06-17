@@ -16,6 +16,7 @@
             <div>
                 <img
                         src="
+
                                 {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
                         alt="{{ char.name }}" class="character-image">
                 <br>
@@ -112,9 +113,8 @@
                     Концентрация и токены
                 </h3>
                 {% include "includes/cp_control.html" %}
-                {% include "includes/token_control.html" with token_type="inspiration" label="Токен вдохновения" current_value=char.inspiration_tokens max_value=char.max_inspiration_tokens %}
-
-                {% include "includes/token_control.html" with token_type="precision" label="Токен прозрения" current_value=char.precision_tokens max_value=char.precision_surge_tokens %}
+                {% include "includes/token_control.html" with token_type="inspiration" label="Вдохновение" current_value=char.inspiration_tokens max_value=char.max_inspiration_tokens %}
+                {% include "includes/token_control.html" with token_type="precision" label="Точность" current_value=char.precision_tokens max_value=char.max_precision_tokens %}
             </div>
         </div>
 
