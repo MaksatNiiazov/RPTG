@@ -128,10 +128,17 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     // Уникальный обработчик только для токенов
-    function handleTokenAction(tokenType, action) {
+    function handleTokenAction(event) {
+        const button = event.currentTarget;
+        const tokenType = button.dataset.tokenType;
+        const action = button.classList.contains('token-decrease-btn') ? 'dec' : 'inc';
+
         const url = "{% url 'characters:ajax_adjust_token' char.id %}";
         const currentEl = document.getElementById(`${tokenType}-value`);
         const maxValue = parseInt(document.querySelector(`#${tokenType}-widget .token-max`).textContent.replace('Макс: ', ''));
+
+        // Блокируем кнопку на время запроса
+        button.disabled = true;
 
         fetch(url, {
             method: "POST",
@@ -166,21 +173,15 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(error => {
             console.error('Ошибка:', error);
+        })
+        .finally(() => {
+            button.disabled = false;
         });
     }
 
-    // Назначаем обработчики для каждого типа токенов
-    ['inspiration', 'precision'].forEach(tokenType => {
-        const decreaseBtn = document.getElementById(`${tokenType}-decrease-btn`);
-        const increaseBtn = document.getElementById(`${tokenType}-increase-btn`);
-
-        if (decreaseBtn) {
-            decreaseBtn.addEventListener('click', () => handleTokenAction(tokenType, 'dec'));
-        }
-
-        if (increaseBtn) {
-            increaseBtn.addEventListener('click', () => handleTokenAction(tokenType, 'inc'));
-        }
+    // Назначаем обработчики для всех кнопок
+    document.querySelectorAll('.token-decrease-btn, .token-increase-btn').forEach(button => {
+        button.addEventListener('click', handleTokenAction);
     });
 });
 </script>
