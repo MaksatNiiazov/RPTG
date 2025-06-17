@@ -137,7 +137,7 @@ if (!window.tokenWidgetInitialized) {
             activeRequests[btn.id] = true;
 
             try {
-                btn.disabled = true;
+                {#btn.disabled = true;#}
                 const response = await fetch("{% url 'characters:ajax_adjust_token' char.id %}", {
                     method: "POST",
                     headers: {
@@ -169,7 +169,7 @@ if (!window.tokenWidgetInitialized) {
                 console.error('Ошибка:', error);
             } finally {
                 delete activeRequests[btn.id];
-                btn.disabled = false;
+                {#btn.disabled = false;#}
             }
         });
     });
