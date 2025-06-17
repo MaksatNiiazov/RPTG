@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -445,30 +446,31 @@ class AjaxAdjustTokenView(LoginRequiredMixin, View):
         token_type = request.POST.get('token_type')
         action = request.POST.get('action')
 
-        try:
-            if token_type == 'inspiration':
-                if action == 'inc':
-                    success = char.add_inspiration_token()
-                else:
-                    success = char.spend_inspiration_token()
-            elif token_type == 'precision':
-                if action == 'inc':
-                    success = char.add_precision_token()
-                else:
-                    success = char.spend_precision_token()
+        if token_type not in ['inspiration', 'precision']:
+            return JsonResponse({'status': 'error', 'message': 'Неверный тип токена'})
+
+        # Блокировка для избежания race condition
+        with transaction.atomic():
+            char = Character.objects.select_for_update().get(pk=pk)
+
+            current = getattr(char, token_type)
+            max_value = getattr(char, f'max_{token_type}')
+
+            if action == 'inc':
+                if current >= max_value:
+                    return JsonResponse({'status': 'error', 'message': 'Достигнут максимум'})
+                setattr(char, token_type, current + 1)
+            elif action == 'dec':
+                if current <= 0:
+                    return JsonResponse({'status': 'error', 'message': 'Достигнут минимум'})
+                setattr(char, token_type, current - 1)
             else:
-                return JsonResponse({'status': 'error', 'message': 'Неверный тип токена'})
+                return JsonResponse({'status': 'error', 'message': 'Неверное действие'})
 
-            if not success:
-                return JsonResponse({'status': 'error', 'message': 'Достигнут максимум/минимум'})
+            char.save()
 
-            char.refresh_from_db()
-            return JsonResponse({
-                'status': 'ok',
-                'current': getattr(char, f'{token_type}_tokens'),
-                'max': getattr(char,
-                               f'max_{token_type}_tokens' if token_type == 'inspiration' else f'precision_surge_tokens')
-            })
-
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
+        return JsonResponse({
+            'status': 'ok',
+            'current': getattr(char, token_type),
+            'max': max_value
+        })
