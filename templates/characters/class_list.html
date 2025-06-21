@@ -349,16 +349,7 @@
                 {% endif %}
             </div>
 
-            {% if is_gm %}
-            <div class="gm-actions">
-                <a href="{% url 'admin:characters_characterclass_change' class.id %}" class="btn btn-sm btn-outline-secondary">
-                    <i class="fas fa-edit"></i> Редактировать
-                </a>
-                <a href="{% url 'admin:characters_characterclass_delete' class.id %}" class="btn btn-sm btn-outline-danger">
-                    <i class="fas fa-trash"></i> Удалить
-                </a>
-            </div>
-            {% endif %}
+
         </div>
     </div>
     {% endfor %}
