@@ -1,24 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="controls">
-  <input id="token-id" placeholder="Ваш ID" value="{{ user_id }}" {% if not is_gm %}readonly type="hidden" {% endif %}>
-  <input id="token-label" placeholder="Имя">
-  <input type="color" id="token-color" value="#00aaff">
-  <button id="set-token">Создать/Обновить</button>
-  <button id="delete-token">Удалить</button>
+  <div class="form-group">
+    <label for="token-id">ID токена</label>
+    <input id="token-id" placeholder="Ваш ID" value="{{ user_id }}" {% if not is_gm %}readonly type="hidden" {% endif %}>
+  </div>
+
+  <div class="form-group">
+    <label for="token-label">Имя токена</label>
+    <input id="token-label" placeholder="Введите имя">
+  </div>
+
+  <div class="form-group">
+    <label for="token-color">Цвет</label>
+    <input type="color" id="token-color" value="#00aaff">
+  </div>
+
+  <div class="button-group">
+    <button id="set-token" class="btn-primary">Сохранить токен</button>
+    <button id="delete-token" class="btn-danger">Удалить токен</button>
+  </div>
 </div>
 
 {% if is_gm %}
   <div class="gm-panel">
-    <h3>Список токенов</h3>
-    <ul id="token-list"></ul>
+    <h3>Управление токенами</h3>
+    <div class="search-box">
+      <input type="text" id="token-search" placeholder="Поиск токенов...">
+    </div>
+    <div class="token-list-container">
+      <ul id="token-list"></ul>
+    </div>
   </div>
 {% endif %}
 
 <div id="map-container">
-  <img id="map-image" src="{{ location.image.url }}">
+  <img id="map-image" src="{{ location.image.url }}" alt="Игровая карта">
   <canvas id="token-canvas"></canvas>
 </div>
+
+<div id="status-message"></div>
 {% endblock %}
 
 {% block extra_js %}
@@ -42,6 +63,9 @@ const locationId = {{ location.id }};
 const tokensRef = ref(db, `locations/${locationId}/tokens`);
 const isGM = {{ is_gm|yesno:"true,false" }};
 
+// Определение мобильного устройства
+const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
 const canvas = document.getElementById("token-canvas");
 const mapImage = document.getElementById("map-image");
 const ctx = canvas.getContext("2d");
@@ -50,27 +74,64 @@ let tokens = {};
 let draggingId = null;
 let selectedId = null;
 
+// Функция для определения размера токена в зависимости от устройства
+function getTokenRadius() {
+  return isMobile ? 8 : 15;
+}
+
+// Функция для определения размера шрифта
+function getFontSize() {
+  return isMobile ? 10 : 14;
+}
+
+// Функция для определения области клика
+function getClickRadius() {
+  return isMobile ? 15 : 20;
+}
+
 const getID = () => document.getElementById("token-id").value.trim();
 const getLabel = () => document.getElementById("token-label").value.trim();
 const getColor = () => document.getElementById("token-color").value;
 
-document.getElementById("set-token").onclick = () => {
+function showStatus(message, isError = false) {
+  const statusMessage = document.getElementById("status-message");
+  statusMessage.textContent = message;
+  statusMessage.className = isError ? "error" : "success";
+  setTimeout(() => statusMessage.textContent = "", 3000);
+}
+
+document.getElementById("set-token").addEventListener("click", () => {
   const id = getID();
-  if (!id) return;
+  if (!id) {
+    showStatus("ID токена не может быть пустым", true);
+    return;
+  }
+
   const token = {
     x: tokens[id]?.x || 50,
     y: tokens[id]?.y || 50,
     color: getColor(),
     label: getLabel() || id
   };
-  set(ref(db, `locations/${locationId}/tokens/${id}`), token);
-};
 
-document.getElementById("delete-token").onclick = () => {
+  set(ref(db, `locations/${locationId}/tokens/${id}`), token)
+    .then(() => showStatus("Токен сохранён!"))
+    .catch(() => showStatus("Ошибка сохранения", true));
+});
+
+document.getElementById("delete-token").addEventListener("click", () => {
   const id = getID();
-  if (!id) return;
-  remove(ref(db, `locations/${locationId}/tokens/${id}`));
-};
+  if (!id) {
+    showStatus("Выберите токен для удаления", true);
+    return;
+  }
+
+  if (!confirm(`Удалить токен "${tokens[id]?.label || id}"?`)) return;
+
+  remove(ref(db, `locations/${locationId}/tokens/${id}`))
+    .then(() => showStatus("Токен удалён"))
+    .catch(() => showStatus("Ошибка удаления", true));
+});
 
 function resizeCanvas() {
   canvas.width = mapImage.clientWidth;
@@ -80,20 +141,36 @@ function resizeCanvas() {
 
 function drawTokens() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const tokenRadius = getTokenRadius();
+  const fontSize = getFontSize();
+
   for (const [id, token] of Object.entries(tokens)) {
     const x = (token.x / 100) * canvas.width;
     const y = (token.y / 100) * canvas.height;
+
+    // Рисуем круг
     ctx.beginPath();
-    ctx.arc(x, y, 10, 0, Math.PI * 2);
-    ctx.fillStyle = token.color || "#000";
+    ctx.arc(x, y, tokenRadius, 0, Math.PI * 2);
+    ctx.fillStyle = token.color || "#00aaff";
     ctx.fill();
-    ctx.strokeStyle = id === selectedId ? "#eaead1" : "#000";
-    ctx.lineWidth = id === selectedId ? 4 : 2;
+
+    // Обводка
+    ctx.strokeStyle = id === selectedId ? "#ffcc00" : "#000";
+    ctx.lineWidth = id === selectedId ? 3 : 2;
     ctx.stroke();
-    ctx.font = "14px sans-serif";
-    ctx.fillStyle = "#fff";
+
+    // Текст
+    ctx.font = `bold ${fontSize}px sans-serif`;
     ctx.textAlign = "center";
-    ctx.fillText(token.label || id, x, y + 20);
+    ctx.textBaseline = "middle";
+
+    // Тень текста
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillText(token.label || id, x + 1, y + 1);
+
+    // Основной текст
+    ctx.fillStyle = "#fff";
+    ctx.fillText(token.label || id, x, y);
   }
 }
 
@@ -107,65 +184,118 @@ function getEventPos(e) {
   };
 }
 
-canvas.addEventListener("mousedown", startDrag);
-canvas.addEventListener("touchstart", startDrag, { passive: false });
-
 function startDrag(e) {
   const pos = getEventPos(e);
   const id = getID();
   if (!id || !tokens[id]) return;
+
   const token = tokens[id];
   const dx = pos.x - token.x;
   const dy = pos.y - token.y;
-  if (Math.hypot(dx, dy) > 3) return;
+
+  if (Math.hypot(dx, dy) > 5) return;
+
   draggingId = id;
+  canvas.style.cursor = "grabbing";
   e.preventDefault();
 }
 
 function handleMove(e) {
   if (!draggingId) return;
+
   const pos = getEventPos(e);
   tokens[draggingId].x = Math.max(0, Math.min(100, pos.x));
   tokens[draggingId].y = Math.max(0, Math.min(100, pos.y));
+
   drawTokens();
   set(ref(db, `locations/${locationId}/tokens/${draggingId}`), tokens[draggingId]);
   e.preventDefault();
 }
 
 function stopDrag() {
-  draggingId = null;
+  if (draggingId) {
+    canvas.style.cursor = "default";
+    draggingId = null;
+  }
 }
 
+canvas.addEventListener("click", (e) => {
+  if (draggingId) return;
+
+  const pos = getEventPos(e);
+  const clickRadius = getClickRadius();
+
+  for (const [id, token] of Object.entries(tokens)) {
+    const distance = Math.hypot(
+      (token.x / 100 * canvas.width) - (pos.x / 100 * canvas.width),
+      (token.y / 100 * canvas.height) - (pos.y / 100 * canvas.height)
+    );
+
+    if (distance <= clickRadius) {
+      document.getElementById("token-id").value = id;
+      document.getElementById("token-label").value = token.label || id;
+      document.getElementById("token-color").value = token.color || "#00aaff";
+      selectedId = id;
+      drawTokens();
+      showStatus(`Выбран токен: ${token.label || id}`);
+      break;
+    }
+  }
+});
+
+canvas.addEventListener("mousedown", startDrag);
+canvas.addEventListener("touchstart", startDrag, { passive: false });
 canvas.addEventListener("mousemove", handleMove);
 canvas.addEventListener("touchmove", handleMove, { passive: false });
 canvas.addEventListener("mouseup", stopDrag);
 canvas.addEventListener("touchend", stopDrag);
+canvas.addEventListener("mouseleave", stopDrag);
 
-mapImage.onload = resizeCanvas;
+if (isGM && document.getElementById("token-search")) {
+  document.getElementById("token-search").addEventListener("input", () => {
+    const searchTerm = document.getElementById("token-search").value.toLowerCase();
+    const items = document.querySelectorAll("#token-list li");
+
+    items.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      item.style.display = text.includes(searchTerm) ? "" : "none";
+    });
+  });
+}
+
+mapImage.onload = () => {
+  resizeCanvas();
+  if (!getID() && isGM) {
+    document.getElementById("token-id").value = `token_${Math.random().toString(36).substr(2, 5)}`;
+  }
+};
+
 window.addEventListener("resize", resizeCanvas);
-
-document.getElementById("token-id").addEventListener("input", (e) => {
-  selectedId = e.target.value;
-  drawTokens();
-});
 
 onValue(tokensRef, (snapshot) => {
   tokens = snapshot.val() || {};
   resizeCanvas();
+
   if (isGM && document.getElementById("token-list")) {
     const list = document.getElementById("token-list");
     list.innerHTML = "";
+
     for (const [id, token] of Object.entries(tokens)) {
       const li = document.createElement("li");
-      li.textContent = `${token.label || id}`;
-      li.style.cursor = "pointer";
+      li.innerHTML = `
+        <span class="token-color" style="background-color:${token.color || '#00aaff'}"></span>
+        <span class="token-name">${token.label || id}</span>
+      `;
+
       li.onclick = () => {
         document.getElementById("token-id").value = id;
         document.getElementById("token-label").value = token.label || id;
-        document.getElementById("token-color").value = token.color || "#000000";
+        document.getElementById("token-color").value = token.color || "#00aaff";
         selectedId = id;
         drawTokens();
+        showStatus(`Выбран токен: ${token.label || id}`);
       };
+
       list.appendChild(li);
     }
   }
@@ -176,46 +306,227 @@ onValue(tokensRef, (snapshot) => {
 {% block css %}
 <style>
 body {
-  font-family: sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  max-width: 1200px;
+  margin: 0 auto;
 }
+
 .controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-.gm-panel {
-  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
   background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 6px;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.form-group input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  align-self: flex-end;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0069d9;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.gm-panel {
+  margin-bottom: 1.5rem;
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 .gm-panel h3 {
   margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
 }
-.gm-panel ul {
+
+.search-box {
+  margin-bottom: 1rem;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.token-list-container {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#token-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.gm-panel li {
-  padding: 4px 6px;
-  border-bottom: 1px solid #ddd;
+
+#token-list li {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s;
 }
+
+#token-list li:hover {
+  background-color: #e9ecef;
+}
+
+.token-color {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+}
+
+.token-name {
+  flex: 1;
+}
+
 #map-container {
   position: relative;
   max-width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
+
 #map-image {
   width: 100%;
   display: block;
+  background: #f0f0f0;
 }
+
 #token-canvas {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 2;
   touch-action: none;
+  cursor: grab;
+}
+
+#token-canvas:active {
+  cursor: grabbing;
+}
+
+#status-message {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 500;
+}
+
+#status-message.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+#status-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Мобильные стили */
+@media (max-width: 768px) {
+  .controls {
+    grid-template-columns: 1fr;
+    padding: 0.8rem;
+    gap: 0.8rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+    align-self: stretch;
+  }
+
+  .button-group button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    padding: 0.6rem;
+  }
+
+  .form-group input {
+    padding: 0.4rem;
+    font-size: 0.9rem;
+  }
+
+  .gm-panel {
+    padding: 0.8rem;
+  }
+
+  #token-list li {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .token-color {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Уменьшаем элементы статус-сообщений */
+  #status-message {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
 }
 </style>
 {% endblock %}
