@@ -47,12 +47,19 @@
                     </div>
                 </div>
                 <div class="character-meta">
-                    <div class="meta-item">
-                        <svg class="meta-icon" viewBox="0 0 24 24">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                        </svg>
-                        Класс: <a href="#">{{ char.character_class|default:"не известно" }}</a>
-                    </div>
+<div class="meta-item">
+    <svg class="meta-icon" viewBox="0 0 24 24">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+    </svg>
+    Класс:
+    {% if char.character_class %}
+        <a href="{% url 'characters:class_list' %}?search={{ char.character_class.name|urlencode }}">
+            {{ char.character_class.name }}
+        </a>
+    {% else %}
+        не выбран
+    {% endif %}
+</div>
 
                     <div class="meta-item">
                         <svg class="meta-icon" viewBox="0 0 24 24">

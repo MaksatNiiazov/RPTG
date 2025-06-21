@@ -34,6 +34,17 @@
                 {% endif %}
             </div>
         {% endrecursetree %}
+    <div class="folder-item">
+                <div class="folder-header">
+                    <svg class="folder-icon" viewBox="0 0 24 24">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <a href="{% url 'characters:class_list' %}" class="folder-link">Классы персонажей</a>
+
+                </div>
+
+
+            </div>
     </div>
 </div>
 {% endblock %}
