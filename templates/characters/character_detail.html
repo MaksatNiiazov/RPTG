@@ -34,7 +34,7 @@
                         <svg class="meta-icon" viewBox="0 0 24 24">
                             <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>
                         </svg>
-                        {{ char.race|default:"Раса не указана" }}
+                        Возраст: {{ char.age|default:"не известно" }} лет
                     </div>
 
                     <div class="meta-item">
@@ -191,44 +191,44 @@
                                 <tbody>
                                 <tr>
                                     <td>Сила</td>
-                                    <td>{{ char.str_stat }}</td>
+                                    <td>{{ effective_stats.str }}</td>
                                     <td>{{ stat_roll_bonuses.str }}</td>
                                 </tr>
                                 <tr>
                                     <td>Ловкость</td>
-                                    <td>{{ char.dex_stat }}</td>
+                                    <td>{{ effective_stats.dex }}</td>
                                     <td>{{ stat_roll_bonuses.dex }}</td>
                                 </tr>
 
                                 <tr>
                                     <td>Выносливость</td>
-                                    <td>{{ char.con_stat }}</td>
+                                    <td>{{ effective_stats.con }}</td>
                                     <td>{{ stat_roll_bonuses.con }}</td>
                                 </tr>
                                 <tr>
                                     <td>Интеллект</td>
-                                    <td>{{ char.int_stat }}</td>
+                                    <td>{{ effective_stats.int }}</td>
                                     <td>{{ stat_roll_bonuses.int }}</td>
                                 </tr>
                                 <tr>
                                     <td>Мудрость (восприятие)</td>
-                                    <td>{{ char.wis_stat }}</td>
+                                    <td>{{ effective_stats.wis }}</td>
                                     <td>{{ stat_roll_bonuses.wis }}</td>
                                 </tr>
                                 <tr>
                                     <td>Харизма</td>
-                                    <td>{{ char.cha_stat }}</td>
+                                    <td>{{ effective_stats.cha }}</td>
                                     <td>{{ stat_roll_bonuses.cha }}</td>
                                 </tr>
 
                                 <tr>
                                     <td>Меткость</td>
-                                    <td>{{ char.acc_stat }}</td>
+                                    <td>{{ effective_stats.acc }}</td>
                                     <td>{{ stat_roll_bonuses.acc }}</td>
                                 </tr>
                                 <tr>
                                     <td>Удача</td>
-                                    <td>{{ char.lck_stat }}</td>
+                                    <td>{{ effective_stats.lck }}</td>
                                     <td>{{ stat_roll_bonuses.lck }}</td>
                                 </tr>
                                 </tbody>

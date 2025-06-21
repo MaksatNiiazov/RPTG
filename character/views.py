@@ -208,14 +208,14 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
 
         # Бонусы к броскам
         stat_roll_bonuses = {
-            'str': c.get_stat_roll_bonus(c.str_stat),
-            'dex': c.get_stat_roll_bonus(c.dex_stat),
-            'con': c.get_stat_roll_bonus(c.con_stat),
-            'int': c.get_stat_roll_bonus(c.int_stat),
-            'wis': c.get_stat_roll_bonus(c.wis_stat),
-            'cha': c.get_stat_roll_bonus(c.cha_stat),
-            'acc': c.get_stat_roll_bonus(c.acc_stat),
-            'lck': c.get_stat_roll_bonus(c.lck_stat),
+            'str': c.get_stat_roll_bonus(c.effective_str),
+            'dex': c.get_stat_roll_bonus(c.effective_dex),
+            'con': c.get_stat_roll_bonus(c.effective_con),
+            'int': c.get_stat_roll_bonus(c.effective_int),
+            'wis': c.get_stat_roll_bonus(c.effective_wis),
+            'cha': c.get_stat_roll_bonus(c.effective_cha),
+            'acc': c.get_stat_roll_bonus(c.effective_acc),
+            'lck': c.get_stat_roll_bonus(c.effective_lck),
         }
         ctx['stat_roll_bonuses'] = stat_roll_bonuses
 

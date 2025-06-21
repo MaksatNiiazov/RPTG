@@ -7,7 +7,7 @@ class CharacterForm(forms.ModelForm):
         model = Character
         fields = [
             "image",
-            "name", "race", "gender", "background", "notes",
+            "name", "race", "age", "gender", "background", "notes",
             "str_stat", "dex_stat", "con_stat", "int_stat",
             "wis_stat", "cha_stat", "acc_stat", "lck_stat",
             "is_npc", "visible_to_players", 'character_class',
@@ -20,6 +20,7 @@ class CharacterForm(forms.ModelForm):
             "gender": forms.Select(),
             "character_class": forms.Select(),
             "character_talent": forms.Select(),
+            "age": forms.NumberInput(attrs={"min": 1, "max": 1000}),
         }
         labels = {
             "str_stat": "Сила",
@@ -60,7 +61,7 @@ class CharacterUpdateForm(forms.ModelForm):
     class Meta:
         model = Character
         fields = [
-            "image", "name", "race", "gender", "background", "notes",
+            "image", "name", "age", "gender", "background", "notes",
         ]
         widgets = {
             "image": forms.ClearableFileInput(),
