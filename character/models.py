@@ -34,6 +34,7 @@ EQUIPMENT_SLOT_MAP = {
 
 class CharacterClass(models.Model):
     name = models.CharField("Название", max_length=100)
+    description = models.TextField("Описание", blank=True, null=True)
     approve = models.BooleanField("Одобрено", default=False)
     action_count = models.PositiveSmallIntegerField("Количество действий", default=0)
     reaction_count = models.PositiveSmallIntegerField("Количество реакций", default=0)
@@ -50,7 +51,7 @@ class CharacterClass(models.Model):
     default_armor = models.PositiveSmallIntegerField("Дефолтная броня", default=0)
     default_damage = models.PositiveSmallIntegerField("Дефолтный урон", default=0)
     crit_multiplier_bonus = models.PositiveSmallIntegerField("Множитель критического урона", default=0)
-    base_ability_boints = models.IntegerField("Базовые очки способностей", default=0)
+    base_ability_points = models.IntegerField("Базовые очки способностей", default=0)
 
     def __str__(self):
         return self.name

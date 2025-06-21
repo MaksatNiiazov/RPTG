@@ -8,12 +8,29 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_POST
-from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
+from django.views.generic import CreateView, DetailView, UpdateView, DeleteView, ListView
 
 from items.models import Item
 from worlds.models import World
 from .forms import CharacterForm, LevelUpForm, CharacterUpdateForm
 from .models import Character, InventoryItem, Equipment, ChestInstance, CharacterClass, Talent
+
+
+class ClassListView(LoginRequiredMixin, ListView):
+    model = CharacterClass
+    template_name = 'characters/class_list.html'
+    context_object_name = 'classes'
+
+    def get_queryset(self):
+        # Для ГМ показываем все классы, для остальных - только одобренные
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return CharacterClass.objects.all()
+        return CharacterClass.objects.filter(approve=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_gm'] = self.request.user.is_staff or self.request.user.is_superuser
+        return context
 
 
 class CharacterCreateView(LoginRequiredMixin, CreateView):
@@ -43,7 +60,7 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
                 try:
                     # Для игроков: берем очки из выбранного класса
                     cls = CharacterClass.objects.get(id=selected_class_id, approve=True)
-                    ctx['initial_points'] = cls.base_ability_boints
+                    ctx['initial_points'] = cls.base_ability_points
                 except CharacterClass.DoesNotExist:
                     # Если класс не найден - 10 очков
                     ctx['initial_points'] = 10
@@ -67,7 +84,7 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
             try:
                 cls = CharacterClass.objects.get(id=request.GET.get('class_id'), approve=True)
                 return JsonResponse({
-                    'base_points': cls.base_ability_boints,
+                    'base_points': cls.base_ability_points,
                     'str_bonus': cls.str_bonus,
                     'dex_bonus': cls.dex_bonus,
                     'con_bonus': cls.con_bonus,
@@ -132,7 +149,7 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
         ]
 
         # Права доступа
-        is_gm = (c.owner == user) or (c.world and c.world.creator == user)
+        is_gm = c.world and c.world.creator == user
         is_owner = (c.owner == user)
         ctx["is_gm"] = is_gm
         ctx["is_owner"] = is_owner

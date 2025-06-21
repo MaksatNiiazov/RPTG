@@ -2,11 +2,13 @@ from django.urls import path
 
 from .views import CharacterCreateView, CharacterDetailView, CharacterInventoryView, \
     UnequipSlotView, EquipItemView, DropItemView, LevelUpView, CharacterUpdateView, ChestDetailView, ToggleNpcFlagView, \
-    AjaxAdjustHpView, AjaxAdjustCpView, AjaxAdjustTokenView, CharacterDeleteView
+    AjaxAdjustHpView, AjaxAdjustCpView, AjaxAdjustTokenView, CharacterDeleteView, ClassListView
 
 app_name = "characters"
 
 urlpatterns = [
+    path('classes/', ClassListView.as_view(), name='class_list'),
+
     path("create/<int:world_pk>/", CharacterCreateView.as_view(), name="character_create"),
     path("update/<int:pk>/", CharacterUpdateView.as_view(), name='character_update'),
     path("<int:pk>/", CharacterDetailView.as_view(), name="character_detail"),
