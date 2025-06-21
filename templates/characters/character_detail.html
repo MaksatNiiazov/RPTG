@@ -11,11 +11,38 @@
 
 {% block content %}
     <div class="character-container">
+        {% if is_gm %}
+            <div class="gm-actions">
+                <br>
+                <h5>Выдать</h5>
+                <a href="{% url 'worlds:gm-grant-spell' world char.id %}" class="btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Заклинание
+                </a>
+
+                <a href="{% url 'worlds:world-grant-points' world char.pk %}" class="btn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    Очки
+                </a>
+                <a href="{% url 'worlds:world-grant-item' world char.pk %}" class="btn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 12v10H4V12M2 7h20v5H2zM12 7v5"/>
+                    </svg>
+                    Предмет
+                </a>
+            </div>
+        {% endif %}
         <!-- Header Section -->
         <div class="character-header">
             <div>
                 <img
                         src="
+
+
                                 {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
                         alt="{{ char.name }}" class="character-image">
                 <br>
@@ -47,32 +74,38 @@
                     </div>
                 </div>
                 <div class="character-meta">
-<div class="meta-item">
-    <svg class="meta-icon" viewBox="0 0 24 24">
-        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-    </svg>
-    Класс:
-    {% if char.character_class %}
-        <a href="{% url 'characters:class_list' %}?search={{ char.character_class.name|urlencode }}">
-            {{ char.character_class.name }}
-        </a>
-    {% else %}
-        не выбран
-    {% endif %}
-</div>
-
                     <div class="meta-item">
                         <svg class="meta-icon" viewBox="0 0 24 24">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                         </svg>
-                        Талант:
-        <a href="{% url 'characters:talent_list' %}?search={{ char.character_talent.name|urlencode }}">
-                        {{ char.character_talent|default:"" }}
-                    </a>
+                        Класс:
+                        {% if char.character_class %}
+                            <a href="{% url 'characters:class_list' %}?search={{ char.character_class.name|urlencode }}">
+                                {{ char.character_class.name }}
+                            </a>
+                        {% else %}
+                            не выбран
+                        {% endif %}
                     </div>
-                </div>
+                    {% if char.character_talent %}
+                        <div class="meta-item">
+                            <svg class="meta-icon" viewBox="0 0 24 24">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                            </svg>
+                            Талант:
+                            <a href="{% url 'characters:talent_list' %}?search={{ char.character_talent.name|urlencode }}">
+                                {{ char.character_talent|default:"" }}
+                            </a>
+                        </div>
+                        <div class="character-description"
+                             style="box-shadow: 0 0 0 1px #ccc; padding: 10px; border-radius: 5px;">
+                            <h5>Описание таланта</h5>
+                            <p style="margin-top: 10px; font-size: 14px;">{{ char.character_talent.description }}</p>
+                        </div>
+                    {% endif %}
 
+                </div>
                 <div class="character-actions">
                     <a href="{% url 'worlds:detail' world %}" class="btn btn-outline">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -90,32 +123,6 @@
                             </svg>
                             Инвентарь
                         </a>
-                    {% endif %}
-
-                    {% if is_gm %}
-                        <div class="gm-actions">
-                            <br>
-                            <h5>Выдать</h5>
-                            <a href="{% url 'worlds:gm-grant-spell' world char.id %}" class="btn">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                                </svg>
-                                Заклинание
-                            </a>
-
-                            <a href="{% url 'worlds:world-grant-points' world char.pk %}" class="btn">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                                </svg>
-                                Очки
-                            </a>
-                            <a href="{% url 'worlds:world-grant-item' world char.pk %}" class="btn">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M20 12v10H4V12M2 7h20v5H2zM12 7v5"/>
-                                </svg>
-                                Предмет
-                            </a>
-                        </div>
                     {% endif %}
                 </div>
             </div>

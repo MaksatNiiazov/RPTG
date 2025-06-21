@@ -23,12 +23,30 @@ class ClassListView(LoginRequiredMixin, ListView):
     context_object_name = 'classes'
     paginate_by = 10
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.GET.get('search', '')
+
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
+
+        return queryset.order_by('name')
+
 
 class TalentListView(LoginRequiredMixin, ListView):
     model = Talent
     template_name = 'characters/talent_list.html'
     context_object_name = 'talents'
     paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.GET.get('search', '')
+
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
+
+        return queryset.order_by('name')
 
 
 class CharacterCreateView(LoginRequiredMixin, CreateView):
