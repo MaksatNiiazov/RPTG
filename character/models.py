@@ -192,25 +192,28 @@ class Character(models.Model, CharacterGetUtils):
 
     def clean(self):
         """Валидация модели"""
-
-        # НЕ нужно присваивать cleaned_data
         super().clean()
 
-        # Используем self.<поле>, а не cleaned_data.get()
-        current_hp = self.current_hp or 0
-        con_stat = self.con_stat or 0
-        int_stat = self.int_stat or 0
+        # Устанавливаем значения по умолчанию для None
+        current_hp = self.current_hp if self.current_hp is not None else 0
+        con_stat = self.con_stat if self.con_stat is not None else 0
+        int_stat = self.int_stat if self.int_stat is not None else 0
+        max_hp = self.max_hp if self.max_hp is not None else 0
         character_class = self.character_class
 
-        max_hp = self.max_hp
-        if current_hp > max_hp:
+        # Проверка HP
+        if max_hp is not None and current_hp > max_hp:
             raise ValidationError(
                 f"Текущее HP ({current_hp}) не может превышать максимальное ({max_hp})"
             )
 
+        # Проверка концентрации
         if self.current_concentration is not None:
-            max_cp = int_stat * 2 + (character_class.cp_bonus if character_class and character_class.cp_bonus else 0)
-            if self.current_concentration > max_cp:
+            # Вычисляем максимальную концентрацию с проверкой на None
+            class_cp_bonus = character_class.cp_bonus if character_class and character_class.cp_bonus is not None else 0
+            max_cp = (int_stat * 2) + class_cp_bonus
+
+            if max_cp is not None and self.current_concentration > max_cp:
                 raise ValidationError(
                     f"Текущая концентрация ({self.current_concentration}) не может превышать максимум ({max_cp})"
                 )
