@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Список талантов | {{ block.super }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/talent_list.css' %}">
+<style>
+    .talent-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 1rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .search-container {
+        margin-bottom: 2rem;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .talent-card {
+        background: white;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .talent-name {
+        font-size: 1.5rem;
+        color: #333;
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .talent-description {
+        color: #555;
+        line-height: 1.5;
+    }
+
+    .talent-requirements {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px dashed #eee;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="talent-container">
+    <div class="page-header">
+        <h1>Доступные таланты</h1>
+    </div>
+
+    <form method="get" action="{% url 'characters:talent_list' %}" class="search-container">
+        <input type="text"
+               class="search-input"
+               placeholder="Поиск по названию или описанию..."
+               name="search"
+               value="{{ search_query }}">
+        <button type="submit" style="display:none;"></button>
+    </form>
+
+    {% if not talents %}
+    <div class="no-results">
+        Талантов не найдено. Попробуйте изменить поисковый запрос.
+    </div>
+    {% endif %}
+
+    {% for talent in talents %}
+    <div class="talent-card">
+        <h2 class="talent-name">{{ talent.name }}</h2>
+
+        <div class="talent-description">
+            {{ talent.description|linebreaks }}
+        </div>
+
+        {% if talent.requirements %}
+        <div class="talent-requirements">
+            <strong>Требования:</strong> {{ talent.requirements }}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Простой поиск без перезагрузки страницы
+    const searchInput = document.querySelector('.search-input');
+    const talentCards = document.querySelectorAll('.talent-card');
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+
+        talentCards.forEach(card => {
+            const name = card.querySelector('.talent-name').textContent.toLowerCase();
+            const description = card.querySelector('.talent-description').textContent.toLowerCase();
+
+            if (name.includes(searchTerm) || description.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -4,177 +4,182 @@
 {% block title %}Справочник правил{% endblock %}
 
 {% block content %}
-<div class="rulebook-container">
-    <header class="rulebook-header">
-        <h1 class="rulebook-title">Справочник правил</h1>
-        <p class="rulebook-description">Полная система правил для вашей игры</p>
-    </header>
+    <div class="rulebook-container">
+        <header class="rulebook-header">
+            <h1 class="rulebook-title">Справочник правил</h1>
+            <p class="rulebook-description">Полная система правил для вашей игры</p>
+        </header>
 
-    <div class="folder-tree">
-        {% recursetree folders %}
+        <div class="folder-tree">
+            {% recursetree folders %}
+                <div class="folder-item">
+                    <div class="folder-header">
+                        <svg class="folder-icon" viewBox="0 0 24 24">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <a href="{% url 'rulebook:article_list' node.slug %}" class="folder-link">{{ node.name }}</a>
+                        {% if not node.is_leaf_node %}
+                            <button class="toggle-children" aria-label="Развернуть подразделы">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </button>
+                        {% endif %}
+                    </div>
+
+                    {% if not node.is_leaf_node %}
+                        <div class="folder-children">
+                            {{ children }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endrecursetree %}
             <div class="folder-item">
                 <div class="folder-header">
                     <svg class="folder-icon" viewBox="0 0 24 24">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2z"/>
                     </svg>
-                    <a href="{% url 'rulebook:article_list' node.slug %}" class="folder-link">{{ node.name }}</a>
-                    {% if not node.is_leaf_node %}
-                        <button class="toggle-children" aria-label="Развернуть подразделы">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M9 18l6-6-6-6"/>
-                            </svg>
-                        </button>
-                    {% endif %}
+                    <a href="{% url 'characters:class_list' %}" class="folder-link">Классы персонажей</a>
                 </div>
-
-                {% if not node.is_leaf_node %}
-                    <div class="folder-children">
-                        {{ children }}
-                    </div>
-                {% endif %}
             </div>
-        {% endrecursetree %}
-    <div class="folder-item">
+         <div class="folder-item">
                 <div class="folder-header">
                     <svg class="folder-icon" viewBox="0 0 24 24">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2z"/>
                     </svg>
-                    <a href="{% url 'characters:class_list' %}" class="folder-link">Классы персонажей</a>
-
+                    <a href="{% url 'characters:talent_list' %}" class="folder-link">Таланты персонажей</a>
                 </div>
-
-
             </div>
+        </div>
     </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const toggleButtons = document.querySelectorAll('.toggle-children');
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleButtons = document.querySelectorAll('.toggle-children');
 
-    toggleButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const childrenContainer = this.parentElement.nextElementSibling;
-            if (childrenContainer) {
-                childrenContainer.classList.toggle('expanded');
-                this.classList.toggle('expanded');
-            }
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const childrenContainer = this.parentElement.nextElementSibling;
+                    if (childrenContainer) {
+                        childrenContainer.classList.toggle('expanded');
+                        this.classList.toggle('expanded');
+                    }
+                });
+            });
         });
-    });
-});
-</script>
+    </script>
 {% endblock %}
 
 {% block extra_css %}
-<style>
-.rulebook-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-}
+    <style>
+        .rulebook-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
 
-.rulebook-header {
-    margin-bottom: 2rem;
-    text-align: center;
-}
+        .rulebook-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
 
-.rulebook-title {
-    font-family: 'Cinzel', serif;
-    font-size: 2rem;
-    color: #3a2e1b;
-    margin-bottom: 0.5rem;
-}
+        .rulebook-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            color: #3a2e1b;
+            margin-bottom: 0.5rem;
+        }
 
-.rulebook-description {
-    font-family: 'Merriweather', serif;
-    color: #5a432d;
-    font-size: 1.1rem;
-}
+        .rulebook-description {
+            font-family: 'Merriweather', serif;
+            color: #5a432d;
+            font-size: 1.1rem;
+        }
 
-.folder-tree {
-    font-family: 'Merriweather', serif;
-}
+        .folder-tree {
+            font-family: 'Merriweather', serif;
+        }
 
-.folder-item {
-    margin-bottom: 0.5rem;
-}
+        .folder-item {
+            margin-bottom: 0.5rem;
+        }
 
-.folder-header {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    background: #f7f1e7;
-    border-radius: 4px;
-    border-left: 3px solid #8c7151;
-}
+        .folder-header {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: #f7f1e7;
+            border-radius: 4px;
+            border-left: 3px solid #8c7151;
+        }
 
-.folder-icon {
-    width: 18px;
-    height: 18px;
-    margin-right: 10px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-}
+        .folder-icon {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
 
-.folder-link {
-    color: #3a2e1b;
-    text-decoration: none;
-    flex-grow: 1;
-    font-weight: 500;
-}
+        .folder-link {
+            color: #3a2e1b;
+            text-decoration: none;
+            flex-grow: 1;
+            font-weight: 500;
+        }
 
-.folder-link:hover {
-    text-decoration: underline;
-    color: #5a432d;
-}
+        .folder-link:hover {
+            text-decoration: underline;
+            color: #5a432d;
+        }
 
-.toggle-children {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.25rem;
-    margin-left: 0.5rem;
-    color: #5a432d;
-    transition: transform 0.2s;
-}
+        .toggle-children {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            margin-left: 0.5rem;
+            color: #5a432d;
+            transition: transform 0.2s;
+        }
 
-.toggle-children svg {
-    width: 16px;
-    height: 16px;
-    stroke: currentColor;
-    stroke-width: 2;
-}
+        .toggle-children svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
 
-.toggle-children.expanded {
-    transform: rotate(90deg);
-}
+        .toggle-children.expanded {
+            transform: rotate(90deg);
+        }
 
-.folder-children {
-    margin-left: 1.5rem;
-    padding-left: 1rem;
-    border-left: 1px dashed #dac8a0;
-    display: none;
-}
+        .folder-children {
+            margin-left: 1.5rem;
+            padding-left: 1rem;
+            border-left: 1px dashed #dac8a0;
+            display: none;
+        }
 
-.folder-children.expanded {
-    display: block;
-}
+        .folder-children.expanded {
+            display: block;
+        }
 
-@media (max-width: 600px) {
-    .rulebook-title {
-        font-size: 1.8rem;
-    }
+        @media (max-width: 600px) {
+            .rulebook-title {
+                font-size: 1.8rem;
+            }
 
-    .folder-header {
-        padding: 0.6rem 0.8rem;
-    }
+            .folder-header {
+                padding: 0.6rem 0.8rem;
+            }
 
-    .folder-children {
-        margin-left: 1rem;
-    }
-}
-</style>
+            .folder-children {
+                margin-left: 1rem;
+            }
+        }
+    </style>
 {% endblock %}

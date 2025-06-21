@@ -66,7 +66,10 @@
                             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                             <circle cx="9" cy="7" r="4"/>
                         </svg>
-                        Талант: <a href="#">{{ char.character_talent|default:"" }}</a>
+                        Талант:
+        <a href="{% url 'characters:talent_list' %}?search={{ char.character_talent.name|urlencode }}">
+                        {{ char.character_talent|default:"" }}
+                    </a>
                     </div>
                 </div>
 
