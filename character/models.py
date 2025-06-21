@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 from accounts.models import User
-from character.character_utils import CharacterCalculationsMixin
+from character.character_utils import CharacterGetUtils
 from items.loot import generate_loot_items
 from items.models import Item
 from magic.models import Spell
@@ -66,7 +66,7 @@ class Talent(models.Model):
         return self.name
 
 
-class Character(CharacterCalculationsMixin,models.Model):
+class Character(models.Model, CharacterGetUtils):
     STAT_CHOICES = [
         ('str_stat', 'Сила'),
         ('dex_stat', 'Ловкость'),
@@ -172,17 +172,22 @@ class Character(CharacterCalculationsMixin,models.Model):
         return f"{self.name} ({'NPC' if self.is_npc else 'PC'})"
 
     def save(self, *args, **kwargs):
-        # Используем вычисляемые свойства из миксина
-        self.max_hp = self.max_hp_calculated
-        self.concentration = self.concentration_calculated
-        self.carry_capacity = self.carry_capacity_calculated
-        self.max_weapon_weight = self.max_weapon_weight_calculated
-        self.max_armor_weight = self.max_armor_weight_calculated
+        self.max_hp = 10 + 10 * self.con_stat
+        self.concentration = self.int_stat - 5
 
-        if getattr(self, 'current_concentration', None) is None:
+        if self.current_concentration is None:
             self.current_concentration = self.concentration
 
-        # Остальная логика save()
+        self.carry_capacity = self.str_stat * 10
+        self.max_weapon_weight = round(self.carry_capacity * 0.2, 1)
+        self.max_armor_weight = round(self.carry_capacity * 0.5, 1)
+
+        # Автоматическая проверка жив/мертв
+        if self.current_hp <= 0 and self.is_alive:
+            self.die(silent=True)
+        elif self.current_hp > 0 and not self.is_alive:
+            self.is_alive = True
+
         super().save(*args, **kwargs)
 
     def clean(self):
@@ -438,7 +443,6 @@ class Character(CharacterCalculationsMixin,models.Model):
             self.save(update_fields=['precision_tokens'])
             return True
         return False
-
 
 
 class InventoryItem(models.Model):

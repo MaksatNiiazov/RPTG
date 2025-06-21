@@ -15,7 +15,8 @@
         <div class="character-header">
             <div>
                 <img
-                        src="{% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
+                        src="
+                                {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
                         alt="{{ char.name }}" class="character-image">
                 <br>
                 {% if is_owner or is_gm %}
@@ -45,6 +46,22 @@
                         {{ char.get_gender_display|default:"Пол не указан" }}
                     </div>
                 </div>
+                <div class="character-meta">
+                    <div class="meta-item">
+                        <svg class="meta-icon" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                        Класс: {{ char.сharacter_class.name|default:"не известно" }}
+                    </div>
+
+                    <div class="meta-item">
+                        <svg class="meta-icon" viewBox="0 0 24 24">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                        </svg>
+                        Талант: {{ char.character_talent.name|default:"" }}
+                    </div>
+                </div>
 
                 <div class="character-actions">
                     <a href="{% url 'worlds:detail' world %}" class="btn btn-outline">
@@ -68,26 +85,26 @@
                     {% if is_gm %}
                         <div class="gm-actions">
                             <br>
-                        <h5>Выдать</h5>
-                        <a href="{% url 'worlds:gm-grant-spell' world char.id %}" class="btn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                            </svg>
-                            Заклинание
-                        </a>
+                            <h5>Выдать</h5>
+                            <a href="{% url 'worlds:gm-grant-spell' world char.id %}" class="btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                                </svg>
+                                Заклинание
+                            </a>
 
-                        <a href="{% url 'worlds:world-grant-points' world char.pk %}" class="btn">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                            </svg>
-                            Очки
-                        </a>
-                        <a href="{% url 'worlds:world-grant-item' world char.pk %}" class="btn">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M20 12v10H4V12M2 7h20v5H2zM12 7v5"/>
-                            </svg>
-                            Предмет
-                        </a>
+                            <a href="{% url 'worlds:world-grant-points' world char.pk %}" class="btn">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                                Очки
+                            </a>
+                            <a href="{% url 'worlds:world-grant-item' world char.pk %}" class="btn">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M20 12v10H4V12M2 7h20v5H2zM12 7v5"/>
+                                </svg>
+                                Предмет
+                            </a>
                         </div>
                     {% endif %}
                 </div>
