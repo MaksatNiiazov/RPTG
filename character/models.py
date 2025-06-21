@@ -202,7 +202,7 @@ class Character(models.Model, CharacterGetUtils):
         int_stat = self.int_stat or 0
         character_class = self.character_class
 
-        max_hp = con_stat * 2 + (character_class.hp_bonus if character_class and character_class.hp_bonus else 0)
+        max_hp = self.max_hp
         if current_hp > max_hp:
             raise ValidationError(
                 f"Текущее HP ({current_hp}) не может превышать максимальное ({max_hp})"
