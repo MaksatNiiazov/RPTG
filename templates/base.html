@@ -161,6 +161,32 @@ document.addEventListener('touchmove', function(e) {
         }
     }
 }, { passive: true });
+
+// Закрытие сообщений
+document.querySelectorAll('.message-close').forEach(button => {
+    button.addEventListener('click', function() {
+        // Находим родительский элемент сообщения и удаляем его
+        const message = this.closest('.message');
+        if (message) {
+            message.style.opacity = '0';
+            message.style.transform = 'translateX(100%)';
+            // Удаляем элемент после завершения анимации
+            setTimeout(() => {
+                message.remove();
+                // Обновляем положение других сообщений
+                updateMessagesPosition();
+            }, 300);
+        }
+    });
+});
+
+// Функция для обновления позиции сообщений после удаления
+function updateMessagesPosition() {
+    const messages = document.querySelectorAll('.message');
+    messages.forEach((message, index) => {
+        message.style.transform = `translateY(${index * 60}px)`;
+    });
+}
 </script>
 </body>
 </html>

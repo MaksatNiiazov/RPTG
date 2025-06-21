@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Удаление персонажа{% endblock %}
+
+{% block content %}
+<div class="container character-delete-container">
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="fas fa-trash-alt"></i> Подтверждение удаления</h2>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="alert alert-danger">
+                    <h4 class="alert-heading">Вы уверены, что хотите удалить персонажа?</h4>
+                    <p>Персонаж <strong>{{ char.name }}</strong> будет удален безвозвратно.</p>
+                    <p>Это действие нельзя отменить.</p>
+                </div>
+                
+                <div class="character-preview">
+                    {% if char.image %}
+                        <img src="{{ char.image.url }}" alt="{{ char.name }}" class="character-image">
+                    {% else %}
+                        <div class="character-image-placeholder">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                    {% endif %}
+                    <div class="character-info">
+                        <h3>{{ char.name }}</h3>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Да, удалить
+                    </button>
+                    <a href="{% url 'characters:character_detail' char.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

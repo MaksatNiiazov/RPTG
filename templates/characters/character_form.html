@@ -59,6 +59,19 @@
                     </div>
                 </div>
 
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.character_class.id_for_label }}">Класс</label>
+                        {{ form.character_class }}
+                        <small class="class-info" id="class-info"></small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.character_talent.id_for_label }}">Талант</label>
+                        {{ form.character_talent }}
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="{{ form.background.id_for_label }}">{{ form.background.label }}</label>
                     {{ form.background }}
@@ -99,7 +112,7 @@
                         <span class="points-label">Осталось очков:</span>
                         <span class="points-value" id="points-left">{{ initial_points }}</span>
                     </div>
-                    <div class="points-total">Всего очков: {{ initial_points }}</div>
+                    <div class="points-total" id="points-total">Всего очков: {{ initial_points }}</div>
                 </div>
 
                 <div class="stats-grid">
@@ -110,6 +123,7 @@
                                 <span class="stat-name">{{ field.label }}</span>
                                 <span class="stat-value">0</span>
                                 {{ field.as_hidden }}
+                                <span class="stat-bonus" id="{{ field.name }}-bonus">+0</span>
                             </div>
                             <div class="stat-controls">
                                 <button type="button" class="btn-stat btn-add"
@@ -149,16 +163,49 @@ document.addEventListener("DOMContentLoaded", () => {
     // Превью загружаемого изображения
     const imageInput = document.getElementById('{{ form.image.id_for_label }}');
     const imagePreview = document.getElementById('image-preview');
+    let defaultAvatar = imagePreview.querySelector('.default-avatar');
 
     imageInput.addEventListener('change', function() {
         if (this.files && this.files[0]) {
             const reader = new FileReader();
+
             reader.onload = function(e) {
-                imagePreview.innerHTML = `<img src="${e.target.result}" alt="Превью персонажа">`;
-            }
+                // Удаляем стандартный аватар, если он есть
+                if (defaultAvatar) {
+                    defaultAvatar.remove();
+                }
+
+                // Проверяем, есть ли уже изображение
+                const existingImg = imagePreview.querySelector('img');
+                if (existingImg) {
+                    // Обновляем существующее изображение
+                    existingImg.src = e.target.result;
+                } else {
+                    // Создаем новое изображение
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = "Превью персонажа";
+                    imagePreview.appendChild(img);
+                }
+            };
+
+            reader.onerror = function() {
+                console.error('Ошибка при загрузке изображения');
+                resetImagePreview();
+            };
+
             reader.readAsDataURL(this.files[0]);
+        } else {
+            resetImagePreview();
         }
     });
+
+    function resetImagePreview() {
+        imagePreview.innerHTML = '';
+        defaultAvatar = document.createElement('i');
+        defaultAvatar.className = 'fas fa-user-circle default-avatar';
+        imagePreview.appendChild(defaultAvatar);
+    }
 
     // Счетчики символов
     const bgField = document.getElementById('{{ form.background.id_for_label }}');
@@ -175,10 +222,51 @@ document.addEventListener("DOMContentLoaded", () => {
     notesField.addEventListener('input', updateCounters);
     updateCounters();
 
-    // Распределение очков характеристик
+    // Система распределения очков
     let pointsLeft = parseInt(document.getElementById("points-left").textContent, 10);
-    const totalPoints = pointsLeft;
+    let totalPoints = pointsLeft;
+    const isGM = {{ is_gm|yesno:"true,false" }};
+    const initialClassId = '{{ form.character_class.value|default_if_none:"" }}';
 
+    // Функция для сброса всех характеристик
+    function resetAllStats() {
+        document.querySelectorAll(".stat-card").forEach(card => {
+            const hiddenInput = card.querySelector("input[type=hidden]");
+            const valueDisplay = card.querySelector(".stat-value");
+            const removeBtn = card.querySelector(".btn-remove");
+
+            hiddenInput.value = 0;
+            valueDisplay.textContent = 0;
+            removeBtn.disabled = true;
+        });
+    }
+
+    // Функция для обновления интерфейса очков
+    function updatePointsInterface(newPoints) {
+        pointsLeft = newPoints;
+        totalPoints = newPoints;
+        document.getElementById("points-left").textContent = pointsLeft;
+        document.getElementById("points-total").textContent = `Всего очков: ${totalPoints}`;
+
+        // Блокируем/разблокируем кнопки добавления
+        document.querySelectorAll(".btn-add").forEach(btn => {
+            btn.disabled = pointsLeft <= 0;
+        });
+    }
+
+    // Функция для обновления бонусов класса
+    function updateClassBonuses(bonuses) {
+        Object.keys(bonuses).forEach(stat => {
+            const bonusElement = document.getElementById(`${stat}_stat-bonus`);
+            if (bonusElement) {
+                const bonus = bonuses[stat];
+                bonusElement.textContent = bonus > 0 ? `+${bonus}` : "";
+                bonusElement.style.display = bonus > 0 ? "inline" : "none";
+            }
+        });
+    }
+
+    // Обработчики для кнопок +/-
     document.querySelectorAll(".btn-add").forEach(btn => {
         btn.addEventListener("click", () => {
             if (pointsLeft <= 0) return;
@@ -191,20 +279,12 @@ document.addEventListener("DOMContentLoaded", () => {
             let currentVal = parseInt(hiddenInput.value, 10);
             if (currentVal >= 10) return;
 
-            // Увеличиваем значение
             currentVal += 1;
             hiddenInput.value = currentVal;
             valueDisplay.textContent = currentVal;
             removeBtn.disabled = false;
 
-            // Обновляем очки
-            pointsLeft -= 1;
-            document.getElementById("points-left").textContent = pointsLeft;
-
-            // Обновляем состояние кнопок
-            if (pointsLeft === 0) {
-                document.querySelectorAll(".btn-add").forEach(b => b.disabled = true);
-            }
+            updatePointsInterface(pointsLeft - 1);
         });
     });
 
@@ -217,22 +297,84 @@ document.addEventListener("DOMContentLoaded", () => {
             let currentVal = parseInt(hiddenInput.value, 10);
             if (currentVal <= 0) return;
 
-            // Уменьшаем значение
             currentVal -= 1;
             hiddenInput.value = currentVal;
             valueDisplay.textContent = currentVal;
 
-            // Обновляем очки
-            pointsLeft += 1;
-            document.getElementById("points-left").textContent = pointsLeft;
-
-            // Обновляем состояние кнопок
             if (currentVal === 0) {
                 btn.disabled = true;
             }
-            document.querySelectorAll(".btn-add").forEach(b => b.disabled = false);
+
+            updatePointsInterface(pointsLeft + 1);
         });
     });
+
+    // Обработчик изменения класса
+    const classSelect = document.getElementById('{{ form.character_class.id_for_label }}');
+    const classInfo = document.getElementById('class-info');
+
+    classSelect.addEventListener('change', function() {
+        const classId = this.value;
+
+        // Сбрасываем все распределённые очки
+        resetAllStats();
+
+        if (!classId) {
+            // Если класс не выбран - 10 очков (для не-ГМ)
+            if (!isGM) {
+                totalPoints = 10;
+                updatePointsInterface(10);
+            }
+            classInfo.textContent = '';
+            updateClassBonuses({
+                str_bonus: 0, dex_bonus: 0, con_bonus: 0,
+                int_bonus: 0, wis_bonus: 0, cha_bonus: 0,
+                acc_bonus: 0, lck_bonus: 0
+            });
+            return;
+        }
+
+        // AJAX запрос для получения информации о классе
+        fetch(`?class_id=${classId}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error(data.error);
+                return;
+            }
+
+            // Обновляем количество очков (если пользователь не ГМ)
+            if (!isGM) {
+                totalPoints = data.base_points;
+                updatePointsInterface(data.base_points);
+            }
+
+            // Обновляем информацию о классе
+            classInfo.textContent = `Даёт ${data.base_points} очков характеристик`;
+
+            // Обновляем бонусы характеристик
+            updateClassBonuses({
+                str_bonus: data.str_bonus,
+                dex_bonus: data.dex_bonus,
+                con_bonus: data.con_bonus,
+                int_bonus: data.int_bonus,
+                wis_bonus: data.wis_bonus,
+                cha_bonus: data.cha_bonus,
+                acc_bonus: data.acc_bonus,
+                lck_bonus: data.lck_bonus
+            });
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Загружаем информацию о классе при открытии формы (если класс уже выбран)
+    if (initialClassId) {
+        classSelect.dispatchEvent(new Event('change'));
+    }
 
     // Валидация формы перед отправкой
     document.getElementById("create-form").addEventListener("submit", function(e) {
@@ -241,6 +383,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 e.preventDefault();
             }
         }
+    });
+
+    // Обработчик сброса формы
+    document.querySelector('button[type="reset"]').addEventListener('click', function() {
+        // После небольшой задержки (чтобы дождаться сброса стандартных значений)
+        setTimeout(() => {
+            resetImagePreview();
+            if (!isGM && !classSelect.value) {
+                updatePointsInterface(10);
+            }
+        }, 10);
     });
 });
 </script>

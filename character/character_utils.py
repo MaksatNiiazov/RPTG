@@ -10,49 +10,55 @@ class CharacterGetUtils:
         """Очистка кэша характеристик"""
         self._stat_cache.clear()
 
+    def _get_class_bonus(self, attr_name, default=0):
+        """Безопасное получение бонуса от класса"""
+        if hasattr(self, 'character_class') and self.character_class:
+            return getattr(self.character_class, attr_name, default)
+        return default
+
     # --- Основные характеристики с бонусами класса ---
     @property
     def effective_str(self):
-        return self.str_stat + self.character_class.str_bonus
+        return self.str_stat + self._get_class_bonus('str_bonus')
 
     @property
     def effective_dex(self):
-        return self.dex_stat + self.character_class.dex_bonus
+        return self.dex_stat + self._get_class_bonus('dex_bonus')
 
     @property
     def effective_con(self):
-        return self.con_stat + self.character_class.con_bonus
+        return self.con_stat + self._get_class_bonus('con_bonus')
 
     @property
     def effective_int(self):
-        return self.int_stat + self.character_class.int_bonus
+        return self.int_stat + self._get_class_bonus('int_bonus')
 
     @property
     def effective_wis(self):
-        return self.wis_stat + self.character_class.wis_bonus
+        return self.wis_stat + self._get_class_bonus('wis_bonus')
 
     @property
     def effective_cha(self):
-        return self.cha_stat + self.character_class.cha_bonus
+        return self.cha_stat + self._get_class_bonus('cha_bonus')
 
     @property
     def effective_acc(self):
-        return self.acc_stat + self.character_class.acc_bonus
+        return self.acc_stat + self._get_class_bonus('acc_bonus')
 
     @property
     def effective_lck(self):
-        return self.lck_stat + self.character_class.lck_bonus
+        return self.lck_stat + self._get_class_bonus('lck_bonus')
 
     # --- Боевые характеристики ---
     @property
     def max_hp(self):
         """Макс. HP с учетом бонуса класса"""
-        return 10 + 10 * self.effective_con + self.character_class.hp_bonus
+        return 10 + 10 * self.effective_con + self._get_class_bonus('hp_bonus')
 
     @property
     def concentration(self):
         """Макс. CP с учетом бонуса класса"""
-        return self.effective_int - 5 + self.character_class.cp_bonus
+        return self.effective_int - 5 + self._get_class_bonus('cp_bonus')
 
     @property
     def carry_capacity(self):
@@ -76,7 +82,7 @@ class CharacterGetUtils:
         """Общая защита с учетом базовой брони класса"""
         cache_key = f'char_{self.id}_defense'
         if cache_key not in self._stat_cache:
-            defense = self.character_class.default_armor
+            defense = self._get_class_bonus('default_armor')
             armor_slots = ["head", "neck", "chest", "hands", "waist", "legs", "feet", "cloak"]
 
             if hasattr(self, "equipment"):
@@ -96,7 +102,7 @@ class CharacterGetUtils:
         """Общий урон с учетом базового урона класса"""
         cache_key = f'char_{self.id}_attack'
         if cache_key not in self._stat_cache:
-            attack = self.character_class.default_damage + self.effective_str
+            attack = self._get_class_bonus('default_damage') + self.effective_str
 
             if hasattr(self, "equipment"):
                 weapon_slots = ["main_hand", "off_hand", "two_hands"]
@@ -112,20 +118,32 @@ class CharacterGetUtils:
     def critical_hit(self):
         """Критический удар с учетом бонуса класса"""
         base = self.total_attack
-        multiplier = 1 + (self.effective_str / 5) + (self.character_class.crit_multiplier_bonus / 100)
+        multiplier = 1 + (self.effective_str / 5) + (self._get_class_bonus('crit_multiplier_bonus') / 100)
         return int(base * multiplier)
 
     # --- Тактические параметры ---
     @property
     def action_points(self):
         """Очки действий с учетом класса"""
-        return self.character_class.action_count + (1 if self.effective_dex == 10 else 0)
+        base_actions = self._get_class_bonus('action_count', default=1 if not self.character_class else 0)
+        dex_bonus = 1 if self.effective_dex == 10 else 0
+
+        # Если класс не задан, минимум 1 действие
+        if not self.character_class and base_actions + dex_bonus < 1:
+            return 1
+        return base_actions + dex_bonus
 
     @property
     def possible_reactions(self):
         """Реакции с учетом класса"""
-        return self.character_class.reaction_count + (1 if self.effective_wis >= 7 else 0) + (
-            1 if self.effective_dex >= 7 else 0)
+        base_reactions = self._get_class_bonus('reaction_count', default=1 if not self.character_class else 0)
+        wis_bonus = 1 if self.effective_wis >= 7 else 0
+        dex_bonus = 1 if self.effective_dex >= 7 else 0
+
+        # Если класс не задан, минимум 1 реакция
+        if not self.character_class and base_reactions + wis_bonus + dex_bonus < 1:
+            return 1
+        return base_reactions + wis_bonus + dex_bonus
 
     @property
     def possible_chain_attacks(self):

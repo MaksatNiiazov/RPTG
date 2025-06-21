@@ -7,12 +7,14 @@ from unfold.admin import ModelAdmin, TabularInline, StackedInline
 
 @admin.register(Talent)
 class TalentAdmin(ModelAdmin):
-    list_display = ("name", "description")
+    list_display = ("name", "approve")
+    list_editable = ("approve",)
 
 
 @admin.register(CharacterClass)
 class CharacterClassAdmin(ModelAdmin):
-    pass
+    list_display = ("name", "approve")
+    list_editable = ("approve",)
 
 
 class InventoryItemInline(TabularInline):
@@ -34,7 +36,6 @@ class EquipmentInline(StackedInline):
 @admin.register(Character)
 class CharacterAdmin(ModelAdmin):
     list_display = (
-
         "world",
         "name",
         "is_npc",

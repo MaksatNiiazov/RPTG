@@ -34,7 +34,7 @@ EQUIPMENT_SLOT_MAP = {
 
 class CharacterClass(models.Model):
     name = models.CharField("Название", max_length=100)
-
+    approve = models.BooleanField("Одобрено", default=False)
     action_count = models.PositiveSmallIntegerField("Количество действий", default=0)
     reaction_count = models.PositiveSmallIntegerField("Количество реакций", default=0)
     str_bonus = models.PositiveSmallIntegerField("Сила", default=0)
@@ -57,6 +57,7 @@ class CharacterClass(models.Model):
 
 
 class Talent(models.Model):
+    approve = models.BooleanField("Одобрено", default=False)
     name = models.CharField("Название", max_length=100)
     description = models.TextField("Описание", blank=True)
 
@@ -190,11 +191,28 @@ class Character(models.Model, CharacterGetUtils):
 
     def clean(self):
         """Валидация модели"""
-        if self.current_hp > self.max_hp:
-            raise ValidationError("Текущее HP не может превышать максимальное")
-        if self.current_concentration and self.current_concentration > self.concentration:
-            raise ValidationError("Концентрация превышает максимум")
 
+        # НЕ нужно присваивать cleaned_data
+        super().clean()
+
+        # Используем self.<поле>, а не cleaned_data.get()
+        current_hp = self.current_hp or 0
+        con_stat = self.con_stat or 0
+        int_stat = self.int_stat or 0
+        character_class = self.character_class
+
+        max_hp = con_stat * 2 + (character_class.hp_bonus if character_class and character_class.hp_bonus else 0)
+        if current_hp > max_hp:
+            raise ValidationError(
+                f"Текущее HP ({current_hp}) не может превышать максимальное ({max_hp})"
+            )
+
+        if self.current_concentration is not None:
+            max_cp = int_stat * 2 + (character_class.cp_bonus if character_class and character_class.cp_bonus else 0)
+            if self.current_concentration > max_cp:
+                raise ValidationError(
+                    f"Текущая концентрация ({self.current_concentration}) не может превышать максимум ({max_cp})"
+                )
     def die(self, silent=False):
         """Помечает персонажа как мертвого"""
         if not self.is_alive:

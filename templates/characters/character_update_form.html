@@ -87,6 +87,9 @@
             <a href="{% url 'characters:character_detail' form.instance.id %}" class="btn btn-cancel">
                 <i class="fas fa-times"></i> Отменить
             </a>
+            <a href="{% url 'characters:character_delete' form.instance.id %}" class="btn btn-delete">
+                <i class="fas fa-trash"></i> Удалить
+            </a>
         </div>
     </form>
 </div>

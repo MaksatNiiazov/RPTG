@@ -1,5 +1,5 @@
 from django import forms
-from .models import Character
+from .models import Character, CharacterClass, Talent
 
 
 class CharacterForm(forms.ModelForm):
@@ -10,13 +10,16 @@ class CharacterForm(forms.ModelForm):
             "name", "race", "gender", "background", "notes",
             "str_stat", "dex_stat", "con_stat", "int_stat",
             "wis_stat", "cha_stat", "acc_stat", "lck_stat",
-            "is_npc", "visible_to_players"
+            "is_npc", "visible_to_players", 'character_class',
+            "character_talent",
         ]
         widgets = {
             "image": forms.ClearableFileInput(),
             "background": forms.Textarea(attrs={"rows": 3}),
             "notes": forms.Textarea(attrs={"rows": 3}),
             "gender": forms.Select(),
+            "character_class": forms.Select(),
+            "character_talent": forms.Select(),
         }
         labels = {
             "str_stat": "Сила",
@@ -27,10 +30,30 @@ class CharacterForm(forms.ModelForm):
             "cha_stat": "Харизма",
             "acc_stat": "Меткость",
             "lck_stat": "Удача",
+            "character_class": "Класс",
+            "character_talent": "Талант",
         }
         help_texts = {
             "lck_stat": "Влияет на выпадение редких предметов",
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Фильтрация классов - только одобренные
+        self.fields['character_class'].queryset = CharacterClass.objects.filter(approve=True)
+
+        # Фильтрация талантов - только одобренные
+        self.fields['character_talent'].queryset = Talent.objects.filter(approve=True)
+
+        # Добавляем пустой выбор для таланта (так как он не обязательный)
+        self.fields['character_class'].empty_label = "Без класса"
+
+        self.fields['character_talent'].empty_label = "Без таланта"
+
+        # Можно добавить классы CSS для стилизации полей
+        self.fields['character_class'].widget.attrs.update({'class': 'form-control'})
+        self.fields['character_talent'].widget.attrs.update({'class': 'form-control'})
 
 
 class CharacterUpdateForm(forms.ModelForm):

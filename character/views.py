@@ -8,12 +8,12 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_POST
-from django.views.generic import CreateView, DetailView, UpdateView
+from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
 
 from items.models import Item
 from worlds.models import World
 from .forms import CharacterForm, LevelUpForm, CharacterUpdateForm
-from .models import Character, InventoryItem, Equipment, ChestInstance
+from .models import Character, InventoryItem, Equipment, ChestInstance, CharacterClass, Talent
 
 
 class CharacterCreateView(LoginRequiredMixin, CreateView):
@@ -25,21 +25,61 @@ class CharacterCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.owner = self.request.user
         form.instance.world = World.objects.get(pk=self.kwargs["world_pk"])
-
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         world = World.objects.get(pk=self.kwargs["world_pk"])
         user = self.request.user
         ctx = super().get_context_data(**kwargs)
-        ctx['initial_points'] = 16 if world.creator != user else 80
+
+        # Получаем выбранный класс из GET параметров (если есть)
+        selected_class_id = self.request.GET.get('character_class')
+
+        if world.creator == user:
+            # Для ГМ всегда 80 очков
+            ctx['initial_points'] = 80
+        else:
+            if selected_class_id:
+                try:
+                    # Для игроков: берем очки из выбранного класса
+                    cls = CharacterClass.objects.get(id=selected_class_id, approve=True)
+                    ctx['initial_points'] = cls.base_ability_boints
+                except CharacterClass.DoesNotExist:
+                    # Если класс не найден - 10 очков
+                    ctx['initial_points'] = 10
+            else:
+                # Если класс не выбран - 10 очков
+                ctx['initial_points'] = 10
+
         ctx['world'] = world.pk
         ctx["is_gm"] = (world.creator == user)
+        ctx["classes"] = CharacterClass.objects.filter(approve=True)
+        ctx["talents"] = Talent.objects.filter(approve=True)
 
         return ctx
 
     def get_success_url(self):
         return reverse_lazy("characters:character_detail", kwargs={"pk": self.object.pk})
+
+    # Добавим обработку AJAX запроса для получения информации о классе
+    def get(self, request, *args, **kwargs):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and 'class_id' in request.GET:
+            try:
+                cls = CharacterClass.objects.get(id=request.GET.get('class_id'), approve=True)
+                return JsonResponse({
+                    'base_points': cls.base_ability_boints,
+                    'str_bonus': cls.str_bonus,
+                    'dex_bonus': cls.dex_bonus,
+                    'con_bonus': cls.con_bonus,
+                    'int_bonus': cls.int_bonus,
+                    'wis_bonus': cls.wis_bonus,
+                    'cha_bonus': cls.cha_bonus,
+                    'acc_bonus': cls.acc_bonus,
+                    'lck_bonus': cls.lck_bonus
+                })
+            except CharacterClass.DoesNotExist:
+                return JsonResponse({'error': 'Class not found'}, status=404)
+        return super().get(request, *args, **kwargs)
 
 
 class CharacterUpdateView(LoginRequiredMixin, UpdateView):
@@ -163,6 +203,31 @@ class CharacterDetailView(LoginRequiredMixin, DetailView):
         ctx['stat_roll_bonuses'] = stat_roll_bonuses
 
         return ctx
+
+
+class CharacterDeleteView(LoginRequiredMixin, DeleteView):
+    model = Character
+    template_name = "characters/character_confirm_delete.html"  # Новый шаблон
+    context_object_name = "char"
+    success_url = reverse_lazy("accounts:profile")  # URL после удаления
+
+    def get(self, request, *args, **kwargs):
+        """Проверка прав доступа при GET-запросе"""
+        obj = self.get_object()
+        if obj.owner != request.user:
+            messages.error(request, "У вас нет прав для удаления этого персонажа")
+            return redirect("characters:character_detail", pk=obj.pk)
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """Проверка прав доступа при POST-запросе"""
+        obj = self.get_object()
+        if obj.owner != request.user:
+            messages.error(request, "У вас нет прав для удаления этого персонажа")
+            return redirect("characters:character_detail", pk=obj.pk)
+
+        messages.success(request, f"Персонаж {obj.name} был успешно удален")
+        return super().post(request, *args, **kwargs)
 
 
 class CharacterInventoryView(LoginRequiredMixin, DetailView):
@@ -458,8 +523,6 @@ class AjaxAdjustTokenView(LoginRequiredMixin, View):
 
         token_type = request.POST.get('token_type')
         action = request.POST.get('action')
-
-
 
         current = getattr(char, f'{token_type}_tokens')
         max_value = getattr(char, f'max_{token_type}_tokens')
