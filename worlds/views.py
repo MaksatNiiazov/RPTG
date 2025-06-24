@@ -1,3 +1,5 @@
+from itertools import chain
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -30,7 +32,9 @@ class WorldDetailView(LoginRequiredMixin, DetailView):
         user = self.request.user
 
         # Все игровые персонажи (не-NPC)
-        players = world.characters.filter(is_npc=False)
+        my_players = world.characters.filter(is_npc=False, owner=user).order_by('name')
+        other_players = world.characters.filter(is_npc=False).exclude(owner=user).order_by('name')
+        players = list(chain(my_players, other_players))
         # NPC, отмеченные как видимые игрокам
         npcs = world.characters.filter(is_npc=True)
         is_gm = (world.creator == user)

@@ -217,6 +217,7 @@ class Character(models.Model, CharacterGetUtils):
                 raise ValidationError(
                     f"Текущая концентрация ({self.current_concentration}) не может превышать максимум ({max_cp})"
                 )
+
     def die(self, silent=False):
         """Помечает персонажа как мертвого"""
         if not self.is_alive:
@@ -457,6 +458,16 @@ class InventoryItem(models.Model):
         verbose_name = "Позиция в инвентаре"
         verbose_name_plural = "Позиции в инвентаре"
 
+
+    def get_original_quantity(self):
+        """Возвращает исходное количество предметов (для существующих записей)"""
+        if self.pk:
+            return InventoryItem.objects.get(pk=self.pk).quantity
+        return 0
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.character.name}: {self.quantity}× {self.item.name}"
 
@@ -519,6 +530,9 @@ class Equipment(models.Model):
                 if item:
                     equipped[field.name] = item
         return equipped
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
 
 class ChestInstance(models.Model):
