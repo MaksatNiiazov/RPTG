@@ -339,7 +339,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const notificationArea = document.getElementById('notification-area');
-    const shopId = {{ shop.id }}; // Получаем ID магазина из шаблона
+    const shopId = {{ shop.id }};
 
     // Функция для показа уведомлений
     function showNotification(message, isSuccess) {
@@ -368,10 +368,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Улучшенная функция для AJAX-запросов
     async function makeRequest(url, method, data, button = null) {
+        let originalHTML = '';
+
         try {
             if (button) {
                 button.disabled = true;
-                const originalHTML = button.innerHTML;
+                originalHTML = button.innerHTML;
                 button.innerHTML = '<i class="fas fa-spinner spinner"></i>';
             }
 
@@ -391,25 +393,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(responseData.message || 'Произошла ошибка');
             }
 
-            if (button) {
-                button.innerHTML = originalHTML;
-                button.disabled = false;
-            }
-
             return responseData;
 
         } catch (error) {
             console.error('Ошибка запроса:', error);
-
-            if (button) {
-                button.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
-                setTimeout(() => {
-                    button.disabled = false;
-                    button.innerHTML = button.dataset.originalText || 'Повторить';
-                }, 2000);
-            }
-
             throw error;
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = originalHTML;
+            }
         }
     }
 
@@ -437,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'POST',
                     {
                         character_id: characterId,
-                        shop_id: shopId  // Используем shopId из шаблона
+                        shop_id: shopId
                     },
                     button
                 );

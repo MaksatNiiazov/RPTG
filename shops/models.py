@@ -28,8 +28,16 @@ class ShopItem(models.Model):
     def __str__(self):
         return f"{self.item.name} (×{self.quantity or '∞'})"
 
+    def save(self, *args, **kwargs):
+        if not self.quantity:
+            self.quantity = 0
+        if not self.price:
+            self.price = self.item.price
+        super().save(*args, **kwargs)
+
     def is_available(self):
         return self.quantity is None or self.quantity > 0
 
     def get_final_price(self):
-        return round(self.price * self.shop.price_multiplier) if self.price else round(self.item.price * self.shop.price_multiplier)
+        return round(self.price * self.shop.price_multiplier) if self.price else round(
+            self.item.price * self.shop.price_multiplier)
