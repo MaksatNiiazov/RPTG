@@ -24,6 +24,12 @@ class ShopCreateView(CreateView):
     form_class = ShopForm
     template_name = "shops/shop_form.html"
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        ctx["world_id"] = self.kwargs["world_id"]
+        return ctx
+
     def form_valid(self, form):
         form.instance.world = get_object_or_404(World, pk=self.kwargs["world_id"])
         form.instance.owner = self.request.user
@@ -41,10 +47,20 @@ class ShopUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["edit_mode"] = True
+        ctx["world_id"] = self.object.world.id
         return ctx
 
     def get_success_url(self):
         return reverse_lazy("shops:shop-detail", kwargs={"pk": self.object.pk})
+
+
+class ShopDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        shop = get_object_or_404(Shop, pk=pk)
+        if shop.world.creator != request.user:
+            return HttpResponseForbidden("Нет прав")
+        shop.delete()
+        return redirect("worlds:detail", pk=shop.world.pk)
 
 
 class ShopDetailView(LoginRequiredMixin, View):

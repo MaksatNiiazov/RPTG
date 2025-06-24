@@ -284,9 +284,9 @@
         {% endif %}
     </div>
 
-    {% if world.shops.exists %}
+    {% if shops %}
         <div class="cards-grid">
-            {% for shop in world.shops.all %}
+            {% for shop in shops %}
                 <div class="location-card">
                     <h3>{{ shop.name }}</h3>
                     <p>Множитель цен: {{ shop.price_multiplier }}</p>
