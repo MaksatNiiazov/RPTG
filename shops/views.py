@@ -196,13 +196,27 @@ def remove_item_from_shop(request, entry_id):
 @login_required
 def buy_item_from_shop(request, item_id):
     try:
-        shop = get_object_or_404(Shop, pk=request.POST.get('shop_id'))
-        character = get_object_or_404(Character, pk=request.POST.get('character_id'), owner=request.user)
+        # Получаем данные из JSON
+        try:
+            data = json.loads(request.body)
+            shop_id = data.get('shop_id')
+            character_id = data.get('character_id')
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Неверный формат запроса'}, status=400)
+
+        if not shop_id:
+            return JsonResponse({'status': 'error', 'message': 'Не указан ID магазина'}, status=400)
+
+        shop = get_object_or_404(Shop, pk=shop_id)
+        if not character_id:
+            return JsonResponse({'status': 'error', 'message': 'Не указан ID персонажа'}, status=400)
+
+        character = get_object_or_404(Character, pk=character_id, owner=request.user)
         entry = get_object_or_404(ShopItem, shop=shop, item_id=item_id)
 
         # Проверка доступности товара
         if entry.quantity is not None and entry.quantity <= 0:
-            return JsonResponse({'status': 'error', 'message': 'Товар закончился'})
+            return JsonResponse({'status': 'error', 'message': 'Товар закончился'}, status=400)
 
         # Расчет цены
         price = entry.price if entry.price is not None else entry.item.price
@@ -210,35 +224,45 @@ def buy_item_from_shop(request, item_id):
 
         # Проверка денег
         if character.gold < final_price:
-            return JsonResponse({'status': 'error', 'message': 'Недостаточно золота'})
+            return JsonResponse({'status': 'error', 'message': 'Недостаточно золота'}, status=400)
 
         # Процесс покупки
         with transaction.atomic():
-            character.gold -= final_price
-            character.save()
+            # Обновляем золото персонажа
+            Character.objects.filter(pk=character.id).update(gold=F('gold') - final_price)
+            updated_character = Character.objects.get(pk=character.id)
 
+            # Добавляем предмет в инвентарь
             InventoryItem.objects.update_or_create(
                 character=character,
                 item=entry.item,
                 defaults={'quantity': F('quantity') + 1}
             )
 
+            # Обновляем количество товара
+            remaining = None
             if entry.quantity is not None:
-                entry.quantity = F('quantity') - 1
-                entry.save()
-                remaining = entry.quantity - 1
-            else:
-                remaining = None
+                ShopItem.objects.filter(pk=entry.id).update(quantity=F('quantity') - 1)
+                updated_entry = ShopItem.objects.get(pk=entry.id)
+                remaining = updated_entry.quantity
 
         return JsonResponse({
             'status': 'ok',
             'message': f'Вы купили {entry.item.name} за {final_price} Ꞩ',
-            'new_gold': character.gold,
+            'item_name': entry.item.name,
+            'final_price': final_price,
+            'new_gold': updated_character.gold,
             'remaining': remaining
         })
 
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
+        print(f"Error in buy_item_from_shop: {str(e)}", exc_info=True)
+        return JsonResponse(
+            {'status': 'error', 'message': 'Произошла ошибка при покупке'},
+            status=500
+        )
+
+
 @require_POST
 @login_required
 def ajax_sell_item(request, character_id, item_id):

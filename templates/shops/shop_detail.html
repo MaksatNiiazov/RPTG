@@ -307,7 +307,7 @@
                 </td>
                 <td>
                     {% if not is_gm %}
-                    <button class="btn btn-buy" data-item-id="{{ entry.item.id }}">
+                    <button class="btn btn-buy" data-item-id="{{ entry.item.id }}" data-shop-id="{{ shop.id }}">
                         <i class="fas fa-shopping-cart"></i> Купить
                     </button>
                     {% else %}
@@ -338,10 +338,10 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const shopId = {{ shop.pk }};
     const notificationArea = document.getElementById('notification-area');
+    const shopId = {{ shop.id }}; // Получаем ID магазина из шаблона
 
-    // Общая функция для показа уведомлений
+    // Функция для показа уведомлений
     function showNotification(message, isSuccess) {
         const notification = document.createElement('div');
         notification.className = `notification ${isSuccess ? 'success' : 'error'}`;
@@ -366,50 +366,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Функция для выполнения AJAX-запросов
+    // Улучшенная функция для AJAX-запросов
     async function makeRequest(url, method, data, button = null) {
         try {
             if (button) {
                 button.disabled = true;
                 const originalHTML = button.innerHTML;
                 button.innerHTML = '<i class="fas fa-spinner spinner"></i>';
+            }
 
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'X-CSRFToken': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
 
-                if (!response.ok) {
-                    throw new Error('Ошибка сети');
-                }
+            const responseData = await response.json();
 
-                const result = await response.json();
+            if (!response.ok) {
+                throw new Error(responseData.message || 'Произошла ошибка');
+            }
+
+            if (button) {
                 button.innerHTML = originalHTML;
                 button.disabled = false;
-                return result;
-            } else {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'X-CSRFToken': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Ошибка сети');
-                }
-
-                return await response.json();
             }
+
+            return responseData;
+
         } catch (error) {
+            console.error('Ошибка запроса:', error);
+
             if (button) {
                 button.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
                 setTimeout(() => {
@@ -417,11 +408,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     button.innerHTML = button.dataset.originalText || 'Повторить';
                 }, 2000);
             }
+
             throw error;
         }
     }
 
-    // 1. Обработка покупки товара
+    // Обработка покупки товара
     document.addEventListener('click', async function(e) {
         if (e.target.closest('.btn-buy')) {
             const button = e.target.closest('.btn-buy');
@@ -445,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'POST',
                     {
                         character_id: characterId,
-                        shop_id: shopId
+                        shop_id: shopId  // Используем shopId из шаблона
                     },
                     button
                 );
@@ -475,13 +467,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error(data.message || 'Ошибка при покупке');
                 }
             } catch (error) {
-                showNotification(error.message, false);
+                console.error('Ошибка покупки:', error);
+                showNotification(error.message || 'Произошла ошибка при покупке', false);
             }
         }
     });
 
     {% if is_gm %}
-    // 2. Управление множителем цен
+    // Управление множителем цен
     let multiplier = parseFloat(document.getElementById('multiplier-value').textContent);
 
     document.getElementById('increase-multiplier').addEventListener('click', () => {
@@ -498,7 +491,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('save-multiplier').addEventListener('click', async function() {
         const button = this;
-
         try {
             const data = await makeRequest(
                 "{% url 'shops:shop-edit-multiplier' shop.pk %}",
@@ -506,18 +498,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 { multiplier: multiplier },
                 button
             );
-
-            if (data.status === 'ok') {
-                showNotification('Множитель цен успешно сохранен', true);
-            } else {
-                throw new Error(data.message || 'Ошибка сохранения');
-            }
+            showNotification('Множитель цен успешно сохранен', true);
         } catch (error) {
             showNotification(error.message, false);
         }
     });
 
-    // 3. Добавление предмета
+    // Добавление предмета
     document.getElementById('add-item-btn').addEventListener('click', async function() {
         const button = this;
         const itemId = document.getElementById('item-selector').value;
@@ -528,25 +515,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            const data = await makeRequest(
+            await makeRequest(
                 "{% url 'shops:shop-add-item' shop.pk %}",
                 'POST',
                 { item_id: itemId },
                 button
             );
-
-            if (data.status === 'ok') {
-                showNotification('Предмет успешно добавлен в магазин', true);
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                throw new Error(data.message || 'Ошибка добавления предмета');
-            }
+            showNotification('Предмет успешно добавлен в магазин', true);
+            setTimeout(() => location.reload(), 1000);
         } catch (error) {
             showNotification(error.message, false);
         }
     });
 
-    // 4. Редактирование цены
+    // Редактирование цены
     document.addEventListener('input', function(e) {
         if (e.target.classList.contains('price-input')) {
             e.target.nextElementSibling.style.display = 'inline-block';
@@ -561,26 +543,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const entryId = button.closest('tr').dataset.entryId;
 
             try {
-                const data = await makeRequest(
+                await makeRequest(
                     `/shops/update-price/${entryId}/`,
                     'POST',
                     { price: newPrice },
                     button
                 );
-
-                if (data.status === 'ok') {
-                    showNotification('Цена успешно обновлена', true);
-                    button.style.display = 'none';
-                } else {
-                    throw new Error(data.message || 'Ошибка обновления цены');
-                }
+                showNotification('Цена успешно обновлена', true);
+                button.style.display = 'none';
             } catch (error) {
                 showNotification(error.message, false);
             }
         }
     });
 
-    // 5. Редактирование количества
+    // Редактирование количества
     document.addEventListener('input', function(e) {
         if (e.target.classList.contains('quantity-input')) {
             e.target.nextElementSibling.style.display = 'inline-block';
@@ -595,26 +572,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const entryId = button.closest('tr').dataset.entryId;
 
             try {
-                const data = await makeRequest(
+                await makeRequest(
                     `/shops/update-quantity/${entryId}/`,
                     'POST',
                     { quantity: newQuantity },
                     button
                 );
-
-                if (data.status === 'ok') {
-                    showNotification('Количество успешно обновлено', true);
-                    button.style.display = 'none';
-                } else {
-                    throw new Error(data.message || 'Ошибка обновления количества');
-                }
+                showNotification('Количество успешно обновлено', true);
+                button.style.display = 'none';
             } catch (error) {
                 showNotification(error.message, false);
             }
         }
     });
 
-    // 6. Удаление предмета
+    // Удаление предмета
     document.addEventListener('click', async function(e) {
         if (e.target.classList.contains('btn-remove-item')) {
             if (!confirm('Вы уверены, что хотите удалить этот предмет из магазина?')) return;
@@ -623,19 +595,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const entryId = button.dataset.entryId;
 
             try {
-                const data = await makeRequest(
+                await makeRequest(
                     `/shops/remove-item/${entryId}/`,
                     'POST',
                     {},
                     button
                 );
-
-                if (data.status === 'ok') {
-                    showNotification('Предмет успешно удален из магазина', true);
-                    button.closest('tr').remove();
-                } else {
-                    throw new Error(data.message || 'Ошибка удаления предмета');
-                }
+                showNotification('Предмет успешно удален из магазина', true);
+                button.closest('tr').remove();
             } catch (error) {
                 showNotification(error.message, false);
             }
