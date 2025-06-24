@@ -1,0 +1,647 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Магазин: {{ shop.name }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/shop.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    /* Основные стили */
+    .shop-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .shop-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .shop-meta {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .shop-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* Таблица товаров */
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+    .items-table th, .items-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    .items-table th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+    }
+
+    .items-table tr:hover {
+        background-color: #f9f9f9;
+    }
+
+    /* Кнопки */
+    .btn {
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .btn-buy {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .btn-buy:hover {
+        background-color: #218838;
+    }
+
+    .btn-edit {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    .btn-edit:hover {
+        background-color: #138496;
+    }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+
+    .btn-add {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .btn-add:hover {
+        background-color: #0069d9;
+    }
+
+    .btn-save {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    /* Формы и инпуты */
+    .form-control {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .input-group {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+
+    /* Уведомления */
+    .notification {
+        padding: 12px 15px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        color: white;
+        animation: fadeIn 0.3s;
+    }
+
+    .notification.success {
+        background-color: #28a745;
+    }
+
+    .notification.error {
+        background-color: #dc3545;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .shop-header {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .shop-meta {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .items-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+        .form-control {
+            max-width: 100%;
+        }
+    }
+
+    /* Панель ГМ */
+    .gm-panel {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px dashed #6c757d;
+    }
+
+    .gm-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+
+    /* Спиннер */
+    .spinner {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shop-container">
+    <div class="shop-header">
+        <h1><i class="fas fa-store"></i> {{ shop.name }}</h1>
+        <div class="shop-meta">
+            <span class="shop-meta-item">
+                <strong>Статус:</strong>
+                <span class="status-badge {% if shop.is_open %}open{% else %}closed{% endif %}">
+                    {% if shop.is_open %}🟢 Открыт{% else %}🔴 Закрыт{% endif %}
+                </span>
+            </span>
+            <span class="shop-meta-item">
+                <strong>Множитель цен:</strong>
+                <span id="multiplier-value">{{ shop.price_multiplier }}</span>x
+            </span>
+        </div>
+    </div>
+
+    {% if not is_gm and player_characters %}
+    <div class="character-selector">
+        <label for="character-selector"><i class="fas fa-user"></i> Покупать от имени:</label>
+        <select id="character-selector" class="form-control">
+            {% for char in player_characters %}
+                <option value="{{ char.id }}" data-gold="{{ char.gold }}">
+                    {{ char.name }} ({{ char.gold }} Ꞩ)
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+
+    {% if is_gm %}
+    <div class="gm-panel">
+        <h3><i class="fas fa-tools"></i> Панель управления</h3>
+
+        <div class="gm-controls">
+            <div class="input-group">
+                <select id="item-selector" class="form-control">
+                    <option value="">-- Выберите предмет --</option>
+                    {% for item in all_items %}
+                        <option value="{{ item.id }}">{{ item.name }} ({{ item.price }} Ꞩ)</option>
+                    {% endfor %}
+                </select>
+                <button id="add-item-btn" class="btn btn-add">
+                    <i class="fas fa-plus"></i> Добавить
+                </button>
+            </div>
+
+            <div class="input-group">
+                <button id="decrease-multiplier" class="btn btn-edit" title="Уменьшить">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button id="increase-multiplier" class="btn btn-edit" title="Увеличить">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button id="save-multiplier" class="btn btn-save">
+                    <i class="fas fa-save"></i> Сохранить множитель
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <h2><i class="fas fa-box-open"></i> Товары в магазине</h2>
+
+    {% if shop.items.exists %}
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Цена</th>
+                <th>Количество</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in shop.items.all %}
+            <tr data-item-id="{{ entry.item.id }}" data-entry-id="{{ entry.id }}">
+                <td>{{ entry.item.name }}</td>
+                <td>
+                    {% if is_gm %}
+                    <div class="input-group">
+                        <input type="number" value="{{ entry.price|default:entry.item.price }}"
+                               class="form-control price-input" min="1">
+                        <button class="btn btn-save btn-save-price" style="display:none;">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    {{ entry.get_final_price|floatformat:0 }} Ꞩ
+                    {% endif %}
+                </td>
+                <td>
+                    {% if is_gm %}
+                    <div class="input-group">
+                        <input type="number" value="{{ entry.quantity|default:'' }}"
+                               class="form-control quantity-input" min="1" placeholder="∞">
+                        <button class="btn btn-save btn-save-quantity" style="display:none;">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    {% if entry.quantity %}{{ entry.quantity }}{% else %}∞{% endif %}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not is_gm %}
+                    <button class="btn btn-buy" data-item-id="{{ entry.item.id }}">
+                        <i class="fas fa-shopping-cart"></i> Купить
+                    </button>
+                    {% else %}
+                    <button class="btn btn-delete btn-remove-item" data-entry-id="{{ entry.id }}">
+                        <i class="fas fa-trash-alt"></i> Удалить
+                    </button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-box-open" style="font-size: 48px; opacity: 0.5;"></i>
+        <p>В магазине пока нет товаров</p>
+    </div>
+    {% endif %}
+
+    <div id="notification-area"></div>
+</div>
+    <form action="#">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    </form>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const shopId = {{ shop.pk }};
+    const notificationArea = document.getElementById('notification-area');
+
+    // Общая функция для показа уведомлений
+    function showNotification(message, isSuccess) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${isSuccess ? 'success' : 'error'}`;
+        notification.innerHTML = `
+            <span>${message}</span>
+            <button class="close-notification" style="float: right; background: none; border: none; color: white; cursor: pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        notificationArea.appendChild(notification);
+
+        // Автоматическое закрытие через 5 секунд
+        const timer = setTimeout(() => {
+            notification.remove();
+        }, 5000);
+
+        // Ручное закрытие
+        notification.querySelector('.close-notification').addEventListener('click', () => {
+            clearTimeout(timer);
+            notification.remove();
+        });
+    }
+
+    // Функция для выполнения AJAX-запросов
+    async function makeRequest(url, method, data, button = null) {
+        try {
+            if (button) {
+                button.disabled = true;
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner spinner"></i>';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка сети');
+                }
+
+                const result = await response.json();
+                button.innerHTML = originalHTML;
+                button.disabled = false;
+                return result;
+            } else {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка сети');
+                }
+
+                return await response.json();
+            }
+        } catch (error) {
+            if (button) {
+                button.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.innerHTML = button.dataset.originalText || 'Повторить';
+                }, 2000);
+            }
+            throw error;
+        }
+    }
+
+    // 1. Обработка покупки товара
+    document.addEventListener('click', async function(e) {
+        if (e.target.closest('.btn-buy')) {
+            const button = e.target.closest('.btn-buy');
+            const itemId = button.dataset.itemId;
+            const characterSelect = document.getElementById('character-selector');
+
+            if (!characterSelect) {
+                showNotification('Ошибка: не найден выбор персонажа', false);
+                return;
+            }
+
+            const characterId = characterSelect.value;
+            if (!characterId) {
+                showNotification('Пожалуйста, выберите персонажа для покупки', false);
+                return;
+            }
+
+            try {
+                const data = await makeRequest(
+                    `/shops/buy/${itemId}/`,
+                    'POST',
+                    {
+                        character_id: characterId,
+                        shop_id: shopId
+                    },
+                    button
+                );
+
+                if (data.status === 'ok') {
+                    showNotification(`Успешно куплено: ${data.item_name} за ${data.final_price} Ꞩ`, true);
+
+                    // Обновляем золото персонажа
+                    const option = characterSelect.querySelector(`option[value="${characterId}"]`);
+                    if (option) {
+                        option.textContent = `${option.textContent.split('(')[0].trim()} (${data.new_gold} Ꞩ)`;
+                    }
+
+                    // Обновляем количество
+                    if (data.remaining !== null) {
+                        const row = button.closest('tr');
+                        const qtyCell = row.querySelector('td:nth-child(3)');
+                        if (qtyCell) {
+                            qtyCell.textContent = data.remaining > 0 ? data.remaining : '0';
+                            if (data.remaining <= 0) {
+                                button.disabled = true;
+                                button.textContent = 'Нет в наличии';
+                            }
+                        }
+                    }
+                } else {
+                    throw new Error(data.message || 'Ошибка при покупке');
+                }
+            } catch (error) {
+                showNotification(error.message, false);
+            }
+        }
+    });
+
+    {% if is_gm %}
+    // 2. Управление множителем цен
+    let multiplier = parseFloat(document.getElementById('multiplier-value').textContent);
+
+    document.getElementById('increase-multiplier').addEventListener('click', () => {
+        multiplier = Math.round((multiplier + 0.1) * 10) / 10;
+        document.getElementById('multiplier-value').textContent = multiplier;
+    });
+
+    document.getElementById('decrease-multiplier').addEventListener('click', () => {
+        if (multiplier > 0.1) {
+            multiplier = Math.round((multiplier - 0.1) * 10) / 10;
+            document.getElementById('multiplier-value').textContent = multiplier;
+        }
+    });
+
+    document.getElementById('save-multiplier').addEventListener('click', async function() {
+        const button = this;
+
+        try {
+            const data = await makeRequest(
+                "{% url 'shops:shop-edit-multiplier' shop.pk %}",
+                'POST',
+                { multiplier: multiplier },
+                button
+            );
+
+            if (data.status === 'ok') {
+                showNotification('Множитель цен успешно сохранен', true);
+            } else {
+                throw new Error(data.message || 'Ошибка сохранения');
+            }
+        } catch (error) {
+            showNotification(error.message, false);
+        }
+    });
+
+    // 3. Добавление предмета
+    document.getElementById('add-item-btn').addEventListener('click', async function() {
+        const button = this;
+        const itemId = document.getElementById('item-selector').value;
+
+        if (!itemId) {
+            showNotification('Выберите предмет для добавления', false);
+            return;
+        }
+
+        try {
+            const data = await makeRequest(
+                "{% url 'shops:shop-add-item' shop.pk %}",
+                'POST',
+                { item_id: itemId },
+                button
+            );
+
+            if (data.status === 'ok') {
+                showNotification('Предмет успешно добавлен в магазин', true);
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                throw new Error(data.message || 'Ошибка добавления предмета');
+            }
+        } catch (error) {
+            showNotification(error.message, false);
+        }
+    });
+
+    // 4. Редактирование цены
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('price-input')) {
+            e.target.nextElementSibling.style.display = 'inline-block';
+        }
+    });
+
+    document.addEventListener('click', async function(e) {
+        if (e.target.classList.contains('btn-save-price')) {
+            const button = e.target;
+            const input = button.previousElementSibling;
+            const newPrice = input.value;
+            const entryId = button.closest('tr').dataset.entryId;
+
+            try {
+                const data = await makeRequest(
+                    `/shops/update-price/${entryId}/`,
+                    'POST',
+                    { price: newPrice },
+                    button
+                );
+
+                if (data.status === 'ok') {
+                    showNotification('Цена успешно обновлена', true);
+                    button.style.display = 'none';
+                } else {
+                    throw new Error(data.message || 'Ошибка обновления цены');
+                }
+            } catch (error) {
+                showNotification(error.message, false);
+            }
+        }
+    });
+
+    // 5. Редактирование количества
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('quantity-input')) {
+            e.target.nextElementSibling.style.display = 'inline-block';
+        }
+    });
+
+    document.addEventListener('click', async function(e) {
+        if (e.target.classList.contains('btn-save-quantity')) {
+            const button = e.target;
+            const input = button.previousElementSibling;
+            const newQuantity = input.value === '' ? null : input.value;
+            const entryId = button.closest('tr').dataset.entryId;
+
+            try {
+                const data = await makeRequest(
+                    `/shops/update-quantity/${entryId}/`,
+                    'POST',
+                    { quantity: newQuantity },
+                    button
+                );
+
+                if (data.status === 'ok') {
+                    showNotification('Количество успешно обновлено', true);
+                    button.style.display = 'none';
+                } else {
+                    throw new Error(data.message || 'Ошибка обновления количества');
+                }
+            } catch (error) {
+                showNotification(error.message, false);
+            }
+        }
+    });
+
+    // 6. Удаление предмета
+    document.addEventListener('click', async function(e) {
+        if (e.target.classList.contains('btn-remove-item')) {
+            if (!confirm('Вы уверены, что хотите удалить этот предмет из магазина?')) return;
+
+            const button = e.target;
+            const entryId = button.dataset.entryId;
+
+            try {
+                const data = await makeRequest(
+                    `/shops/remove-item/${entryId}/`,
+                    'POST',
+                    {},
+                    button
+                );
+
+                if (data.status === 'ok') {
+                    showNotification('Предмет успешно удален из магазина', true);
+                    button.closest('tr').remove();
+                } else {
+                    throw new Error(data.message || 'Ошибка удаления предмета');
+                }
+            } catch (error) {
+                showNotification(error.message, false);
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

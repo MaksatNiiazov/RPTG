@@ -41,22 +41,21 @@ class CharacterAdmin(ModelAdmin):
         "is_npc",
         "race", "gender",
         "str_stat", "dex_stat", "con_stat", "int_stat",
-        "carry_capacity", "max_weapon_weight", "max_armor_weight",
+        "carry_capacity", "max_weapon_weight", "max_armor_weight","can_trade"
     )
     list_display_links = ("name",)
     readonly_fields = (
         "max_hp", "concentration", "carry_capacity",
         "max_weapon_weight", "max_armor_weight",
     )
-    list_filter = ("race", "gender", "world", "is_npc", "world",
-
-                   )
+    list_filter = ("race", "gender", "world", "is_npc", "world",)
+    list_editable = ("can_trade",)
     search_fields = ("name",)
     fieldsets = (
         (None, {
             "fields": ("owner", "world",
                        'image',
-                       "name", "gender", "race", "character_class", "character_talent", "is_alive",)
+                       "name", "gender", "race", "character_class", "character_talent", "is_alive", "can_trade")
         }),
         ("RP-данные", {
             "fields": ("background", "notes"),

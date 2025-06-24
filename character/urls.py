@@ -2,7 +2,8 @@ from django.urls import path
 
 from .views import CharacterCreateView, CharacterDetailView, CharacterInventoryView, \
     UnequipSlotView, EquipItemView, DropItemView, LevelUpView, CharacterUpdateView, ChestDetailView, ToggleNpcFlagView, \
-    AjaxAdjustHpView, AjaxAdjustCpView, AjaxAdjustTokenView, CharacterDeleteView, ClassListView, TalentListView
+    AjaxAdjustHpView, AjaxAdjustCpView, AjaxAdjustTokenView, CharacterDeleteView, ClassListView, TalentListView, \
+    toggle_can_trade
 
 app_name = "characters"
 
@@ -19,11 +20,11 @@ urlpatterns = [
     path("characters/<int:character_id>/unequip/<str:slot>/", UnequipSlotView.as_view(), name="unequip-slot"),
     path("characters/<int:character_id>/drop/<int:item_id>/", DropItemView.as_view(), name="drop-item"),
     path('level-up/<int:character_id>/', LevelUpView.as_view(), name='level-up'),
-
     path('chest/<int:instance_pk>/', ChestDetailView.as_view(), name='chest-detail'),
     path('npc-settings/<int:char_id>/', ToggleNpcFlagView.as_view(), name='toggle-npc-flag'),
     path('characters/<int:pk>/adjust-hp/', AjaxAdjustHpView.as_view(), name='ajax_adjust_hp'),
     path('characters/<int:pk>/adjust-cp/', AjaxAdjustCpView.as_view(), name='ajax_adjust_cp'),
     path('character/<int:pk>/adjust-token/', AjaxAdjustTokenView.as_view(), name='ajax_adjust_token'),
+    path("character/<int:char_id>/toggle-trade/", toggle_can_trade, name="toggle-can-trade"),
 
 ]

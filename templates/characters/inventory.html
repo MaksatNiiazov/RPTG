@@ -10,6 +10,7 @@
 
 {% block content %}
     <h1>Инвентарь: <a href="{% url 'characters:character_detail' char.id %}">{{ char.name }}</a></h1>
+<p><strong>Золото:</strong> <span id="char-gold">{{ char.gold }} Ꞩ</span></p>
 
     <div class="inventory-layout"
          data-char-id="{{ char.id }}"
@@ -81,7 +82,9 @@
                 {% for entry in inventory_items %}
                     <tr class="inv-row"
                         data-item-id="{{ entry.item.id }}">
-                        <td class="name-cell"><span style="border-left: 6px solid {{ entry.item.rarity.color }}; padding-left: 6px">{{ entry.item.name }}</span></td>
+                        <td class="name-cell"><span
+                                style="border-left: 6px solid {{ entry.item.rarity.color }}; padding-left: 6px">{{ entry.item.name }}</span>
+                        </td>
                         <td class="quantity-cell">{{ entry.quantity }}</td>
                         <td class="bonus-cell">+{{ entry.item.bonus }}</td>
                         <td class="weight-cell">{{ entry.item.weight }} кг</td>
@@ -89,6 +92,13 @@
                             {% if entry.item.legendary_buff %}{{ entry.item.legendary_buff }}{% else %}—{% endif %}
                         </td>
                         <td class="td-buttons">
+                             {% if char.can_trade %}
+                    <button
+                            class="btn-inventory btn-sell"
+                            data-sell-url="{% url 'shops:ajax-sell-item' char.id entry.item.id %}">
+                        Продать ({{ entry.item|sell_price_for:char }}Ꞩ)
+                    </button>
+                {% endif %}
                             <form class="equip-form">
                                 {% csrf_token %}
                                 <button class="btn-inventory btn-equip">Экипировать</button>
@@ -118,6 +128,7 @@
             <td class="weight-cell"></td>
             <td class="legendary-cell"></td>
             <td class="td-buttons">
+
                 <form class="equip-form">
                     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                     <button class="btn-inventory btn-equip">Экипировать</button>
@@ -130,16 +141,17 @@
         </tr>
     </template>
     <h2>Сундуки</h2>
-{% if char.chests.exists %}
-  {% for chest in char.chests.all %}
-    <div class="card">
-      <h4>{{ chest.config.name }} <small>от {{ chest.created_at|date:"SHORT_DATETIME_FORMAT" }}</small></h4>
-        <a href="{% url 'characters:chest-detail' chest.id %}" class="btn">Подробнее <img src="{% static 'img/arrow-right.svg' %}"></a>
-    </div>
-  {% endfor %}
-{% else %}
-  <p>У вас нет текущих сундуков.</p>
-{% endif %}
+    {% if char.chests.exists %}
+        {% for chest in char.chests.all %}
+            <div class="card">
+                <h4>{{ chest.config.name }} <small>от {{ chest.created_at|date:"SHORT_DATETIME_FORMAT" }}</small></h4>
+                <a href="{% url 'characters:chest-detail' chest.id %}" class="btn">Подробнее <img
+                        src="{% static 'img/arrow-right.svg' %}"></a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>У вас нет текущих сундуков.</p>
+    {% endif %}
 
 {% endblock %}
 

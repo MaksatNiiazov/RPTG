@@ -31,6 +31,7 @@ urlpatterns = [
     path("characters/", include("character.urls")),
     path("worlds/", include("worlds.urls")),
     path("maps/", include("maps.urls")),
+    path("shops/", include("shops.urls")),
 
 ]
 

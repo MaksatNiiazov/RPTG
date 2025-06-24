@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // 1) Подтверждённое удаление
         if (form.matches(".drop-form")) {
             const name = form.closest("tr.inv-row").querySelector(".name-cell").textContent;
-            if (!confirm(`Вы уверены, что хотите выбросить «${name}»?`)) return;
+            if (!confirm(`Вы уверены, что хотите выбросить ${name} ?`)) return;
         }
 
         // 2) Построение URL
@@ -173,3 +173,90 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+document.addEventListener("DOMContentLoaded", () => {
+    initSellButtons();
+});
+
+function initSellButtons() {
+    document.querySelectorAll(".btn-sell").forEach(button => {
+        button.addEventListener("click", event => {
+            event.preventDefault();
+
+            const url = button.dataset.sellUrl;
+            const row = button.closest("tr");
+
+            const itemName = row.querySelector(".name-cell").textContent.trim();
+            const quantity = row.querySelector(".quantity-cell").textContent.trim();
+
+            const priceText = button.textContent.match(/\d+/g)?.[0] || "?";
+            const confirmText = `Продать ${itemName} за ${priceText} Ꞩ ?\nУ вас ${quantity} шт.`;
+            if (!confirm(confirmText)) return;
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCsrfToken(),
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "ok") {
+                        updateInventoryRow(row, data.remaining);
+                        updateGoldDisplay(data.new_gold);
+                        showToast(data.message, "success");
+                    } else {
+                        showToast(data.message, "error");
+                    }
+                })
+                .catch(() => {
+                    showToast("Ошибка при отправке запроса.", "error");
+                });
+        });
+    });
+}
+
+function updateInventoryRow(row, remainingQuantity) {
+    if (remainingQuantity <= 0) {
+        row.remove();
+    } else {
+        const qtyCell = row.querySelector(".quantity-cell");
+        if (qtyCell) qtyCell.textContent = remainingQuantity;
+    }
+}
+
+function updateGoldDisplay(newGold) {
+    const goldDisplay = document.querySelector("#char-gold");
+    if (goldDisplay) {
+        goldDisplay.textContent = `${newGold} Ꞩ`;
+    }
+}
+
+function getCsrfToken() {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; csrftoken=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+}
+
+function showToast(message, type = "info") {
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    Object.assign(toast.style, {
+        position: "fixed",
+        bottom: "20px",
+        right: "20px",
+        background: type === "success" ? "#2ecc71" : "#e74c3c",
+        color: "#fff",
+        padding: "10px 15px",
+        borderRadius: "6px",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+        zIndex: 9999,
+        fontSize: "14px",
+        opacity: 0.95,
+    });
+
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}

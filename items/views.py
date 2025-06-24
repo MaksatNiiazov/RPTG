@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, FormView
 
-from .forms import  LootConfigForm
+from .forms import LootConfigForm
 from .loot import generate_loot_items
 from .models import Rarity, Type, Item
 
@@ -74,6 +74,7 @@ class LootConfigView(View):
         }
         return redirect("items:loot_result")
 
+
 class LootResultView(View):
     template_name = "items/loot_result.html"
 
@@ -84,10 +85,10 @@ class LootResultView(View):
 
         # получаем объекты по сохранённым id
         chest_rarity = get_object_or_404(Rarity, pk=params["chest_rarity_id"])
-        rare_rarity  = (get_object_or_404(Rarity, pk=params["rare_rarity_id"])
-                        if params["rare_rarity_id"] else None)
-        type_bias    = (get_object_or_404(Type, pk=params["type_bias_id"])
-                        if params["type_bias_id"] else None)
+        rare_rarity = (get_object_or_404(Rarity, pk=params["rare_rarity_id"])
+                       if params["rare_rarity_id"] else None)
+        type_bias = (get_object_or_404(Type, pk=params["type_bias_id"])
+                     if params["type_bias_id"] else None)
 
         items = generate_loot_items(
             luck=params["luck"],

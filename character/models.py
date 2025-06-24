@@ -3,8 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 from accounts.models import User
-from character.character_utils import CharacterGetUtils
-from items.loot import generate_loot_items
+from character.utils.character_utils import CharacterGetUtils
 from items.models import Item
 from magic.models import Spell
 from worlds.models import World
@@ -135,6 +134,7 @@ class Character(models.Model, CharacterGetUtils):
     max_weapon_weight = models.FloatField("Макс. вес оружия", editable=False)
     max_armor_weight = models.FloatField("Макс. вес доспехов", editable=False)
     gold = models.PositiveIntegerField("Золото", default=0)
+    can_trade = models.BooleanField("Может торговать", default=False)
 
     # Системные поля
     created_at = models.DateTimeField(auto_now_add=True)

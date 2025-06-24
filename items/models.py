@@ -100,6 +100,8 @@ class Item(models.Model):
 
     legendary_buff = models.CharField("Легендарный бонус", max_length=200, null=True, blank=True, default=None)
 
+    price = models.PositiveIntegerField("Цена", default=1)
+
     class Meta:
         verbose_name = "Предмет"
         verbose_name_plural = "Предметы"

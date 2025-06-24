@@ -218,3 +218,20 @@
         justify-content: center;
     }
 }
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    margin-left: 4px;
+    cursor: pointer;
+}
+
+.btn-danger {
+    background: #c44;
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #a22;
+}

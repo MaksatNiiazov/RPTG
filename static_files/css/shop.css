@@ -1,0 +1,355 @@
+/* Основные стили магазина */
+.shop-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #eee;
+}
+
+.shop-header h1 {
+    margin: 0;
+    color: #333;
+    font-size: 28px;
+}
+
+.shop-header h1 i {
+    margin-right: 10px;
+    color: #6c757d;
+}
+
+.shop-status {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.status-badge.open {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.closed {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.btn-edit {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.btn-edit:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Блок множителя цен */
+.price-multiplier {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #e2e3e5;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.price-multiplier span {
+    font-size: 16px;
+}
+
+.price-multiplier strong {
+    font-size: 18px;
+    color: #0d6efd;
+}
+
+.multiplier-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-multiplier {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ced4da;
+    background-color: white;
+}
+
+.btn-save {
+    background-color: #198754;
+    color: white;
+    border: none;
+}
+
+/* Выбор персонажа */
+.character-selector {
+    margin-bottom: 20px;
+}
+
+.character-selector label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+/* Поиск товаров */
+.shop-search {
+    margin-bottom: 20px;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-box i {
+    position: absolute;
+    left: 12px;
+    color: #6c757d;
+}
+
+#item-search {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.btn-clear {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+}
+
+/* Панель ГМ */
+.gm-panel {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border: 1px dashed #6c757d;
+}
+
+.add-item-form {
+    display: flex;
+    gap: 10px;
+}
+
+#item-selector {
+    flex-grow: 1;
+}
+
+.btn-add {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    white-space: nowrap;
+}
+
+/* Таблица товаров */
+.shop-items {
+    overflow-x: auto;
+}
+
+#items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+#items-table th {
+    background-color: #343a40;
+    color: white;
+    padding: 12px 15px;
+    text-align: left;
+}
+
+#items-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+#items-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+#items-table tr:hover {
+    background-color: #e9ecef;
+}
+
+.item-name {
+    position: relative;
+    min-width: 200px;
+}
+
+.item-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 100;
+    width: 300px;
+    font-size: 14px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.item-name:hover .item-tooltip {
+    display: block;
+}
+
+.item-price, .item-quantity {
+    min-width: 120px;
+}
+
+.price-edit, .quantity-edit {
+    display: flex;
+    gap: 5px;
+}
+
+.price-input, .quantity-input {
+    max-width: 80px;
+}
+
+.btn-save-price, .btn-save-quantity {
+    padding: 5px 10px;
+}
+
+.item-actions {
+    text-align: right;
+    min-width: 120px;
+}
+
+.btn-buy {
+    background-color: #198754;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.btn-buy:hover {
+    background-color: #157347;
+    transform: translateY(-2px);
+}
+
+.btn-remove {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    transition: all 0.3s;
+}
+
+.btn-remove:hover {
+    background-color: #bb2d3b;
+}
+
+/* Состояние пустого магазина */
+.empty-shop {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-shop i {
+    font-size: 50px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-shop p {
+    font-size: 18px;
+    margin: 0;
+}
+
+/* Уведомления */
+#shop-notifications {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    z-index: 1000;
+}
+
+.alert {
+    margin-bottom: 10px;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .shop-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .price-multiplier {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .add-item-form {
+        flex-direction: column;
+    }
+
+    #items-table {
+        display: block;
+    }
+
+    #items-table th, #items-table td {
+        padding: 8px 10px;
+    }
+
+    .item-tooltip {
+        width: 200px;
+    }
+}

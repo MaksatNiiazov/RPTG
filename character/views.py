@@ -1,8 +1,7 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.db.models import Q
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -577,3 +576,25 @@ class AjaxAdjustTokenView(LoginRequiredMixin, View):
             'current': getattr(char, f'{token_type}_tokens'),
             'max': max_value
         })
+
+
+
+
+
+@require_POST
+@login_required
+def toggle_can_trade(request, char_id):
+    if request.headers.get("x-requested-with") != "XMLHttpRequest":
+        return JsonResponse({"status": "error", "message": "Только AJAX"}, status=400)
+
+    character = get_object_or_404(Character, pk=char_id)
+    if not character.world or character.world.creator != request.user:
+        return JsonResponse({"status": "error", "message": "Нет прав"}, status=403)
+
+    character.can_trade = not character.can_trade
+    character.save(update_fields=["can_trade"])
+
+    return JsonResponse({
+        "status": "ok",
+        "new_value": character.can_trade
+    })

@@ -34,6 +34,21 @@
                     </svg>
                     Предмет
                 </a>
+                <br>
+                <a href="#"
+                   data-url="{% url 'characters:toggle-can-trade' char.pk %}"
+                   data-current="{{ char.can_trade|yesno:'1,0' }}"
+                   class="btn toggle-trade-btn">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M3 6h18v2H3zM3 10h18v2H3zM3 14h18v2H3zM3 18h18v2H3z"/>  <!-- меню/касса -->
+                    </svg>
+                    {% if char.can_trade %}
+                        Запретить торговлю
+                    {% else %}
+                        Разрешить торговлю
+                    {% endif %}
+                </a>
+
             </div>
         {% endif %}
         <!-- Header Section -->
@@ -41,11 +56,10 @@
             <div>
                 <img
                         src="
-
-
                                 {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
                         alt="{{ char.name }}" class="character-image">
                 <br>
+                <p><strong>Соллиды:</strong> {{ char.gold }} Ꞩ</p>
                 {% if is_owner or is_gm %}
                     <a style="font-size: 12px;" href="{% url 'characters:character_update' char.pk %}">редактировать</a>
                 {% endif %}
@@ -497,4 +511,8 @@
             });
         });
     </script>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/toggle-trade.js' %}"></script>
 {% endblock %}
