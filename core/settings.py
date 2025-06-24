@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'magic',
     'character',
     'worlds',
-    'maps'
+    'maps',
+    'shops',
 ]
 AUTH_USER_MODEL = "accounts.User"
 
