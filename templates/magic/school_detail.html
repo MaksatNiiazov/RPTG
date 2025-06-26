@@ -15,7 +15,7 @@
         <div class="school-title-wrapper">
             <h1 class="school-title">
                 <span class="school-icon">
-                    <img src="{{ school.icon.url }}" alt="{{ school.name }}" width="40" height="40">
+                    <img src="{% if school.icon %}{{ school.icon.url }}{% endif %}" alt="{{ school.name }}" width="40" height="40">
                 </span>
                 {{ school.name }}
             </h1>
