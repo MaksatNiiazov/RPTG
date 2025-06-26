@@ -10,7 +10,6 @@ app_name = "characters"
 urlpatterns = [
     path('classes/', ClassListView.as_view(), name='class_list'),
     path('talents/', TalentListView.as_view(), name='talent_list'),
-
     path("create/<int:world_pk>/", CharacterCreateView.as_view(), name="character_create"),
     path("update/<int:pk>/", CharacterUpdateView.as_view(), name='character_update'),
     path("<int:pk>/", CharacterDetailView.as_view(), name="character_detail"),
