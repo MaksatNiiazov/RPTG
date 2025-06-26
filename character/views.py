@@ -271,7 +271,7 @@ class CharacterInventoryView(LoginRequiredMixin, DetailView):
     #
     def get(self, request, *args, **kwargs):
         obj = self.get_object()
-        if obj.owner != request.user:
+        if not (obj.owner == request.user or (obj.world and obj.world.creator == request.user)):
             messages.error(request, "Нет доступа")
             return redirect("characters:character_detail", pk=obj.pk)
         return super().get(request, *args, **kwargs)
@@ -342,7 +342,7 @@ class EquipItemView(LoginRequiredMixin, View):
 
 class UnequipSlotView(LoginRequiredMixin, View):
     def post(self, request, character_id, slot):
-        character = get_object_or_404(Character, id=character_id, owner=request.user)
+        character = get_object_or_404(Character, id=character_id)
         is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
 
         try:
@@ -365,7 +365,7 @@ class UnequipSlotView(LoginRequiredMixin, View):
 
 class DropItemView(LoginRequiredMixin, View):
     def post(self, request, character_id, item_id):
-        character = get_object_or_404(Character, id=character_id, owner=request.user)
+        character = get_object_or_404(Character, id=character_id)
         item = get_object_or_404(Item, id=item_id)
         is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
 
