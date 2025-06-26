@@ -20,7 +20,6 @@ class ClassListView(LoginRequiredMixin, ListView):
     model = CharacterClass
     template_name = 'characters/class_list.html'
     context_object_name = 'classes'
-    paginate_by = 10
 
     def get_queryset(self):
         queryset = super().get_queryset()
