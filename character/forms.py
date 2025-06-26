@@ -84,3 +84,11 @@ class LevelUpForm(forms.Form):
     ]
     stat = forms.ChoiceField(choices=STAT_CHOICES, label="Характеристика")
     points = forms.IntegerField(min_value=1, label="Очков для прокачки")
+
+
+class GoldDeltaForm(forms.Form):
+    delta = forms.IntegerField(
+        label="Изменить золото",
+        help_text="Введите положительное или отрицательное число",
+        widget=forms.NumberInput(attrs={"placeholder": "Например, 1000 или -200"})
+    )

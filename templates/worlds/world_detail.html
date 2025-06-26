@@ -101,6 +101,7 @@
                                         Разрешить торговлю
                                     {% endif %}
                                 </a>
+                                <a href="{% url 'characters:change-gold' char.pk %}" class="btn-gm">Деньги</a>
 
                                 <div class="gm-actions">
                                     <a href="{% url 'worlds:world-grant-points' world.pk char.pk %}" class="btn-gm">

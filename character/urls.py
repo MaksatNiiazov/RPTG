@@ -3,7 +3,7 @@ from django.urls import path
 from .views import CharacterCreateView, CharacterDetailView, CharacterInventoryView, \
     UnequipSlotView, EquipItemView, DropItemView, LevelUpView, CharacterUpdateView, ChestDetailView, ToggleNpcFlagView, \
     AjaxAdjustHpView, AjaxAdjustCpView, AjaxAdjustTokenView, CharacterDeleteView, ClassListView, TalentListView, \
-    toggle_can_trade
+    toggle_can_trade, CharacterGoldDeltaView
 
 app_name = "characters"
 
@@ -26,5 +26,6 @@ urlpatterns = [
     path('characters/<int:pk>/adjust-cp/', AjaxAdjustCpView.as_view(), name='ajax_adjust_cp'),
     path('character/<int:pk>/adjust-token/', AjaxAdjustTokenView.as_view(), name='ajax_adjust_token'),
     path("character/<int:char_id>/toggle-trade/", toggle_can_trade, name="toggle-can-trade"),
+    path("characters/<int:pk>/change-gold/", CharacterGoldDeltaView.as_view(), name="change-gold"),
 
 ]

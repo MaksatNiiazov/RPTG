@@ -34,6 +34,19 @@
                     </svg>
                     Предмет
                 </a>
+
+<a href="{% url 'characters:change-gold' char.pk %}" class="btn">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="8"/>
+        <circle cx="12" cy="12" r="4"/>
+        <line x1="3" y1="3" x2="5" y2="5"/>
+        <line x1="19" y1="3" x2="21" y2="5"/>
+        <line x1="3" y1="21" x2="5" y2="19"/>
+        <line x1="19" y1="21" x2="21" y2="19"/>
+    </svg>
+    Деньги
+</a>
+
                 <br>
                 <a href="#"
                    data-url="{% url 'characters:toggle-can-trade' char.pk %}"
@@ -56,6 +69,7 @@
             <div>
                 <img
                         src="
+
                                 {% if char.image %}{{ char.image.url }}{% else %}{% static 'images/characters/placeholder.png' %}{% endif %}"
                         alt="{{ char.name }}" class="character-image">
                 <br>

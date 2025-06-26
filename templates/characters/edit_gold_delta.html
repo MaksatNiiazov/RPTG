@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Cinzel+Decorative&display=swap');
+
+  body {
+    background-color: #f3e9d8;
+    background-image: url('https://www.transparenttextures.com/patterns/old-paper.png');
+  }
+
+  .parchment-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #f8f1e0;
+    background-image: url('https://www.transparenttextures.com/patterns/old-paper.png');
+    border: 1px solid #d4b483;
+    border-radius: 0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2),
+                inset 0 0 30px rgba(139, 69, 19, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .parchment-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(212, 180, 131, 0.1) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+
+  .form-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.8rem;
+    color: #5c2c0c;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    text-shadow: 1px 1px 2px rgba(92, 44, 12, 0.3);
+    border-bottom: 2px solid #d4b483;
+    padding-bottom: 0.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.2rem;
+  }
+
+  .form-label {
+    display: block;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1rem;
+    color: #5c2c0c;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.5px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #b38b6d;
+    border-radius: 2px;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1rem;
+    color: #3a2613;
+    background-color: rgba(255, 255, 255, 0.7);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: #8b4513;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 5px rgba(139, 69, 19, 0.3);
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px dashed #b38b6d;
+  }
+
+  .btn {
+    font-family: 'IM Fell English SC', serif;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 2px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary {
+    background-color: #8b4513;
+    color: #f8f1e0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-primary:hover {
+    background-color: #6b3410;
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    color: #8b4513;
+    border: 1px solid #8b4513;
+  }
+
+  .btn-secondary:hover {
+    background-color: rgba(139, 69, 19, 0.1);
+  }
+
+  .form-help {
+    font-size: 0.75rem;
+    color: #8b4513;
+    font-style: italic;
+    margin-top: 0.3rem;
+  }
+
+  .form-error {
+    font-size: 0.75rem;
+    color: #a52a2a;
+    margin-top: 0.3rem;
+    font-family: 'IM Fell English SC', serif;
+  }
+
+  /* Декоративные элементы */
+  .corner-decoration {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    opacity: 0.3;
+  }
+
+  .corner-tl {
+    top: 10px;
+    left: 10px;
+    border-top: 2px solid #8b4513;
+    border-left: 2px solid #8b4513;
+  }
+
+  .corner-tr {
+    top: 10px;
+    right: 10px;
+    border-top: 2px solid #8b4513;
+    border-right: 2px solid #8b4513;
+  }
+
+  .corner-bl {
+    bottom: 10px;
+    left: 10px;
+    border-bottom: 2px solid #8b4513;
+    border-left: 2px solid #8b4513;
+  }
+
+  .corner-br {
+    bottom: 10px;
+    right: 10px;
+    border-bottom: 2px solid #8b4513;
+    border-right: 2px solid #8b4513;
+  }
+</style>
+
+<div class="parchment-container">
+  <div class="corner-decoration corner-tl"></div>
+  <div class="corner-decoration corner-tr"></div>
+  <div class="corner-decoration corner-bl"></div>
+  <div class="corner-decoration corner-br"></div>
+
+  <h2 class="form-title">Денежные изменения: {{ char.name }}</h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    {% for field in form %}
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}" class="form-label">
+          {{ field.label }}
+        </label>
+        {{ field }}
+        {% if field.help_text %}
+          <p class="form-help">{{ field.help_text }}</p>
+        {% endif %}
+        {% for error in field.errors %}
+          <p class="form-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        Сохранить изменения
+      </button>
+      <a href="{% url 'characters:character_detail' char.pk %}" class="btn btn-secondary">
+        Отложить
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

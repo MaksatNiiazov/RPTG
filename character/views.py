@@ -12,7 +12,7 @@ from django.views.generic import CreateView, DetailView, UpdateView, DeleteView,
 
 from items.models import Item
 from worlds.models import World
-from .forms import CharacterForm, LevelUpForm, CharacterUpdateForm
+from .forms import CharacterForm, LevelUpForm, CharacterUpdateForm, GoldDeltaForm
 from .models import Character, InventoryItem, Equipment, ChestInstance, CharacterClass, Talent
 
 
@@ -578,9 +578,6 @@ class AjaxAdjustTokenView(LoginRequiredMixin, View):
         })
 
 
-
-
-
 @require_POST
 @login_required
 def toggle_can_trade(request, char_id):
@@ -598,3 +595,35 @@ def toggle_can_trade(request, char_id):
         "status": "ok",
         "new_value": character.can_trade
     })
+
+
+class CharacterGoldDeltaView(LoginRequiredMixin, View):
+    template_name = "characters/edit_gold_delta.html"
+
+    def get(self, request, pk):
+        char = get_object_or_404(Character, pk=pk)
+        if not self._has_access(request.user, char):
+            messages.error(request, "Нет доступа к изменению золота.")
+            return redirect("characters:character_detail", pk=pk)
+
+        form = GoldDeltaForm()
+        return render(request, self.template_name, {"form": form, "char": char})
+
+    def post(self, request, pk):
+        char = get_object_or_404(Character, pk=pk)
+        if not self._has_access(request.user, char):
+            messages.error(request, "Нет доступа к изменению золота.")
+            return redirect("characters:character_detail", pk=pk)
+
+        form = GoldDeltaForm(request.POST)
+        if form.is_valid():
+            delta = form.cleaned_data["delta"]
+            char.gold = max(0, char.gold + delta)
+            char.save(update_fields=["gold"])
+            messages.success(request, f"Золото успешно изменено. Теперь у {char.name} {char.gold} золота.")
+            return redirect("characters:character_detail", pk=char.pk)
+
+        return render(request, self.template_name, {"form": form, "char": char})
+
+    def _has_access(self, user, char):
+        return char.owner == user or (char.world and char.world.creator == user)
