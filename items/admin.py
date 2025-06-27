@@ -24,8 +24,8 @@ class TypeAdmin(ModelAdmin):
 class ItemAdmin(ModelAdmin, ImportExportModelAdmin):
     import_form_class = ImportForm
     export_form_class = ExportForm
-    list_display = ("name", "type", "rarity", "bonus", "weight", "legendary_buff")
+    list_display = ("name", "type", "rarity", "bonus", "weight", "price")
     list_filter = ("type", "rarity")
-    list_editable = ("bonus", "weight","legendary_buff")
+    list_editable = ("bonus", "weight", "price",)
     search_fields = ("name", "bonus")
     prepopulated_fields = {"slug": ("name",)}
