@@ -1,6 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
 
 from accounts.models import User
 from character.utils.character_utils import CharacterGetUtils
@@ -570,3 +572,13 @@ class ChestInstance(models.Model):
         inst = cls.objects.create(character=character)
         inst.items.set(loot)
         return inst
+
+
+@receiver([post_save, post_delete], sender=Equipment)
+@receiver([post_save, post_delete], sender=InventoryItem)
+@receiver(post_save, sender=Character)
+def clear_character_cache(sender, instance, **kwargs):
+    if hasattr(instance, 'character'):
+        instance.character.clear_cache()
+    elif isinstance(instance, Character):
+        instance.clear_cache()
