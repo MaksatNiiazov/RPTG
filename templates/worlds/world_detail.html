@@ -104,13 +104,13 @@
                                                     Разрешить торговлю
                                                 {% endif %}
                                             </span>
-                                            <span class="toggle-trade-status" aria-live="polite">
-                                                {% if char.can_trade %}
-                                                    Торговля разрешена
-                                                {% else %}
-                                                    Торговля запрещена
-                                                {% endif %}
-                                            </span>
+{#                                            <span class="toggle-trade-status" aria-live="polite">#}
+{#                                                {% if char.can_trade %}#}
+{#                                                    Торговля разрешена#}
+{#                                                {% else %}#}
+{#                                                    Торговля запрещена#}
+{#                                                {% endif %}#}
+{#                                            </span>#}
                                         </span>
                                     </a>
                                     <a href="{% url 'characters:change-gold' char.pk %}" class="btn-gm">
