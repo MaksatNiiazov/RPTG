@@ -237,6 +237,72 @@ a:hover {
     opacity: 1;
 }
 
+.toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    background: rgba(62, 47, 27, 0.92);
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    font-size: 0.95rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 1100;
+    pointer-events: none;
+}
+
+.toast-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-success {
+    background: rgba(46, 204, 113, 0.95);
+}
+
+.toast-error {
+    background: rgba(231, 76, 60, 0.95);
+}
+
+.toast-info {
+    background: rgba(64, 115, 158, 0.95);
+}
+
+.toast::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.65;
+    margin-right: 0.35rem;
+}
+
+.toast-success::before {
+    background: #1e8449;
+}
+
+.toast-error::before {
+    background: #c0392b;
+}
+
+.toast-info::before {
+    background: #2c3e50;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast {
+        transition: opacity 0.01ms linear;
+    }
+}
+
 /* 6. CARDS & TABLES */
 .card {
     background: var(--color-card);
