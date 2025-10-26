@@ -137,6 +137,11 @@ class Character(models.Model, CharacterGetUtils):
     max_armor_weight = models.FloatField("Макс. вес доспехов", editable=False)
     gold = models.PositiveIntegerField("Золото", default=0)
     can_trade = models.BooleanField("Может торговать", default=False)
+    home_storage_enabled = models.BooleanField(
+        "Домашнее хранилище разрешено",
+        default=False,
+        help_text="Если включено ГМ, персонаж может складывать вещи в личное хранилище",
+    )
 
     # Системные поля
     created_at = models.DateTimeField(auto_now_add=True)
@@ -474,6 +479,26 @@ class InventoryItem(models.Model):
         return f"{self.character.name}: {self.quantity}× {self.item.name}"
 
 
+class HomeInventoryItem(models.Model):
+    character = models.ForeignKey(
+        Character,
+        on_delete=models.CASCADE,
+        related_name="home_storage_items",
+        verbose_name="Персонаж",
+    )
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='+', verbose_name="Предмет")
+    quantity = models.PositiveIntegerField("Кол-во", default=1)
+    created_at = models.DateTimeField("Добавлено", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Предмет в домашнем хранилище"
+        verbose_name_plural = "Домашнее хранилище"
+        ordering = ["item__name"]
+
+    def __str__(self):
+        return f"Склад {self.character.name}: {self.quantity}× {self.item.name}"
+
+
 class Equipment(models.Model):
     character = models.OneToOneField(Character, on_delete=models.CASCADE, related_name="equipment")
 
@@ -576,6 +601,7 @@ class ChestInstance(models.Model):
 
 @receiver([post_save, post_delete], sender=Equipment)
 @receiver([post_save, post_delete], sender=InventoryItem)
+@receiver([post_save, post_delete], sender=HomeInventoryItem)
 @receiver(post_save, sender=Character)
 def clear_character_cache(sender, instance, **kwargs):
     if hasattr(instance, 'character'):
