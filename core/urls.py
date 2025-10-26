@@ -20,6 +20,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
+from character.views import (
+    StoreItemInHomeView,
+    RetrieveItemFromHomeView,
+    DeleteItemFromHomeView,
+)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 
@@ -28,6 +34,21 @@ urlpatterns = [
     path('rulebook/', include('rulebook.urls')),
     path('items/', include('items.urls')),
     path('magic/', include('magic.urls')),
+    path(
+        "characters/<int:character_id>/storage/store/<int:item_id>/",
+        StoreItemInHomeView.as_view(),
+        name="home-storage-store",
+    ),
+    path(
+        "characters/<int:character_id>/storage/retrieve/<int:item_id>/",
+        RetrieveItemFromHomeView.as_view(),
+        name="home-storage-retrieve",
+    ),
+    path(
+        "characters/<int:character_id>/storage/delete/<int:item_id>/",
+        DeleteItemFromHomeView.as_view(),
+        name="home-storage-delete",
+    ),
     path("characters/", include("character.urls")),
     path("worlds/", include("worlds.urls")),
     path("maps/", include("maps.urls")),
