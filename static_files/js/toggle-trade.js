@@ -2,10 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const toggleBtns = document.querySelectorAll(".toggle-trade-btn");
 
     toggleBtns.forEach((toggleBtn) => {
-        const currentAttr = toggleBtn.dataset.current;
-        const initialState =
-            currentAttr === "1" ||
-            (currentAttr === undefined && toggleBtn.getAttribute("aria-pressed") === "true");
+        const initialState = toggleBtn.dataset.current === "1";
         updateTradeButton(toggleBtn, initialState);
 
         toggleBtn.addEventListener("click", async (event) => {

@@ -57,10 +57,18 @@
                     </svg>
                     <span class="toggle-trade-text">
                         <span class="toggle-trade-label">
-                            {{ char.can_trade|yesno:'Запретить торговлю,Разрешить торговлю' }}
+                            {% if char.can_trade %}
+                                Запретить торговлю
+                            {% else %}
+                                Разрешить торговлю
+                            {% endif %}
                         </span>
                         <span class="toggle-trade-status" aria-live="polite">
-                            {{ char.can_trade|yesno:'Торговля разрешена,Торговля запрещена' }}
+                            {% if char.can_trade %}
+                                Торговля разрешена
+                            {% else %}
+                                Торговля запрещена
+                            {% endif %}
                         </span>
                     </span>
                 </a>

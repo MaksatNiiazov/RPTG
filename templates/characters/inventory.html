@@ -109,6 +109,13 @@
                                 {% csrf_token %}
                                 <button class="btn-inventory btn-drop">Выбросить</button>
                             </form>
+                            {% if can_use_home_storage %}
+                                <form class="storage-form" method="post"
+                                      action="{% url 'characters:home-storage-store' char.id entry.item.id %}">
+                                    {% csrf_token %}
+                                    <button class="btn-inventory btn-store">В хранилище</button>
+                                </form>
+                            {% endif %}
                         </td>
                     </tr>
                 {% empty %}
@@ -142,6 +149,70 @@
             </td>
         </tr>
     </template>
+    <div class="home-storage-controls">
+        {% if can_toggle_home_storage %}
+            <form method="post" action="{% url 'characters:home-storage-toggle' char.id %}">
+                {% csrf_token %}
+                {% if home_storage_enabled %}
+                    <button class="btn">Отключить домашнее хранилище</button>
+                {% else %}
+                    <button class="btn">Разрешить домашнее хранилище</button>
+                {% endif %}
+            </form>
+        {% endif %}
+    </div>
+
+    {% if home_storage_enabled %}
+        <div class="inventory-section home-storage">
+            <h2>Домашнее хранилище</h2>
+            {% if home_storage_items %}
+                <table class="item-table">
+                    <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Кол-во</th>
+                        <th>Бонус</th>
+                        <th>Вес</th>
+                        <th>Легендарный баф</th>
+                        <th>Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for entry in home_storage_items %}
+                        <tr>
+                            <td class="name-cell"><span
+                                    style="border-left: 6px solid {{ entry.item.rarity.color }}; padding-left: 6px">{{ entry.item.name }}</span>
+                            </td>
+                            <td class="quantity-cell">{{ entry.quantity }}</td>
+                            <td class="bonus-cell">+{{ entry.item.bonus }}</td>
+                            <td class="weight-cell">{{ entry.item.weight }} кг</td>
+                            <td class="legendary-cell">
+                                {% if entry.item.legendary_buff %}{{ entry.item.legendary_buff }}{% else %}—{% endif %}
+                            </td>
+                            <td class="td-buttons">
+                                {% if can_use_home_storage %}
+                                    <form class="storage-form" method="post"
+                                          action="{% url 'characters:home-storage-retrieve' char.id entry.item.id %}">
+                                        {% csrf_token %}
+                                        <button class="btn-inventory btn-store">Забрать</button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted">Недоступно</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Хранилище пусто.</p>
+            {% endif %}
+        </div>
+    {% else %}
+        {% if can_toggle_home_storage %}
+            <p class="text-muted">Домашнее хранилище сейчас отключено.</p>
+        {% endif %}
+    {% endif %}
     <h2>Сундуки</h2>
     {% if char.chests.exists %}
         {% for chest in char.chests.all %}
