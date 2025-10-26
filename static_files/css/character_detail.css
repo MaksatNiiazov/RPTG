@@ -159,6 +159,31 @@
     transition: all 0.2s;
 }
 
+.toggle-trade-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toggle-trade-btn[aria-busy="true"] {
+    opacity: 0.6;
+    pointer-events: none;
+    cursor: progress;
+}
+
+.toggle-trade-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+}
+
+.toggle-trade-status {
+    font-size: 0.75rem;
+    color: var(--medium-text);
+    opacity: 0.85;
+}
+
 .tab:hover {
     color: var(--primary);
 }

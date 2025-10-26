@@ -113,9 +113,6 @@
                                 <form class="storage-form" method="post"
                                       action="{% url 'characters:home-storage-store' char.id entry.item.id %}">
                                     {% csrf_token %}
-                                    <input id="store-quantity-{{ entry.item.id }}" type="number" name="quantity" min="1"
-                                           max="{{ entry.quantity }}" value="1" class="storage-quantity-input"
-                                           aria-label="Количество">
                                     <button class="btn-inventory btn-store">В хранилище</button>
                                 </form>
                             {% endif %}
@@ -194,24 +191,11 @@
                             </td>
                             <td class="td-buttons">
                                 {% if can_use_home_storage %}
-                                    <div class="storage-actions">
-                                        <form class="storage-form" method="post"
-                                              action="{% url 'characters:home-storage-retrieve' char.id entry.item.id %}">
-                                            {% csrf_token %}
-                                            <input id="retrieve-quantity-{{ entry.item.id }}" type="number" name="quantity"
-                                                   min="1" max="{{ entry.quantity }}" value="1"
-                                                   class="storage-quantity-input" aria-label="Количество">
-                                            <button class="btn-inventory btn-store">Забрать</button>
-                                        </form>
-                                        <form class="storage-form" method="post"
-                                              action="{% url 'characters:home-storage-delete' char.id entry.item.id %}">
-                                            {% csrf_token %}
-                                            <input id="delete-quantity-{{ entry.item.id }}" type="number" name="quantity"
-                                                   min="1" max="{{ entry.quantity }}" value="{{ entry.quantity }}"
-                                                   class="storage-quantity-input" aria-label="Количество">
-                                            <button class="btn-inventory btn-drop">Удалить</button>
-                                        </form>
-                                    </div>
+                                    <form class="storage-form" method="post"
+                                          action="{% url 'characters:home-storage-retrieve' char.id entry.item.id %}">
+                                        {% csrf_token %}
+                                        <button class="btn-inventory btn-store">Забрать</button>
+                                    </form>
                                 {% else %}
                                     <span class="text-muted">Недоступно</span>
                                 {% endif %}
