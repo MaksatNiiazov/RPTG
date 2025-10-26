@@ -143,22 +143,7 @@
   border: 1px solid #9a7341;
   box-shadow: 0 6px 12px rgba(0,0,0,0.12);
 }
-.inventory-section.home-storage::before,
-.inventory-section.home-storage::after {
-  content: "";
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  height: 6px;
-  background: rgba(94, 62, 33, 0.35);
-  border-radius: 3px;
-}
-.inventory-section.home-storage::before {
-  top: 14px;
-}
-.inventory-section.home-storage::after {
-  bottom: 14px;
-}
+
 .inventory-section.home-storage h2 {
   color: #2f1d0f;
   letter-spacing: 0.03em;

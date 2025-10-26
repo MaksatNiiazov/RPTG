@@ -23,7 +23,6 @@ from django.views.generic import TemplateView
 from character.views import (
     StoreItemInHomeView,
     RetrieveItemFromHomeView,
-    DeleteItemFromHomeView,
 )
 
 urlpatterns = [
@@ -44,11 +43,7 @@ urlpatterns = [
         RetrieveItemFromHomeView.as_view(),
         name="home-storage-retrieve",
     ),
-    path(
-        "characters/<int:character_id>/storage/delete/<int:item_id>/",
-        DeleteItemFromHomeView.as_view(),
-        name="home-storage-delete",
-    ),
+
     path("characters/", include("character.urls")),
     path("worlds/", include("worlds.urls")),
     path("maps/", include("maps.urls")),

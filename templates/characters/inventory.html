@@ -22,7 +22,7 @@
          data-sell-base="{% if char.can_trade %}{% url 'shops:ajax-sell-item' char.id 0 %}{% endif %}"
          data-storage-store-base="{% url 'characters:home-storage-store' char.id 0 %}"
          data-storage-retrieve-base="{% url 'characters:home-storage-retrieve' char.id 0 %}"
-         data-storage-delete-base="{% url 'characters:home-storage-delete' char.id 0 %}"
+{#         data-storage-delete-base="{% url 'characters:home-storage-delete' char.id 0 %}"#}
          data-can-trade="{{ char.can_trade|yesno:'true,false' }}"
          data-can-use-storage="{{ can_use_home_storage|yesno:'true,false' }}">
 
@@ -167,6 +167,7 @@
             </form>
         {% endif %}
     </div>
+    <br>
 
     {% if home_storage_enabled %}
         <div class="inventory-section home-storage">
