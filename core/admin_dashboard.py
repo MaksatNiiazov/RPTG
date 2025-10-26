@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import timedelta
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from django.contrib import admin
 from django.db.models import Count
@@ -93,7 +93,7 @@ def _build_character_growth() -> tuple[str, str]:
     return json.dumps(chart_data), json.dumps(chart_options)
 
 
-def _build_stats() -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
+def _build_stats() -> List[Dict[str, Any]]:
     total_users = User.objects.count()
     active_users = User.objects.filter(is_active=True).count()
 
@@ -110,7 +110,7 @@ def _build_stats() -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
         created_at__gte=timezone.now() - timedelta(days=7)
     ).count()
 
-    stats = [
+    return [
         {
             "label": _("Пользователи"),
             "value": total_users,
@@ -138,19 +138,6 @@ def _build_stats() -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
         },
     ]
 
-    metrics = {
-        "total_users": total_users,
-        "active_users": active_users,
-        "total_characters": total_characters,
-        "new_characters_week": new_characters_week,
-        "total_worlds": total_worlds,
-        "pending_invitations": pending_invitations,
-        "total_items": total_items,
-        "new_items_week": new_items_week,
-    }
-
-    return stats, metrics
-
 
 def _build_worlds() -> List[World]:
     return list(
@@ -160,92 +147,6 @@ def _build_worlds() -> List[World]:
         )
         .order_by("-created_at")[:5]
     )
-
-
-def _build_recent_activity() -> List[Dict[str, Any]]:
-    entries: List[Dict[str, Any]] = []
-
-    for character in (
-        Character.objects.select_related("world")
-        .order_by("-created_at")
-        .only("name", "created_at", "world__name")[:4]
-    ):
-        entries.append(
-            {
-                "title": character.name,
-                "subtitle": _("Персонаж")
-                + (
-                    f" · {character.world.name}"
-                    if getattr(character, "world", None)
-                    else ""
-                ),
-                "icon": "stadia_controller",
-                "accent": "text-primary-500 dark:text-primary-300",
-                "timestamp": character.created_at,
-            }
-        )
-
-    for item in (
-        Item.objects.select_related("rarity", "type")
-        .order_by("-created_at")
-        .only("name", "created_at", "rarity__name", "type__name")[:4]
-    ):
-        details: List[str] = []
-        if getattr(item, "rarity", None):
-            details.append(item.rarity.name)
-        if getattr(item, "type", None):
-            details.append(item.type.name)
-        subtitle = _("Предмет")
-        if details:
-            subtitle = f"{subtitle} · {' · '.join(details)}"
-
-        entries.append(
-            {
-                "title": item.name,
-                "subtitle": subtitle,
-                "icon": "inventory_2",
-                "accent": "text-amber-500 dark:text-amber-300",
-                "timestamp": item.created_at,
-            }
-        )
-
-    for world in World.objects.order_by("-created_at").only("name", "created_at")[:4]:
-        entries.append(
-            {
-                "title": world.name,
-                "subtitle": _("Мир"),
-                "icon": "public",
-                "accent": "text-secondary-500 dark:text-secondary-300",
-                "timestamp": world.created_at,
-            }
-        )
-
-    entries.sort(key=lambda entry: entry.get("timestamp") or timezone.now(), reverse=True)
-
-    return entries[:6]
-
-
-def _build_summary(metrics: Dict[str, int]) -> Dict[str, str]:
-    return {
-        "subtitle": _("Панель управления"),
-        "title": _("Мастерская приключений"),
-        "description": _(
-            "%(worlds)s миров, %(characters)s персонажей и %(items)s предметов готовы к обновлениям."
-        )
-        % {
-            "worlds": metrics["total_worlds"],
-            "characters": metrics["total_characters"],
-            "items": metrics["total_items"],
-        },
-        "note": _(
-            "За неделю создано %(characters)s персонажей и %(items)s предметов, активных игроков: %(users)s."
-        )
-        % {
-            "characters": metrics["new_characters_week"],
-            "items": metrics["new_items_week"],
-            "users": metrics["active_users"],
-        },
-    }
 
 
 def _build_quick_links() -> List[Dict[str, str]]:
@@ -279,15 +180,9 @@ def _build_quick_links() -> List[Dict[str, str]]:
 
 def build_dashboard_context() -> Dict[str, Any]:
     chart_data, chart_options = _build_character_growth()
-    stats, metrics = _build_stats()
 
     return {
-        "dashboard_stats": stats,
-        "dashboard_summary": _build_summary(metrics),
-        "weekly_highlights": {
-            "characters": metrics["new_characters_week"],
-            "items": metrics["new_items_week"],
-        },
+        "dashboard_stats": _build_stats(),
         "character_growth_data": chart_data,
         "character_growth_options": chart_options,
         "dashboard_worlds": _build_worlds(),
@@ -296,7 +191,6 @@ def build_dashboard_context() -> Dict[str, Any]:
         "latest_items": Item.objects.select_related("rarity", "type")
         .order_by("-created_at")[:5],
         "quick_links": _build_quick_links(),
-        "recent_activity": _build_recent_activity(),
     }
 
 
