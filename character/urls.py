@@ -3,7 +3,8 @@ from django.urls import path
 from .views import CharacterCreateView, CharacterDetailView, CharacterInventoryView, \
     UnequipSlotView, EquipItemView, DropItemView, LevelUpView, CharacterUpdateView, ChestDetailView, ToggleNpcFlagView, \
     AjaxAdjustHpView, AjaxAdjustCpView, AjaxAdjustTokenView, CharacterDeleteView, ClassListView, TalentListView, \
-    toggle_can_trade, CharacterGoldDeltaView
+    toggle_can_trade, CharacterGoldDeltaView, StoreItemInHomeView, RetrieveItemFromHomeView, ToggleHomeStorageView, \
+    DeleteItemFromHomeView
 
 app_name = "characters"
 
@@ -18,6 +19,26 @@ urlpatterns = [
     path("characters/<int:character_id>/equip/<int:item_id>/", EquipItemView.as_view(), name="equip-item"),
     path("characters/<int:character_id>/unequip/<str:slot>/", UnequipSlotView.as_view(), name="unequip-slot"),
     path("characters/<int:character_id>/drop/<int:item_id>/", DropItemView.as_view(), name="drop-item"),
+    path(
+        "characters/<int:character_id>/storage/store/<int:item_id>/",
+        StoreItemInHomeView.as_view(),
+        name="home-storage-store",
+    ),
+    path(
+        "characters/<int:character_id>/storage/retrieve/<int:item_id>/",
+        RetrieveItemFromHomeView.as_view(),
+        name="home-storage-retrieve",
+    ),
+    path(
+        "characters/<int:character_id>/storage/delete/<int:item_id>/",
+        DeleteItemFromHomeView.as_view(),
+        name="home-storage-delete",
+    ),
+    path(
+        "characters/<int:character_id>/storage/toggle/",
+        ToggleHomeStorageView.as_view(),
+        name="home-storage-toggle",
+    ),
     path('level-up/<int:character_id>/', LevelUpView.as_view(), name='level-up'),
     path('chest/<int:instance_pk>/', ChestDetailView.as_view(), name='chest-detail'),
     path('npc-settings/<int:char_id>/', ToggleNpcFlagView.as_view(), name='toggle-npc-flag'),
