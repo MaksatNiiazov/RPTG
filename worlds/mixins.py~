@@ -1,0 +1,25 @@
+# worlds/mixins.py
+
+from django.shortcuts import redirect
+from django.core.exceptions import PermissionDenied
+
+
+class WorldAccessMixin:
+    """
+    Проверяет, что пользователь либо является GM мира, либо у него есть в этом мире хотя бы один Character.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        world = self.get_object()  # для DetailView
+        user = request.user
+        # если аноним — сразу отказ
+        if not user.is_authenticated:
+            return redirect("accounts:login")
+        # GM всегда может
+        if world.creator == user:
+            return super().dispatch(request, *args, **kwargs)
+        # иначе проверяем, есть ли у него персонажи в этом мире
+        if world.characters.filter(creator=user).exists():
+            return super().dispatch(request, *args, **kwargs)
+        # иначе — нет доступа
+        raise PermissionDenied

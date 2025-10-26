@@ -11,7 +11,7 @@
 {% block content %}
     <h1>Инвентарь: <a href="{% url 'characters:character_detail' char.id %}">{{ char.name }}</a></h1>
     <p><strong>Соллиды:</strong> <span id="char-gold">{{ char.gold }} Ꞩ</span></p>
-    <p><strong>Нагрузка:</strong> <span id="char-gold">{{ char.get_current_load.total_weight }} / {{ char.get_current_load.carry_capacity }} кг</span></p>
+    <p><strong>Нагрузка:</strong> <span id="char-load">{{ char.get_current_load.total_weight }} / {{ char.get_current_load.carry_capacity }} кг</span></p>
 {#    <p>{{ char.get_current_load }}</p>#}
 
     <div class="inventory-layout"
@@ -117,13 +117,8 @@
                             </form>
                             {% if can_use_home_storage %}
                                 <form class="storage-form" method="post"
-                                      data-storage-action="store"
-                                      data-item-id="{{ entry.item.id }}"
                                       action="{% url 'characters:home-storage-store' char.id entry.item.id %}">
                                     {% csrf_token %}
-                                    <input id="store-quantity-{{ entry.item.id }}" type="number" name="quantity" min="1"
-                                           max="{{ entry.quantity }}" value="1" class="storage-quantity-input"
-                                           aria-label="Количество">
                                     <button class="btn-inventory btn-store">В хранилище</button>
                                 </form>
                             {% endif %}
@@ -160,29 +155,6 @@
             </td>
         </tr>
     </template>
-    <template id="storage-row-template">
-        <tr class="storage-row" data-item-id="">
-            <td class="name-cell"></td>
-            <td class="quantity-cell"></td>
-            <td class="bonus-cell"></td>
-            <td class="weight-cell"></td>
-            <td class="legendary-cell"></td>
-            <td class="td-buttons">
-                <div class="storage-actions">
-                    <form class="storage-form" method="post" data-storage-action="retrieve" data-item-id="">
-                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                        <input type="number" name="quantity" min="1" value="1" class="storage-quantity-input" aria-label="Количество">
-                        <button class="btn-inventory btn-store">Забрать</button>
-                    </form>
-                    <form class="storage-form" method="post" data-storage-action="delete" data-item-id="">
-                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                        <input type="number" name="quantity" min="1" value="1" class="storage-quantity-input" aria-label="Количество">
-                        <button class="btn-inventory btn-drop">Удалить</button>
-                    </form>
-                </div>
-            </td>
-        </tr>
-    </template>
     <div class="home-storage-controls">
         {% if can_toggle_home_storage %}
             <form method="post" action="{% url 'characters:home-storage-toggle' char.id %}">
@@ -199,21 +171,21 @@
     {% if home_storage_enabled %}
         <div class="inventory-section home-storage">
             <h2>Домашнее хранилище</h2>
-            <table class="item-table home-storage-table">
-                <thead>
-                <tr>
-                    <th>Название</th>
-                    <th>Кол-во</th>
-                    <th>Бонус</th>
-                    <th>Вес</th>
-                    <th>Легендарный баф</th>
-                    <th>Действия</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% if home_storage_items %}
+            {% if home_storage_items %}
+                <table class="item-table">
+                    <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Кол-во</th>
+                        <th>Бонус</th>
+                        <th>Вес</th>
+                        <th>Легендарный баф</th>
+                        <th>Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
                     {% for entry in home_storage_items %}
-                        <tr class="storage-row" data-item-id="{{ entry.item.id }}">
+                        <tr>
                             <td class="name-cell"><span
                                     style="border-left: 6px solid {{ entry.item.rarity.color }}; padding-left: 6px">{{ entry.item.name }}</span>
                             </td>
@@ -225,41 +197,22 @@
                             </td>
                             <td class="td-buttons">
                                 {% if can_use_home_storage %}
-                                    <div class="storage-actions">
-                                        <form class="storage-form" method="post"
-                                              data-storage-action="retrieve"
-                                              data-item-id="{{ entry.item.id }}"
-                                              action="{% url 'characters:home-storage-retrieve' char.id entry.item.id %}">
-                                            {% csrf_token %}
-                                            <input id="retrieve-quantity-{{ entry.item.id }}" type="number" name="quantity"
-                                                   min="1" max="{{ entry.quantity }}" value="1"
-                                                   class="storage-quantity-input" aria-label="Количество">
-                                            <button class="btn-inventory btn-store">Забрать</button>
-                                        </form>
-                                        <form class="storage-form" method="post"
-                                              data-storage-action="delete"
-                                              data-item-id="{{ entry.item.id }}"
-                                              action="{% url 'characters:home-storage-delete' char.id entry.item.id %}">
-                                            {% csrf_token %}
-                                            <input id="delete-quantity-{{ entry.item.id }}" type="number" name="quantity"
-                                                   min="1" max="{{ entry.quantity }}" value="{{ entry.quantity }}"
-                                                   class="storage-quantity-input" aria-label="Количество">
-                                            <button class="btn-inventory btn-drop">Удалить</button>
-                                        </form>
-                                    </div>
+                                    <form class="storage-form" method="post"
+                                          action="{% url 'characters:home-storage-retrieve' char.id entry.item.id %}">
+                                        {% csrf_token %}
+                                        <button class="btn-inventory btn-store">Забрать</button>
+                                    </form>
                                 {% else %}
                                     <span class="text-muted">Недоступно</span>
                                 {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
-                {% else %}
-                        <tr class="empty-row" data-empty="storage">
-                            <td colspan="6" class="empty-slot">Хранилище пусто.</td>
-                        </tr>
-                {% endif %}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Хранилище пусто.</p>
+            {% endif %}
         </div>
     {% else %}
         {% if can_toggle_home_storage %}

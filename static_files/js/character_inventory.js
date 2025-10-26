@@ -1,8 +1,15 @@
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.querySelector(".inventory-layout");
-    if (!container) return;
+    if (!container) {
+        return;
+    }
 
-    // создаём таб-бар
+    initInventoryTabs(container);
+    initInventoryActions(container);
+    initSellButtons();
+});
+
+function initInventoryTabs(container) {
     const tabs = document.createElement("div");
     tabs.className = "inventory-tabs";
 
@@ -19,13 +26,15 @@ document.addEventListener("DOMContentLoaded", () => {
     tabs.append(btnEquip, btnInv);
     container.parentNode.insertBefore(tabs, container);
 
-    // находим секции
-    const equipSection = container.querySelector(".inventory-section:nth-child(1)");
-    const invSection = container.querySelector(".inventory-section:nth-child(2)");
-    if (!equipSection || !invSection) return;
+    const sections = container.querySelectorAll(".inventory-section");
+    const equipSection = sections[0];
+    const invSection = sections[1];
 
-    // функция переключения
-    function activate(tab) {
+    if (!equipSection || !invSection) {
+        return;
+    }
+
+    const activate = (tab) => {
         if (tab === "equip") {
             btnEquip.classList.add("active");
             btnInv.classList.remove("active");
@@ -37,33 +46,32 @@ document.addEventListener("DOMContentLoaded", () => {
             invSection.classList.add("active");
             equipSection.classList.remove("active");
         }
-    }
+    };
 
-    // обработчики
     btnEquip.addEventListener("click", () => activate("equip"));
     btnInv.addEventListener("click", () => activate("inv"));
 
-    // при загрузке: на мобиле показываем экипировку по умолчанию
+    const showBoth = () => {
+        btnEquip.classList.remove("active");
+        btnInv.classList.remove("active");
+        equipSection.classList.add("active");
+        invSection.classList.add("active");
+    };
+
     if (window.innerWidth <= 800) {
         activate("equip");
     } else {
-        // на десктопе показываем обе секции
-        equipSection.classList.add("active");
-        invSection.classList.add("active");
+        showBoth();
     }
 
-    // при ресайзе: пересчитать
     window.addEventListener("resize", () => {
         if (window.innerWidth <= 800) {
             activate("equip");
         } else {
-            btnEquip.classList.remove("active");
-            btnInv.classList.remove("active");
-            equipSection.classList.add("active");
-            invSection.classList.add("active");
+            showBoth();
         }
     });
-});
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.querySelector(".inventory-layout");
@@ -86,7 +94,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const storageTableBody = document.querySelector(".home-storage-table tbody");
     const storageRowTemplate = document.getElementById("storage-row-template");
 
-    container.addEventListener("submit", async e => {
+    if (!csrfToken || !equipBase || !dropBase || !invTableBody) {
+        console.warn("Inventory script: missing required data attributes or CSRF token.");
+        return;
+    }
+
+    container.addEventListener("submit", async (e) => {
         const form = e.target;
 
         if (form.matches(".storage-form")) {
@@ -131,9 +144,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: {
                     "X-CSRFToken": csrfToken,
                     "X-Requested-With": "XMLHttpRequest",
-                    "Accept": "application/json"
+                    "Accept": "application/json",
                 },
-                body: new FormData(form)
+                body: new FormData(form),
             });
             const payload = await res.json();
             if (!res.ok || payload.status !== "ok") {
@@ -142,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const data = payload.data;
             if (form.matches(".equip-form")) {
-                const {slot, item} = data;
+                const { slot, item } = data;
                 const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
                 if (eqRow) {
                     eqRow.innerHTML = `
@@ -169,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             } else if (form.matches(".unequip-form")) {
-                const {slot, item} = data;
+                const { slot, item } = data;
                 const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
                 if (eqRow) {
                     eqRow.innerHTML = `
@@ -516,33 +529,51 @@ function initSellButtons(context = document) {
             const url = button.dataset.sellUrl;
             const row = button.closest("tr");
 
-            const itemName = row.querySelector(".name-cell").textContent.trim();
-            const quantity = row.querySelector(".quantity-cell").textContent.trim();
+            if (!url || !row) {
+                showToast("Не удалось определить товар для продажи.", "error");
+                return;
+            }
+
+            const itemName = row.querySelector(".name-cell")?.textContent.trim() || "";
+            const quantity = row.querySelector(".quantity-cell")?.textContent.trim() || "0";
 
             const priceText = button.textContent.match(/\d+/g)?.[0] || "?";
             const confirmText = `Продать ${itemName} за ${priceText} Ꞩ ?\nУ вас ${quantity} шт.`;
             if (!confirm(confirmText)) return;
 
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": getCsrfToken(),
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "ok") {
-                        updateInventoryRow(row, data.remaining);
-                        updateGoldDisplay(data.new_gold);
-                        showToast(data.message, "success");
-                    } else {
-                        showToast(data.message, "error");
-                    }
-                })
-                .catch(() => {
-                    showToast("Ошибка при отправке запроса.", "error");
+            button.disabled = true;
+            button.setAttribute("aria-busy", "true");
+
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": getCsrfToken(),
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Accept": "application/json",
+                    },
                 });
+
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                const data = await response.json();
+
+                if (data.status === "ok") {
+                    updateInventoryRow(row, data.remaining);
+                    updateGoldDisplay(data.new_gold);
+                    showToast(data.message, "success");
+                } else {
+                    showToast(data.message || "Не удалось продать предмет.", "error");
+                }
+            } catch (error) {
+                console.error(error);
+                showToast("Ошибка при отправке запроса.", "error");
+            } finally {
+                button.disabled = false;
+                button.removeAttribute("aria-busy");
+            }
         });
     });
 }
@@ -571,23 +602,27 @@ function getCsrfToken() {
 }
 
 function showToast(message, type = "info") {
+    removeExistingToasts();
+
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
+    toast.role = "status";
+    toast.ariaLive = "polite";
     toast.textContent = message;
-    Object.assign(toast.style, {
-        position: "fixed",
-        bottom: "20px",
-        right: "20px",
-        background: type === "success" ? "#2ecc71" : "#e74c3c",
-        color: "#fff",
-        padding: "10px 15px",
-        borderRadius: "6px",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-        zIndex: 9999,
-        fontSize: "14px",
-        opacity: 0.95,
-    });
 
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    requestAnimationFrame(() => {
+        toast.classList.add("toast-visible");
+    });
+
+    setTimeout(() => {
+        toast.classList.remove("toast-visible");
+        toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+    }, 3200);
+}
+
+function removeExistingToasts() {
+    document.querySelectorAll(".toast").forEach((toast) => {
+        toast.remove();
+    });
 }

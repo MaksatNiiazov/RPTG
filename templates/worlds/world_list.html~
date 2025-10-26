@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Миры{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Миры</h1>
+  {% if worlds %}
+    <div class="grid-2">
+      {% for world in worlds %}
+        <div class="card">
+          <h3>{{ world.name }}</h3>
+          <p><strong>Создан:</strong> {{ world.created_at|date:"d.m.Y H:i" }}</p>
+          <a href="{% url 'worlds:detail' world.pk %}" class="btn">Открыть</a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>У вас пока нет миров.</p>
+  {% endif %}
+  <a href="#" class="btn">Создать новый мир</a>
+</div>
+{% endblock %}
