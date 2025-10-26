@@ -340,7 +340,15 @@ class EquipItemView(LoginRequiredMixin, View):
             status = "ok"
             data = {
                 "slot": eq,
-                "item": {"id": item.id, "name": item.name, "bonus": item.bonus, "weight": item.weight}
+                "item": {
+                    "id": item.id,
+                    "name": item.name,
+                    "bonus": item.bonus,
+                    "weight": item.weight,
+                    "legendary_buff": item.legendary_buff or "",
+                    "rarity_color": getattr(item.rarity, "color", "#a57c52"),
+                    "sell_price": get_sell_price(item, character) if character.can_trade else None,
+                }
             }
         except Exception as e:
             message = str(e)
@@ -365,8 +373,18 @@ class UnequipSlotView(LoginRequiredMixin, View):
             item = character.unequip_slot(slot)
             message = f"{item.name} снят."
             status = "ok"
-            data = {"slot": slot, "item": {"id": item.id, "name": item.name,
-                                           "bonus": item.bonus, "weight": item.weight}}
+            data = {
+                "slot": slot,
+                "item": {
+                    "id": item.id,
+                    "name": item.name,
+                    "bonus": item.bonus,
+                    "weight": item.weight,
+                    "legendary_buff": item.legendary_buff or "",
+                    "rarity_color": getattr(item.rarity, "color", "#a57c52"),
+                    "sell_price": get_sell_price(item, character) if character.can_trade else None,
+                },
+            }
         except Exception as e:
             message = str(e)
             status = "error"
