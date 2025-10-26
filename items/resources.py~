@@ -1,0 +1,7 @@
+class ItemResource(resources.ModelResource):
+    class Meta:
+        model = Item
+        skip_unchanged = True
+        report_skipped = True
+        import_id_fields = ['id']  # или другой уникальный идентификатор
+        fields = ('id', 'name', 'slug', 'weight', 'bonus', 'rarity__name', 'type__name')

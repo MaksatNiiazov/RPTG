@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Ваши сундуки{% endblock %}
+{% block content %}
+  <h1>Ваши сундуки</h1>
+  {% if loots %}
+    <ul>
+      {% for pl in loots %}
+        <li>
+          <strong>Мир:</strong> {{ pl.world.name }},
+          <strong>Персонаж:</strong> {{ pl.character.name }}
+          <ul>
+            {% for itm in pl.items.all %}
+              <li>
+                {{ itm.name }} (+{{ itm.bonus }}) —
+                <form style="display:inline" method="post"
+                      action="{% url 'pick-loot-item' pl.pk itm.pk %}">
+                  {% csrf_token %}
+                  <button class="btn btn-sm">Взять</button>
+                </form>
+              </li>
+            {% empty %}
+              <li>Сундук пуст.</li>
+            {% endfor %}
+          </ul>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Сундуков нет.</p>
+  {% endif %}
+{% endblock %}

@@ -3,8 +3,7 @@ from django.urls import path
 from .views import CharacterCreateView, CharacterDetailView, CharacterInventoryView, \
     UnequipSlotView, EquipItemView, DropItemView, LevelUpView, CharacterUpdateView, ChestDetailView, ToggleNpcFlagView, \
     AjaxAdjustHpView, AjaxAdjustCpView, AjaxAdjustTokenView, CharacterDeleteView, ClassListView, TalentListView, \
-    toggle_can_trade, CharacterGoldDeltaView, StoreItemInHomeView, RetrieveItemFromHomeView, ToggleHomeStorageView, \
-    DeleteItemFromHomeView
+    toggle_can_trade, CharacterGoldDeltaView, StoreItemInHomeView, RetrieveItemFromHomeView, ToggleHomeStorageView
 
 app_name = "characters"
 
@@ -28,11 +27,6 @@ urlpatterns = [
         "characters/<int:character_id>/storage/retrieve/<int:item_id>/",
         RetrieveItemFromHomeView.as_view(),
         name="home-storage-retrieve",
-    ),
-    path(
-        "characters/<int:character_id>/storage/delete/<int:item_id>/",
-        DeleteItemFromHomeView.as_view(),
-        name="home-storage-delete",
     ),
     path(
         "characters/<int:character_id>/storage/toggle/",

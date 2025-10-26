@@ -13,8 +13,6 @@ from django.views.generic import CreateView, DetailView, UpdateView, DeleteView,
 from items.models import Item
 from worlds.models import World
 from .forms import CharacterForm, LevelUpForm, CharacterUpdateForm, GoldDeltaForm
-from shops.utils.economy import get_sell_price
-
 from .models import (
     Character,
     InventoryItem,
@@ -430,19 +428,6 @@ class DropItemView(LoginRequiredMixin, View):
         return redirect("characters:character-inventory", character_id)
 
 
-def _parse_quantity(raw_value, *, default=1):
-    """Safely parse a positive quantity value from user input."""
-    if raw_value is None:
-        return default
-    try:
-        value = int(raw_value)
-    except (TypeError, ValueError):
-        return None
-    if value <= 0:
-        return None
-    return value
-
-
 @method_decorator(require_POST, name="dispatch")
 class StoreItemInHomeView(LoginRequiredMixin, View):
     def post(self, request, character_id, item_id):
@@ -451,26 +436,11 @@ class StoreItemInHomeView(LoginRequiredMixin, View):
         is_owner = user == character.owner
         is_gm = bool(character.world and character.world.creator == user)
 
-        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
-
         if not (is_owner or is_gm):
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": "Нет прав"}, status=403)
             return HttpResponseForbidden("Нет прав")
 
         if not character.home_storage_enabled and not is_gm:
-            message = "Домашнее хранилище пока не разрешено ГМ."
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": message}, status=400)
-            messages.error(request, message)
-            return redirect("characters:character-inventory", character_id)
-
-        quantity = _parse_quantity(request.POST.get("quantity"))
-        if quantity is None:
-            message = "Укажите корректное количество для перемещения в хранилище."
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": message}, status=400)
-            messages.error(request, message)
+            messages.error(request, "Домашнее хранилище пока не разрешено ГМ.")
             return redirect("characters:character-inventory", character_id)
 
         inv_entry = (
@@ -480,62 +450,26 @@ class StoreItemInHomeView(LoginRequiredMixin, View):
             .first()
         )
         if not inv_entry:
-            message = "В инвентаре нет такого предмета."
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": message}, status=404)
-            messages.error(request, message)
+            messages.error(request, "В инвентаре нет такого предмета.")
             return redirect("characters:character-inventory", character_id)
 
         item = inv_entry.item
-        if inv_entry.quantity < quantity:
-            message = "Недостаточно предметов для перемещения в хранилище."
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": message}, status=400)
-            messages.error(request, message)
-            return redirect("characters:character-inventory", character_id)
-
-        remaining_inventory = inv_entry.quantity
-        if inv_entry.quantity == quantity:
+        if inv_entry.quantity <= 1:
             inv_entry.delete()
-            remaining_inventory = 0
         else:
-            inv_entry.quantity -= quantity
+            inv_entry.quantity -= 1
             inv_entry.save(update_fields=["quantity"])
-            remaining_inventory = inv_entry.quantity
 
         storage_entry, created = HomeInventoryItem.objects.get_or_create(
             character=character,
             item=item,
-            defaults={"quantity": quantity},
+            defaults={"quantity": 1},
         )
-        if created:
-            if storage_entry.quantity != quantity:
-                storage_entry.quantity = quantity
-                storage_entry.save(update_fields=["quantity"])
-        else:
-            storage_entry.quantity += quantity
+        if not created:
+            storage_entry.quantity += 1
             storage_entry.save(update_fields=["quantity"])
 
-        message = f"{item.name} перемещён в домашнее хранилище (×{quantity})."
-        if is_ajax:
-            return JsonResponse({
-                "status": "ok",
-                "message": message,
-                "action": "store",
-                "item": {
-                    "id": item.id,
-                    "name": item.name,
-                    "bonus": item.bonus,
-                    "weight": item.weight,
-                    "legendary_buff": item.legendary_buff or "",
-                    "rarity_color": getattr(item.rarity, "color", "#a57c52"),
-                    "sell_price": get_sell_price(item, character) if character.can_trade else None,
-                },
-                "inventory_quantity": remaining_inventory,
-                "storage_quantity": storage_entry.quantity,
-            })
-
-        messages.success(request, message)
+        messages.success(request, f"{item.name} перемещён в домашнее хранилище.")
         return redirect("characters:character-inventory", character_id)
 
 
@@ -547,26 +481,11 @@ class RetrieveItemFromHomeView(LoginRequiredMixin, View):
         is_owner = user == character.owner
         is_gm = bool(character.world and character.world.creator == user)
 
-        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
-
         if not (is_owner or is_gm):
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": "Нет прав"}, status=403)
             return HttpResponseForbidden("Нет прав")
 
         if not character.home_storage_enabled and not is_gm:
-            message = "Домашнее хранилище пока не разрешено ГМ."
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": message}, status=400)
-            messages.error(request, message)
-            return redirect("characters:character-inventory", character_id)
-
-        quantity = _parse_quantity(request.POST.get("quantity"))
-        if quantity is None:
-            message = "Укажите корректное количество для забора из хранилища."
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": message}, status=400)
-            messages.error(request, message)
+            messages.error(request, "Домашнее хранилище пока не разрешено ГМ.")
             return redirect("characters:character-inventory", character_id)
 
         storage_entry = (
@@ -576,124 +495,26 @@ class RetrieveItemFromHomeView(LoginRequiredMixin, View):
             .first()
         )
         if not storage_entry:
-            message = "В хранилище нет такого предмета."
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": message}, status=404)
-            messages.error(request, message)
+            messages.error(request, "В хранилище нет такого предмета.")
             return redirect("characters:character-inventory", character_id)
 
         item = storage_entry.item
-        if storage_entry.quantity < quantity:
-            message = "В хранилище недостаточно экземпляров предмета."
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": message}, status=400)
-            messages.error(request, message)
-            return redirect("characters:character-inventory", character_id)
-
-        remaining_storage = storage_entry.quantity
-        if storage_entry.quantity == quantity:
+        if storage_entry.quantity <= 1:
             storage_entry.delete()
-            remaining_storage = 0
         else:
-            storage_entry.quantity -= quantity
+            storage_entry.quantity -= 1
             storage_entry.save(update_fields=["quantity"])
-            remaining_storage = storage_entry.quantity
 
         inv_entry, created = InventoryItem.objects.get_or_create(
             character=character,
             item=item,
-            defaults={"quantity": quantity},
+            defaults={"quantity": 1},
         )
-        if created:
-            if inv_entry.quantity != quantity:
-                inv_entry.quantity = quantity
-                inv_entry.save(update_fields=["quantity"])
-        else:
-            inv_entry.quantity += quantity
+        if not created:
+            inv_entry.quantity += 1
             inv_entry.save(update_fields=["quantity"])
 
-        message = f"{item.name} возвращён из домашнего хранилища (×{quantity})."
-        if is_ajax:
-            return JsonResponse({
-                "status": "ok",
-                "message": message,
-                "action": "retrieve",
-                "item": {
-                    "id": item.id,
-                    "name": item.name,
-                    "bonus": item.bonus,
-                    "weight": item.weight,
-                    "legendary_buff": item.legendary_buff or "",
-                    "rarity_color": getattr(item.rarity, "color", "#a57c52"),
-                    "sell_price": get_sell_price(item, character) if character.can_trade else None,
-                },
-                "inventory_quantity": inv_entry.quantity,
-                "storage_quantity": remaining_storage,
-            })
-
-        messages.success(request, message)
-        return redirect("characters:character-inventory", character_id)
-
-
-@method_decorator(require_POST, name="dispatch")
-class DeleteItemFromHomeView(LoginRequiredMixin, View):
-    def post(self, request, character_id, item_id):
-        character = get_object_or_404(Character, id=character_id)
-        user = request.user
-        is_owner = user == character.owner
-        is_gm = bool(character.world and character.world.creator == user)
-
-        is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
-
-        if not (is_owner or is_gm):
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": "Нет прав"}, status=403)
-            return HttpResponseForbidden("Нет прав")
-
-        storage_entry = (
-            HomeInventoryItem.objects
-            .select_related("item")
-            .filter(character=character, item_id=item_id)
-            .first()
-        )
-        if not storage_entry:
-            message = "В хранилище нет такого предмета."
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": message}, status=404)
-            messages.error(request, message)
-            return redirect("characters:character-inventory", character_id)
-
-        quantity = _parse_quantity(request.POST.get("quantity"), default=storage_entry.quantity)
-        if quantity is None:
-            message = "Укажите корректное количество для удаления из хранилища."
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": message}, status=400)
-            messages.error(request, message)
-            return redirect("characters:character-inventory", character_id)
-
-        item_name = storage_entry.item.name
-        remaining_storage = storage_entry.quantity
-        if quantity >= storage_entry.quantity:
-            removed_qty = storage_entry.quantity
-            storage_entry.delete()
-            remaining_storage = 0
-        else:
-            storage_entry.quantity -= quantity
-            storage_entry.save(update_fields=["quantity"])
-            removed_qty = quantity
-            remaining_storage = storage_entry.quantity
-
-        message = f"Из домашнего хранилища удалено {item_name} ×{removed_qty}."
-        if is_ajax:
-            return JsonResponse({
-                "status": "ok",
-                "message": message,
-                "action": "delete",
-                "item_id": item_id,
-                "storage_quantity": remaining_storage,
-            })
-
-        messages.success(request, message)
+        messages.success(request, f"{item.name} возвращён из домашнего хранилища.")
         return redirect("characters:character-inventory", character_id)
 
 
