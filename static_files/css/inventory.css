@@ -101,6 +101,11 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.btn-inventory:focus-visible {
+  outline: 2px solid #6b4f2b;
+  outline-offset: 2px;
+}
+
 /* Flex-кнопки в ячейке */
 .td-buttons {
   display: flex;
@@ -199,6 +204,7 @@
 .inventory-tabs {
   display: none;
   margin-bottom: 1rem;
+  gap: 0.5rem;
 }
 .inventory-tabs .tab-button {
   flex: 1;
@@ -209,9 +215,17 @@
   cursor: pointer;
   transition: background 0.2s;
   text-align: center;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
 }
 .inventory-tabs .tab-button.active {
   background: #d1bfa3;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.inventory-tabs .tab-button:focus-visible {
+  outline: 2px solid #6b4f2b;
+  outline-offset: 2px;
 }
 
 /* === Адаптивность === */
@@ -221,10 +235,14 @@
   }
   .inventory-section {
     display: none;
+    opacity: 0;
+    transform: translateY(12px);
   }
   .inventory-section.active {
     display: block;
     max-width: 100%;
+    opacity: 1;
+    transform: translateY(0);
   }
   .item-table th,
   .item-table td {

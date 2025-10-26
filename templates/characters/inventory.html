@@ -11,7 +11,7 @@
 {% block content %}
     <h1>Инвентарь: <a href="{% url 'characters:character_detail' char.id %}">{{ char.name }}</a></h1>
     <p><strong>Соллиды:</strong> <span id="char-gold">{{ char.gold }} Ꞩ</span></p>
-    <p><strong>Нагрузка:</strong> <span id="char-gold">{{ char.get_current_load.total_weight }} / {{ char.get_current_load.carry_capacity }} кг</span></p>
+    <p><strong>Нагрузка:</strong> <span id="char-load">{{ char.get_current_load.total_weight }} / {{ char.get_current_load.carry_capacity }} кг</span></p>
 {#    <p>{{ char.get_current_load }}</p>#}
 
     <div class="inventory-layout"

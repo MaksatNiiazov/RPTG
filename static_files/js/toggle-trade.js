@@ -91,21 +91,25 @@ function getCsrfToken() {
 }
 
 function showToast(msg, type = "info") {
+    removeExistingToasts();
+
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
+    toast.role = "status";
+    toast.ariaLive = "polite";
     toast.textContent = msg;
-    Object.assign(toast.style, {
-        position: "fixed",
-        bottom: "20px",
-        right: "20px",
-        background: type === "success" ? "#2ecc71" : "#e74c3c",
-        color: "#fff",
-        padding: "10px 15px",
-        borderRadius: "6px",
-        zIndex: 9999,
-        fontSize: "14px",
-        opacity: 0.95,
-    });
+
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    requestAnimationFrame(() => {
+        toast.classList.add("toast-visible");
+    });
+
+    setTimeout(() => {
+        toast.classList.remove("toast-visible");
+        toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+    }, 3200);
+}
+
+function removeExistingToasts() {
+    document.querySelectorAll(".toast").forEach((toast) => toast.remove());
 }
