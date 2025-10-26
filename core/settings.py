@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -157,6 +160,172 @@ CKEDITOR_CONFIGS = {
         # чтобы ссылка на превью картинок работала
         "filebrowserUploadUrl": "/ckeditor/upload/",
         "filebrowserBrowseUrl": "/ckeditor/browse/",
+    },
+}
+
+
+UNFOLD = {
+    "SITE_TITLE": "RPTG Admin",
+    "SITE_HEADER": "RPTG",
+    "SITE_SUBHEADER": _("Панель управления ролевой площадкой"),
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": _("Обзор"),
+                "items": [
+                    {
+                        "title": _("Дэшборд"),
+                        "icon": "space_dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                ],
+            },
+            {
+                "title": _("Пользователи и доступ"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Пользователи"),
+                        "icon": "group",
+                        "link": reverse_lazy("admin:accounts_user_changelist"),
+                    },
+                    {
+                        "title": _("Группы"),
+                        "icon": "admin_panel_settings",
+                        "link": reverse_lazy("admin:auth_group_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Миры и карты"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Миры"),
+                        "icon": "public",
+                        "link": reverse_lazy("admin:worlds_world_changelist"),
+                    },
+                    {
+                        "title": _("Приглашения"),
+                        "icon": "mail",
+                        "link": reverse_lazy("admin:worlds_worldinvitation_changelist"),
+                    },
+                    {
+                        "title": _("Локации"),
+                        "icon": "explore",
+                        "link": reverse_lazy("admin:maps_location_changelist"),
+                    },
+                    {
+                        "title": _("Токены карт"),
+                        "icon": "location_on",
+                        "link": reverse_lazy("admin:maps_maptoken_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Персонажи"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Персонажи"),
+                        "icon": "group",
+                        "link": reverse_lazy("admin:character_character_changelist"),
+                    },
+                    {
+                        "title": _("Классы"),
+                        "icon": "school",
+                        "link": reverse_lazy("admin:character_characterclass_changelist"),
+                    },
+                    {
+                        "title": _("Таланты"),
+                        "icon": "emoji_objects",
+                        "link": reverse_lazy("admin:character_talent_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Магия"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Школы магии"),
+                        "icon": "auto_fix_high",
+                        "link": reverse_lazy("admin:magic_school_changelist"),
+                    },
+                    {
+                        "title": _("Категории заклинаний"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:magic_spellcategory_changelist"),
+                    },
+                    {
+                        "title": _("Заклинания"),
+                        "icon": "auto_awesome",
+                        "link": reverse_lazy("admin:magic_spell_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Предметы"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Редкости"),
+                        "icon": "star",
+                        "link": reverse_lazy("admin:items_rarity_changelist"),
+                    },
+                    {
+                        "title": _("Типы предметов"),
+                        "icon": "inventory_2",
+                        "link": reverse_lazy("admin:items_type_changelist"),
+                    },
+                    {
+                        "title": _("Предметы"),
+                        "icon": "shopping_bag",
+                        "link": reverse_lazy("admin:items_item_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Правила и предложения"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Папки правил"),
+                        "icon": "folder",
+                        "link": reverse_lazy("admin:rulebook_folder_changelist"),
+                    },
+                    {
+                        "title": _("Статьи"),
+                        "icon": "description",
+                        "link": reverse_lazy("admin:rulebook_article_changelist"),
+                    },
+                    {
+                        "title": _("Предложения по улучшению"),
+                        "icon": "tips_and_updates",
+                        "link": reverse_lazy("admin:rulebook_improvementproposal_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Системные инструменты"),
+                "collapsible": True,
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Журнал действий"),
+                        "icon": "history",
+                        "link": reverse_lazy("admin:admin_logentry_changelist"),
+                    },
+                    {
+                        "title": _("Сессии"),
+                        "icon": "monitor_heart",
+                        "link": reverse_lazy("admin:sessions_session_changelist"),
+                    },
+                ],
+            },
+        ],
     },
 }
 

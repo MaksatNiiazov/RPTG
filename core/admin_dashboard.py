@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any, Dict, List
 
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
 from django.db.models import Count
 from django.db.models.functions import TruncWeek
 from django.template.response import TemplateResponse
@@ -205,3 +206,38 @@ def _custom_admin_index(self, request, extra_context: Dict[str, Any] | None = No
 _ORIGINAL_INDEX = admin.site.index
 admin.site.index = _custom_admin_index.__get__(admin.site, admin.sites.AdminSite)
 admin.site.index_template = "admin/index.html"
+
+
+@admin.register(LogEntry)
+class LogEntryAdmin(admin.ModelAdmin):
+    """Read-only admin interface for Django's action log."""
+
+    date_hierarchy = "action_time"
+    list_display = (
+        "action_time",
+        "user",
+        "content_type",
+        "object_repr",
+        "action_flag",
+    )
+    list_filter = ("action_flag", "user", "content_type")
+    ordering = ("-action_time",)
+    search_fields = ("object_repr", "change_message", "user__username", "user__email")
+    readonly_fields = (
+        "action_time",
+        "user",
+        "content_type",
+        "object_id",
+        "object_repr",
+        "action_flag",
+        "change_message",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
