@@ -91,15 +91,19 @@
                                     <a href="#"
                                        class="btn-gm toggle-trade-btn"
                                        data-url="{% url 'characters:toggle-can-trade' char.pk %}"
-                                       data-current="{{ char.can_trade|yesno:'1,0' }}">
+                                       data-current="{{ char.can_trade|yesno:'1,0' }}"
+                                       aria-pressed="{{ char.can_trade|yesno:'true,false' }}">
                                         <svg viewBox="0 0 24 24" width="24" height="24">
                                             <path d="M3 6h18v2H3zM3 10h18v2H3zM3 14h18v2H3zM3 18h18v2H3z"/>
                                         </svg>
-                                        {% if char.can_trade %}
-                                            Запретить торговлю
-                                        {% else %}
-                                            Разрешить торговлю
-                                        {% endif %}
+                                        <span class="toggle-trade-text">
+                                            <span class="toggle-trade-label">
+                                                {{ char.can_trade|yesno:'Запретить торговлю,Разрешить торговлю' }}
+                                            </span>
+                                            <span class="toggle-trade-status" aria-live="polite">
+                                                {{ char.can_trade|yesno:'Торговля разрешена,Торговля запрещена' }}
+                                            </span>
+                                        </span>
                                     </a>
                                     <a href="{% url 'characters:change-gold' char.pk %}" class="btn-gm">
                                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
