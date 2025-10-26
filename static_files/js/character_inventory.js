@@ -67,38 +67,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.querySelector(".inventory-layout");
-    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-    const equipBase = container.dataset.equipBase;   // e.g. "/characters/characters/3/equip/0/"
-    const dropBase = container.dataset.dropBase;    // e.g. "/characters/characters/3/drop/0/"
+    if (!container) return;
+
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    if (!csrfInput) return;
+
+    const csrfToken = csrfInput.value;
+    const equipBase = container.dataset.equipBase;
+    const dropBase = container.dataset.dropBase;
     const unequipBase = equipBase.replace(/\/equip\/0\/$/, "/unequip/");
+    const storeBase = container.dataset.storageStoreBase || "";
+    const retrieveBase = container.dataset.storageRetrieveBase || "";
+    const deleteBase = container.dataset.storageDeleteBase || "";
+    const sellBase = container.dataset.sellBase || "";
+    const canUseStorage = container.dataset.canUseStorage === "true";
+    const canTrade = container.dataset.canTrade === "true";
     const invTableBody = document.querySelector("#inv-table tbody");
+    const storageTableBody = document.querySelector(".home-storage-table tbody");
+    const storageRowTemplate = document.getElementById("storage-row-template");
 
     container.addEventListener("submit", async e => {
         const form = e.target;
-        if (!form.matches(".equip-form, .unequip-form, .drop-form")) return;
-        e.preventDefault();
 
-        // 1) Подтверждённое удаление
-        if (form.matches(".drop-form")) {
-            const name = form.closest("tr.inv-row").querySelector(".name-cell").textContent;
-            if (!confirm(`Вы уверены, что хотите выбросить ${name} ?`)) return;
+        if (form.matches(".storage-form")) {
+            e.preventDefault();
+            if (canUseStorage) {
+                await handleStorageForm(form);
+            }
+            return;
         }
 
-        // 2) Построение URL
+        if (!form.matches(".equip-form, .unequip-form, .drop-form")) return;
+        e.preventDefault();
+        await handleEquipmentForm(form);
+    });
+
+    async function handleEquipmentForm(form) {
+        if (form.matches(".drop-form")) {
+            const name = form.closest("tr.inv-row")?.querySelector(".name-cell")?.textContent?.trim();
+            if (name && !confirm(`Вы уверены, что хотите выбросить ${name}?`)) {
+                return;
+            }
+        }
+
         let url;
         if (form.matches(".equip-form")) {
             const tr = form.closest("tr.inv-row");
+            if (!tr) return;
             url = equipBase.replace(/0\/$/, tr.dataset.itemId + "/");
         } else if (form.matches(".unequip-form")) {
-            const slot = form.closest("tr.equip-row").dataset.slot;
-            url = unequipBase + slot + "/";
-        } else {  // .drop-form
+            const slot = form.closest("tr.equip-row")?.dataset.slot;
+            if (!slot) return;
+            url = `${unequipBase}${slot}/`;
+        } else {
             const tr = form.closest("tr.inv-row");
+            if (!tr) return;
             url = dropBase.replace(/0\/$/, tr.dataset.itemId + "/");
         }
 
         try {
-            // 3) AJAX-запрос
             const res = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -108,17 +135,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: new FormData(form)
             });
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            const {status, data} = await res.json();
-            if (status !== "ok") {
-                return alert("Ошибка: " + (data.message || JSON.stringify(data)));
+            const payload = await res.json();
+            if (!res.ok || payload.status !== "ok") {
+                throw new Error(payload.message || payload.data?.message || `HTTP ${res.status}`);
             }
 
-            // 4) Обработка ответов
+            const data = payload.data;
             if (form.matches(".equip-form")) {
                 const {slot, item} = data;
                 const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
-                eqRow.innerHTML = `
+                if (eqRow) {
+                    eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
           <td>${item.name}</td>
           <td>+${item.bonus}</td>
@@ -129,56 +156,360 @@ document.addEventListener("DOMContentLoaded", () => {
               <button class="btn-inventory btn-unequip">Снять</button>
             </form>
           </td>`;
-                // убавляем из инвентаря
+                }
                 const invRow = container.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
                     const cell = invRow.querySelector(".quantity-cell");
-                    const q = parseInt(cell.textContent, 10) - 1;
-                    if (q > 0) cell.textContent = q; else invRow.remove();
+                    const nextQuantity = Math.max(0, parseInt(cell.textContent, 10) - 1);
+                    if (nextQuantity > 0) {
+                        cell.textContent = nextQuantity;
+                        updateInventoryStoreForm(invRow, item.id, nextQuantity);
+                    } else {
+                        invRow.remove();
+                    }
                 }
             } else if (form.matches(".unequip-form")) {
                 const {slot, item} = data;
                 const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
-                eqRow.innerHTML = `
+                if (eqRow) {
+                    eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
           <td colspan="4" class="empty-slot">Пусто</td>`;
-                // добавляем в инвентарь
-                let invRow = invTableBody.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
-                if (invRow) {
-                    invRow.querySelector(".quantity-cell").textContent =
-                        parseInt(invRow.querySelector(".quantity-cell").textContent, 10) + 1;
-                } else {
-                    const tpl = document.getElementById("inv-row-template");
-                    const clone = tpl.content.cloneNode(true);
-                    const newRow = clone.querySelector("tr");
-                    newRow.dataset.itemId = item.id;
-                    newRow.querySelector(".name-cell").textContent = item.name;
-                    newRow.querySelector(".quantity-cell").textContent = 1;
-                    newRow.querySelector(".bonus-cell").textContent = "+" + item.bonus;
-                    newRow.querySelector(".weight-cell").textContent = item.weight + " кг";
-                    newRow.querySelector(".legendary-cell").textContent = item.legendary_buff || "—";
-                    invTableBody.append(newRow);
                 }
-            } else {  // drop-form
+                let invRow = invTableBody?.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
+                if (invRow) {
+                    const qtyCell = invRow.querySelector(".quantity-cell");
+                    const newQty = parseInt(qtyCell.textContent, 10) + 1;
+                    qtyCell.textContent = newQty;
+                    updateInventoryStoreForm(invRow, item.id, newQty);
+                } else {
+                    const newRow = buildInventoryRow({
+                        id: item.id,
+                        name: item.name,
+                        bonus: item.bonus,
+                        weight: item.weight,
+                        legendary_buff: item.legendary_buff || "",
+                        rarity_color: item.rarity_color || "#a57c52",
+                        sell_price: item.sell_price ?? null,
+                    }, 1);
+                    invTableBody?.append(newRow);
+                    initSellButtons(newRow);
+                }
+            } else {
                 const {item_id, remaining} = data;
                 const invRow = container.querySelector(`tr.inv-row[data-item-id="${item_id}"]`);
                 if (!invRow) return;
-                if (remaining > 0) invRow.querySelector(".quantity-cell").textContent = remaining;
-                else invRow.remove();
+                if (remaining > 0) {
+                    invRow.querySelector(".quantity-cell").textContent = remaining;
+                    updateInventoryStoreForm(invRow, item_id, remaining);
+                } else {
+                    invRow.remove();
+                }
             }
 
+            if (payload.message) {
+                showToast(payload.message, "success");
+            }
         } catch (err) {
             console.error(err);
-            alert("Не удалось выполнить операцию: " + err.message);
+            showToast(err.message || "Не удалось выполнить операцию", "error");
         }
-    });
+    }
+
+    async function handleStorageForm(form) {
+        const actionType = form.dataset.storageAction;
+        const itemId = form.dataset.itemId;
+        if (!actionType || !itemId) return;
+
+        if (actionType === "delete") {
+            const name = form.closest("tr")?.querySelector(".name-cell")?.textContent?.trim();
+            if (name && !confirm(`Удалить ${name} из хранилища?`)) {
+                return;
+            }
+        }
+
+        try {
+            const res = await fetch(form.getAttribute("action"), {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Accept": "application/json"
+                },
+                body: new FormData(form)
+            });
+            const payload = await res.json();
+            if (!res.ok || payload.status !== "ok") {
+                throw new Error(payload.message || `HTTP ${res.status}`);
+            }
+
+            if (payload.action === "store") {
+                updateInventoryAfterStore(payload);
+                updateStorageRow(payload.item, payload.storage_quantity);
+            } else if (payload.action === "retrieve") {
+                updateStorageRow(payload.item, payload.storage_quantity);
+                updateInventoryAfterRetrieve(payload);
+            } else if (payload.action === "delete") {
+                updateStorageRow({id: payload.item_id}, payload.storage_quantity);
+            }
+
+            if (payload.message) {
+                showToast(payload.message, "success");
+            }
+        } catch (err) {
+            console.error(err);
+            showToast(err.message || "Не удалось выполнить операцию", "error");
+        }
+    }
+
+    function buildInventoryRow(item, quantity) {
+        const row = document.createElement("tr");
+        row.className = "inv-row";
+        row.dataset.itemId = item.id;
+
+        const nameCell = document.createElement("td");
+        nameCell.className = "name-cell";
+        const nameSpan = document.createElement("span");
+        nameSpan.style.borderLeft = `6px solid ${item.rarity_color || "#a57c52"}`;
+        nameSpan.style.paddingLeft = "6px";
+        nameSpan.textContent = item.name;
+        nameCell.append(nameSpan);
+
+        const quantityCell = document.createElement("td");
+        quantityCell.className = "quantity-cell";
+        quantityCell.textContent = quantity;
+
+        const bonusCell = document.createElement("td");
+        bonusCell.className = "bonus-cell";
+        bonusCell.textContent = `+${item.bonus}`;
+
+        const weightCell = document.createElement("td");
+        weightCell.className = "weight-cell";
+        weightCell.textContent = `${item.weight} кг`;
+
+        const legendaryCell = document.createElement("td");
+        legendaryCell.className = "legendary-cell";
+        legendaryCell.textContent = item.legendary_buff ? item.legendary_buff : "—";
+
+        const actionsCell = document.createElement("td");
+        actionsCell.className = "td-buttons";
+
+        if (canTrade && sellBase && item.sell_price != null) {
+            const sellBtn = document.createElement("button");
+            sellBtn.className = "btn-inventory btn-sell";
+            sellBtn.dataset.sellUrl = sellBase.replace(/0\/$/, `${item.id}/`);
+            sellBtn.textContent = `Продать (${item.sell_price}Ꞩ)`;
+            actionsCell.append(sellBtn);
+        }
+
+        const equipForm = document.createElement("form");
+        equipForm.className = "equip-form";
+        equipForm.method = "post";
+        equipForm.append(createCsrfInput());
+        const equipBtn = document.createElement("button");
+        equipBtn.className = "btn-inventory btn-equip";
+        equipBtn.textContent = "Экипировать";
+        equipForm.append(equipBtn);
+        actionsCell.append(equipForm);
+
+        const dropForm = document.createElement("form");
+        dropForm.className = "drop-form";
+        dropForm.method = "post";
+        dropForm.append(createCsrfInput());
+        const dropBtn = document.createElement("button");
+        dropBtn.className = "btn-inventory btn-drop";
+        dropBtn.textContent = "Выбросить";
+        dropForm.append(dropBtn);
+        actionsCell.append(dropForm);
+
+        if (canUseStorage && storeBase) {
+            const storeForm = document.createElement("form");
+            storeForm.className = "storage-form";
+            storeForm.method = "post";
+            storeForm.dataset.storageAction = "store";
+            storeForm.dataset.itemId = String(item.id);
+            storeForm.action = storeBase.replace(/0\/$/, `${item.id}/`);
+            storeForm.append(createCsrfInput());
+            const quantityInput = document.createElement("input");
+            quantityInput.type = "number";
+            quantityInput.name = "quantity";
+            quantityInput.min = "1";
+            quantityInput.max = String(quantity);
+            quantityInput.value = Math.min(quantity, 1);
+            quantityInput.className = "storage-quantity-input";
+            quantityInput.setAttribute("aria-label", "Количество");
+            const storeBtn = document.createElement("button");
+            storeBtn.className = "btn-inventory btn-store";
+            storeBtn.textContent = "В хранилище";
+            storeForm.append(quantityInput, storeBtn);
+            actionsCell.append(storeForm);
+        }
+
+        row.append(nameCell, quantityCell, bonusCell, weightCell, legendaryCell, actionsCell);
+        return row;
+    }
+
+    function createCsrfInput() {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "csrfmiddlewaretoken";
+        input.value = csrfToken;
+        return input;
+    }
+
+    function updateInventoryAfterStore(payload) {
+        const {item, inventory_quantity} = payload;
+        const row = invTableBody?.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
+        if (!row) return;
+        if (inventory_quantity > 0) {
+            row.querySelector(".quantity-cell").textContent = inventory_quantity;
+            updateInventoryStoreForm(row, item.id, inventory_quantity);
+        } else {
+            row.remove();
+        }
+    }
+
+    function updateInventoryAfterRetrieve(payload) {
+        const {item, inventory_quantity} = payload;
+        let row = invTableBody?.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
+        if (row) {
+            row.querySelector(".quantity-cell").textContent = inventory_quantity;
+            updateInventoryStoreForm(row, item.id, inventory_quantity);
+        } else {
+            row = buildInventoryRow(item, inventory_quantity);
+            invTableBody?.append(row);
+            initSellButtons(row);
+        }
+    }
+
+    function updateInventoryStoreForm(row, itemId, quantity) {
+        if (!canUseStorage) return;
+        const storeForm = row.querySelector('.storage-form[data-storage-action="store"]');
+        if (!storeForm) return;
+        storeForm.dataset.itemId = String(itemId);
+        if (storeBase) {
+            storeForm.action = storeBase.replace(/0\/$/, `${itemId}/`);
+        }
+        const input = storeForm.querySelector('input[name="quantity"]');
+        if (!input) return;
+        input.max = String(quantity);
+        if (!input.value || parseInt(input.value, 10) < 1) {
+            input.value = quantity > 0 ? 1 : 0;
+        }
+        if (parseInt(input.value, 10) > quantity) {
+            input.value = quantity;
+        }
+    }
+
+    function updateStorageRow(item, quantity) {
+        if (!storageTableBody || !item?.id) return;
+        let row = storageTableBody.querySelector(`tr.storage-row[data-item-id="${item.id}"]`);
+
+        if (quantity <= 0) {
+            if (row) row.remove();
+            ensureStorageEmptyRow();
+            return;
+        }
+
+        removeStorageEmptyRow();
+
+        if (!row) {
+            if (!storageRowTemplate) return;
+            const clone = storageRowTemplate.content.cloneNode(true);
+            row = clone.querySelector("tr.storage-row");
+            if (!row) return;
+            row.dataset.itemId = String(item.id);
+            storageTableBody.append(row);
+        }
+
+        if (item.name !== undefined) {
+            const nameCell = row.querySelector(".name-cell");
+            if (nameCell) {
+                let span = nameCell.querySelector("span");
+                if (!span) {
+                    span = document.createElement("span");
+                    nameCell.innerHTML = "";
+                    nameCell.append(span);
+                }
+                span.style.borderLeft = `6px solid ${item.rarity_color || "#a57c52"}`;
+                span.style.paddingLeft = "6px";
+                span.textContent = item.name;
+            }
+        }
+
+        if (item.bonus !== undefined) {
+            const bonusCell = row.querySelector(".bonus-cell");
+            if (bonusCell) bonusCell.textContent = `+${item.bonus}`;
+        }
+        if (item.weight !== undefined) {
+            const weightCell = row.querySelector(".weight-cell");
+            if (weightCell) weightCell.textContent = `${item.weight} кг`;
+        }
+        if (item.legendary_buff !== undefined) {
+            const legendaryCell = row.querySelector(".legendary-cell");
+            if (legendaryCell) legendaryCell.textContent = item.legendary_buff ? item.legendary_buff : "—";
+        }
+
+        const qtyCell = row.querySelector(".quantity-cell");
+        if (qtyCell) qtyCell.textContent = quantity;
+
+        row.querySelectorAll(".storage-form").forEach(storageForm => {
+            storageForm.dataset.itemId = String(item.id);
+            const actionType = storageForm.dataset.storageAction;
+            let base = "";
+            if (actionType === "retrieve") base = retrieveBase;
+            if (actionType === "delete") base = deleteBase;
+            if (base) storageForm.action = base.replace(/0\/$/, `${item.id}/`);
+            const input = storageForm.querySelector('input[name="quantity"]');
+            if (input) {
+                input.max = String(quantity);
+                if (actionType === "delete") {
+                    input.value = quantity;
+                } else if (parseInt(input.value, 10) > quantity) {
+                    input.value = quantity;
+                } else if (parseInt(input.value || "1", 10) < 1) {
+                    input.value = 1;
+                }
+            }
+        });
+    }
+
+    function removeStorageEmptyRow() {
+        if (!storageTableBody) return;
+        const emptyRow = storageTableBody.querySelector("tr.empty-row[data-empty='storage']");
+        if (emptyRow) emptyRow.remove();
+    }
+
+    function ensureStorageEmptyRow() {
+        if (!storageTableBody) return;
+        const hasItems = storageTableBody.querySelector("tr.storage-row");
+        let emptyRow = storageTableBody.querySelector("tr.empty-row[data-empty='storage']");
+        if (hasItems) {
+            if (emptyRow) emptyRow.remove();
+            return;
+        }
+        if (!emptyRow) {
+            emptyRow = document.createElement("tr");
+            emptyRow.className = "empty-row";
+            emptyRow.dataset.empty = "storage";
+            const td = document.createElement("td");
+            td.colSpan = 6;
+            td.className = "empty-slot";
+            td.textContent = "Хранилище пусто.";
+            emptyRow.append(td);
+            storageTableBody.append(emptyRow);
+        }
+    }
 });
 document.addEventListener("DOMContentLoaded", () => {
     initSellButtons();
 });
 
-function initSellButtons() {
-    document.querySelectorAll(".btn-sell").forEach(button => {
+function initSellButtons(context = document) {
+    if (!context || typeof context.querySelectorAll !== "function") return;
+    context.querySelectorAll(".btn-sell").forEach(button => {
+        if (button.dataset.sellHandlerAttached === "true") return;
+        button.dataset.sellHandlerAttached = "true";
         button.addEventListener("click", event => {
             event.preventDefault();
 
