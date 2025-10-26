@@ -93,6 +93,24 @@
   flex-wrap: wrap;
 }
 
+.storage-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.storage-quantity-input {
+  width: 4.5rem;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid #c7b091;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: "Merriweather", serif;
+  background: #fffaf0;
+  color: #3e2f1b;
+}
+
 /* === Табы для мобильного === */
 .inventory-tabs {
   display: none;
