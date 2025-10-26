@@ -13,7 +13,15 @@ from django.views.generic import CreateView, DetailView, UpdateView, DeleteView,
 from items.models import Item
 from worlds.models import World
 from .forms import CharacterForm, LevelUpForm, CharacterUpdateForm, GoldDeltaForm
-from .models import Character, InventoryItem, Equipment, ChestInstance, CharacterClass, Talent
+from .models import (
+    Character,
+    InventoryItem,
+    Equipment,
+    ChestInstance,
+    CharacterClass,
+    Talent,
+    HomeInventoryItem,
+)
 
 
 class ClassListView(LoginRequiredMixin, ListView):
@@ -289,6 +297,16 @@ class CharacterInventoryView(LoginRequiredMixin, DetailView):
 
         context["equipment"] = equipment
         context["inventory_items"] = char.items.select_related("item")
+        is_owner = self.request.user == char.owner
+        is_gm = bool(char.world and char.world.creator == self.request.user)
+        context["is_owner"] = is_owner
+        context["home_storage_enabled"] = char.home_storage_enabled
+        context["can_toggle_home_storage"] = is_gm
+        context["can_use_home_storage"] = char.home_storage_enabled and (is_owner or is_gm)
+        if char.home_storage_enabled:
+            context["home_storage_items"] = char.home_storage_items.select_related("item").order_by("item__name")
+        else:
+            context["home_storage_items"] = []
         context["slot_names"] = [
             {"head": 'Голова'},
             {"neck": 'Шея'},
@@ -389,6 +407,193 @@ class DropItemView(LoginRequiredMixin, View):
         from django.contrib import messages
         messages_method = messages.success if status == "ok" else messages.error
         messages_method(request, message)
+        return redirect("characters:character-inventory", character_id)
+
+
+def _parse_quantity(raw_value, *, default=1):
+    """Safely parse a positive quantity value from user input."""
+    if raw_value is None:
+        return default
+    try:
+        value = int(raw_value)
+    except (TypeError, ValueError):
+        return None
+    if value <= 0:
+        return None
+    return value
+
+
+@method_decorator(require_POST, name="dispatch")
+class StoreItemInHomeView(LoginRequiredMixin, View):
+    def post(self, request, character_id, item_id):
+        character = get_object_or_404(Character, id=character_id)
+        user = request.user
+        is_owner = user == character.owner
+        is_gm = bool(character.world and character.world.creator == user)
+
+        if not (is_owner or is_gm):
+            return HttpResponseForbidden("Нет прав")
+
+        if not character.home_storage_enabled and not is_gm:
+            messages.error(request, "Домашнее хранилище пока не разрешено ГМ.")
+            return redirect("characters:character-inventory", character_id)
+
+        quantity = _parse_quantity(request.POST.get("quantity"))
+        if quantity is None:
+            messages.error(request, "Укажите корректное количество для перемещения в хранилище.")
+            return redirect("characters:character-inventory", character_id)
+
+        inv_entry = (
+            InventoryItem.objects
+            .select_related("item")
+            .filter(character=character, item_id=item_id)
+            .first()
+        )
+        if not inv_entry:
+            messages.error(request, "В инвентаре нет такого предмета.")
+            return redirect("characters:character-inventory", character_id)
+
+        item = inv_entry.item
+        if inv_entry.quantity < quantity:
+            messages.error(request, "Недостаточно предметов для перемещения в хранилище.")
+            return redirect("characters:character-inventory", character_id)
+
+        if inv_entry.quantity == quantity:
+            inv_entry.delete()
+        else:
+            inv_entry.quantity -= quantity
+            inv_entry.save(update_fields=["quantity"])
+
+        storage_entry, created = HomeInventoryItem.objects.get_or_create(
+            character=character,
+            item=item,
+            defaults={"quantity": quantity},
+        )
+        if created:
+            if storage_entry.quantity != quantity:
+                storage_entry.quantity = quantity
+                storage_entry.save(update_fields=["quantity"])
+        else:
+            storage_entry.quantity += quantity
+            storage_entry.save(update_fields=["quantity"])
+
+        messages.success(request, f"{item.name} перемещён в домашнее хранилище (×{quantity}).")
+        return redirect("characters:character-inventory", character_id)
+
+
+@method_decorator(require_POST, name="dispatch")
+class RetrieveItemFromHomeView(LoginRequiredMixin, View):
+    def post(self, request, character_id, item_id):
+        character = get_object_or_404(Character, id=character_id)
+        user = request.user
+        is_owner = user == character.owner
+        is_gm = bool(character.world and character.world.creator == user)
+
+        if not (is_owner or is_gm):
+            return HttpResponseForbidden("Нет прав")
+
+        if not character.home_storage_enabled and not is_gm:
+            messages.error(request, "Домашнее хранилище пока не разрешено ГМ.")
+            return redirect("characters:character-inventory", character_id)
+
+        quantity = _parse_quantity(request.POST.get("quantity"))
+        if quantity is None:
+            messages.error(request, "Укажите корректное количество для забора из хранилища.")
+            return redirect("characters:character-inventory", character_id)
+
+        storage_entry = (
+            HomeInventoryItem.objects
+            .select_related("item")
+            .filter(character=character, item_id=item_id)
+            .first()
+        )
+        if not storage_entry:
+            messages.error(request, "В хранилище нет такого предмета.")
+            return redirect("characters:character-inventory", character_id)
+
+        item = storage_entry.item
+        if storage_entry.quantity < quantity:
+            messages.error(request, "В хранилище недостаточно экземпляров предмета.")
+            return redirect("characters:character-inventory", character_id)
+
+        if storage_entry.quantity == quantity:
+            storage_entry.delete()
+        else:
+            storage_entry.quantity -= quantity
+            storage_entry.save(update_fields=["quantity"])
+
+        inv_entry, created = InventoryItem.objects.get_or_create(
+            character=character,
+            item=item,
+            defaults={"quantity": quantity},
+        )
+        if created:
+            if inv_entry.quantity != quantity:
+                inv_entry.quantity = quantity
+                inv_entry.save(update_fields=["quantity"])
+        else:
+            inv_entry.quantity += quantity
+            inv_entry.save(update_fields=["quantity"])
+
+        messages.success(request, f"{item.name} возвращён из домашнего хранилища (×{quantity}).")
+        return redirect("characters:character-inventory", character_id)
+
+
+@method_decorator(require_POST, name="dispatch")
+class DeleteItemFromHomeView(LoginRequiredMixin, View):
+    def post(self, request, character_id, item_id):
+        character = get_object_or_404(Character, id=character_id)
+        user = request.user
+        is_owner = user == character.owner
+        is_gm = bool(character.world and character.world.creator == user)
+
+        if not (is_owner or is_gm):
+            return HttpResponseForbidden("Нет прав")
+
+        storage_entry = (
+            HomeInventoryItem.objects
+            .select_related("item")
+            .filter(character=character, item_id=item_id)
+            .first()
+        )
+        if not storage_entry:
+            messages.error(request, "В хранилище нет такого предмета.")
+            return redirect("characters:character-inventory", character_id)
+
+        quantity = _parse_quantity(request.POST.get("quantity"), default=storage_entry.quantity)
+        if quantity is None:
+            messages.error(request, "Укажите корректное количество для удаления из хранилища.")
+            return redirect("characters:character-inventory", character_id)
+
+        item_name = storage_entry.item.name
+        if quantity >= storage_entry.quantity:
+            removed_qty = storage_entry.quantity
+            storage_entry.delete()
+        else:
+            storage_entry.quantity -= quantity
+            storage_entry.save(update_fields=["quantity"])
+            removed_qty = quantity
+
+        messages.success(request, f"Из домашнего хранилища удалено {item_name} ×{removed_qty}.")
+        return redirect("characters:character-inventory", character_id)
+
+
+@method_decorator(require_POST, name="dispatch")
+class ToggleHomeStorageView(LoginRequiredMixin, View):
+    def post(self, request, character_id):
+        character = get_object_or_404(Character, pk=character_id)
+        user = request.user
+        if not (character.world and character.world.creator == user):
+            return HttpResponseForbidden("Нет прав")
+
+        character.home_storage_enabled = not character.home_storage_enabled
+        character.save(update_fields=["home_storage_enabled"])
+
+        if character.home_storage_enabled:
+            messages.success(request, "Домашнее хранилище включено.")
+        else:
+            messages.info(request, "Домашнее хранилище отключено. Игроки не смогут им пользоваться до повторного включения.")
+
         return redirect("characters:character-inventory", character_id)
 
 
