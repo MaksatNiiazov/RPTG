@@ -318,11 +318,11 @@ UNFOLD = {
                         "icon": "history",
                         "link": reverse_lazy("admin:admin_logentry_changelist"),
                     },
-                    {
-                        "title": _("Сессии"),
-                        "icon": "monitor_heart",
-                        "link": reverse_lazy("admin:sessions_session_changelist"),
-                    },
+                    # {
+                    #     "title": _("Сессии"),
+                    #     "icon": "monitor_heart",
+                    #     "link": reverse_lazy("admin:sessions_session_changelist"),
+                    # },
                 ],
             },
         ],

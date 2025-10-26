@@ -3,130 +3,137 @@
 
 {% block breadcrumbs %}{% endblock %}
 
-{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+{% block title %}
+    {% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}
+{% endblock %}
 
 {% block branding %}
     {% include "unfold/helpers/site_branding.html" %}
 {% endblock %}
 
 {% block content %}
-    <div class="flex flex-col gap-8">
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {% for stat in dashboard_stats %}
-                {% component "unfold/components/card.html" with class="relative overflow-hidden" %}
-                    <div class="flex items-center gap-4">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-300">
-                            <span class="material-symbols-outlined text-3xl">{{ stat.icon }}</span>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-base-400 dark:text-base-500">{{ stat.label }}</p>
-                            <p class="text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ stat.value }}</p>
-                        </div>
-                    </div>
-                    {% if stat.caption %}
-                        <p class="mt-4 text-sm text-base-500 dark:text-base-400">{{ stat.caption }}</p>
-                    {% endif %}
-                {% endcomponent %}
-            {% endfor %}
-        </div>
+<div class="grid gap-6 sm:grid-cols-2">
 
-        <div class="grid gap-6 lg:grid-cols-3">
-            <div class="lg:col-span-2">
-                {% component "unfold/components/card.html" with title=_("Динамика персонажей") %}
-                    <p class="mb-4 text-sm text-base-500 dark:text-base-400">{% trans "Отслеживайте, сколько новых персонажей появляется каждую неделю за последние полтора месяца." %}</p>
-                    {% component "unfold/components/chart/line.html" with data=character_growth_data options=character_growth_options height=260 %}{% endcomponent %}
-                {% endcomponent %}
-            </div>
-            <div>
-                {% component "unfold/components/card.html" with title=_("Быстрые действия") %}
-                    <ul class="space-y-4">
-                        {% for link in quick_links %}
-                            <li>
-                                <a href="{{ link.url }}" class="flex items-start gap-3 rounded-default border border-base-200 px-4 py-3 transition hover:border-primary-400 hover:bg-primary-50/60 hover:text-primary-600 dark:border-base-700 dark:hover:border-primary-500/70 dark:hover:bg-primary-500/10 dark:hover:text-primary-300">
-                                    <span class="material-symbols-outlined text-2xl">{{ link.icon }}</span>
-                                    <span class="flex min-w-0 flex-col">
-                                        <span class="font-semibold text-font-important-light dark:text-font-important-dark">{{ link.title }}</span>
-                                        <span class="text-sm text-base-500 dark:text-base-400">{{ link.description }}</span>
-                                    </span>
-                                    <span class="material-symbols-outlined ml-auto text-base-400 dark:text-base-600">arrow_outward</span>
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endcomponent %}
-            </div>
-        </div>
-
-        <div class="grid gap-6 xl:grid-cols-3">
-            <div class="space-y-6">
-                {% component "unfold/components/card.html" with title=_("Активные миры") %}
-                    <div class="space-y-4">
-                        {% for world in dashboard_worlds %}
-                            <div class="flex items-start gap-3 rounded-default border border-dashed border-base-200 p-3 dark:border-base-700">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-50 text-secondary-600 dark:bg-secondary-500/10 dark:text-secondary-300">
-                                    <span class="material-symbols-outlined">public</span>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <p class="font-semibold text-font-important-light dark:text-font-important-dark">{{ world.name }}</p>
-                                    <p class="text-xs uppercase tracking-wide text-base-400 dark:text-base-500">{{ world.created_at|date:"d E Y" }}</p>
-                                </div>
-                                <div class="flex flex-col items-end gap-2 text-sm text-base-500 dark:text-base-400">
-                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined md-18 text-primary-500 dark:text-primary-300">groups</span>{{ world.player_count }}</span>
-                                    <span class="flex items-center gap-1"><span class="material-symbols-outlined md-18 text-secondary-500 dark:text-secondary-300">stadia_controller</span>{{ world.character_count }}</span>
-                                </div>
-                            </div>
-                        {% empty %}
-                            <p class="text-sm text-base-500 dark:text-base-400">{% trans "Пока не создано ни одного мира." %}</p>
-                        {% endfor %}
-                    </div>
-                {% endcomponent %}
-            </div>
-            <div class="space-y-6">
-                {% component "unfold/components/card.html" with title=_("Последние заклинания") %}
-                    <ul class="space-y-3">
-                        {% for spell in latest_spells %}
-                            <li class="flex items-start gap-3 rounded-default border border-base-200 p-3 dark:border-base-700">
-                                <span class="material-symbols-outlined text-primary-500 dark:text-primary-300">auto_awesome</span>
-                                <div class="min-w-0">
-                                    <p class="font-semibold text-font-important-light dark:text-font-important-dark">{{ spell.name }}</p>
-                                    <p class="text-sm text-base-500 dark:text-base-400">{{ spell.school.name }} · {{ spell.category.name }} · {% blocktrans with level=spell.level %}уровень {{ level }}{% endblocktrans %}</p>
-                                </div>
-                            </li>
-                        {% empty %}
-                            <p class="text-sm text-base-500 dark:text-base-400">{% trans "Добавьте первое заклинание, чтобы увидеть его здесь." %}</p>
-                        {% endfor %}
-                    </ul>
-                {% endcomponent %}
-            </div>
-            <div class="space-y-6">
-                {% component "unfold/components/card.html" with title=_("Новые предметы") %}
-                    <ul class="space-y-3">
-                        {% for item in latest_items %}
-                            <li class="flex items-start gap-3 rounded-default border border-base-200 p-3 dark:border-base-700">
-                                <span class="material-symbols-outlined text-amber-500">inventory_2</span>
-                                <div class="min-w-0">
-                                    <p class="font-semibold text-font-important-light dark:text-font-important-dark">{{ item.name }}</p>
-                                    <p class="text-sm text-base-500 dark:text-base-400">{{ item.type.name }} · {{ item.rarity.name }} · {{ item.created_at|date:"d E Y" }}</p>
-                                </div>
-                            </li>
-                        {% empty %}
-                            <p class="text-sm text-base-500 dark:text-base-400">{% trans "Предметы ещё не созданы." %}</p>
-                        {% endfor %}
-                    </ul>
-                {% endcomponent %}
-            </div>
-        </div>
-
-        <div class="grid gap-6 xl:grid-cols-[2fr_minmax(0,1fr)]">
-            <div class="bg-white border border-base-200 overflow-hidden rounded-default shadow-xs dark:border-base-800 dark:bg-base-900">
-                <h2 class="border-b border-base-200 bg-base-50 px-6 py-4 text-lg font-semibold text-font-important-light dark:border-base-800 dark:bg-white/[.02] dark:text-font-important-dark">{% trans "Управление контентом" %}</h2>
-                <div class="px-6 py-4">
-                    {% include "unfold/helpers/app_list_default.html" %}
+    {# --- Статистика --- #}
+    {% for stat in dashboard_stats %}
+        {% component "unfold/components/card.html" with class="relative overflow-hidden transition transform hover:scale-[1.02] hover:shadow-lg group" %}
+            <div class="flex items-center gap-5">
+                <div class="flex h-14 w-14 items-center justify-center rounded-full border border-base-200 bg-base-50 text-base-400 transition-colors
+                            group-hover:bg-primary-50 group-hover:text-primary-600 dark:border-base-700 dark:bg-base-800 dark:text-base-500
+                            dark:group-hover:bg-primary-500/10 dark:group-hover:text-primary-300">
+                    <span class="material-symbols-outlined text-2xl"> -{{ stat.icon }}- </span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-base-500 dark:text-base-400">{{ stat.label }}</p>
+                    <p class="text-3xl font-bold text-font-important-light dark:text-font-important-dark">{{ stat.value }}</p>
                 </div>
             </div>
-            <div>
-                {% include "unfold/helpers/history.html" %}
-            </div>
+            {% if stat.caption %}
+                <p class="mt-3 text-sm text-base-500 dark:text-base-400 italic">{{ stat.caption }}</p>
+            {% endif %}
+        {% endcomponent %}
+    {% endfor %}
+
+    {# --- Динамика персонажей --- #}
+    {% component "unfold/components/card.html" with title=_("Динамика персонажей") %}
+        <p class="mb-4 text-sm text-base-500 dark:text-base-400">
+            {% trans "Отслеживайте, сколько новых персонажей появляется каждую неделю за последние полтора месяца." %}
+        </p>
+        {% component "unfold/components/chart/line.html" with data=character_growth_data options=character_growth_options height=260 %}{% endcomponent %}
+    {% endcomponent %}
+
+    {# --- Быстрые действия --- #}
+    {% component "unfold/components/card.html" with title=_("Быстрые действия") %}
+        <ul class="space-y-4">
+            {% for link in quick_links %}
+                <li>
+                    <a href="{{ link.url }}"
+                       class="flex items-start gap-3 rounded-default border border-base-200 px-4 py-3 transition
+                              hover:border-primary-400 hover:bg-primary-50/60 hover:text-primary-600
+                              dark:border-base-700 dark:hover:border-primary-500/70 dark:hover:bg-primary-500/10 dark:hover:text-primary-300">
+                        <span class="material-symbols-outlined text-2xl">{{ link.icon }}</span>
+                        <span class="flex min-w-0 flex-col">
+                            <span class="font-semibold text-font-important-light dark:text-font-important-dark">{{ link.title }}</span>
+                            <span class="text-sm text-base-500 dark:text-base-400">{{ link.description }}</span>
+                        </span>
+                        <span class="material-symbols-outlined ml-auto text-base-400 dark:text-base-600">arrow_outward</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endcomponent %}
+
+    {# --- Активные миры --- #}
+    {% component "unfold/components/card.html" with title=_("Активные миры") %}
+        <div class="space-y-4">
+            {% for world in dashboard_worlds %}
+                <div class="flex items-start gap-3 rounded-default border border-dashed border-base-200 p-3 dark:border-base-700 hover:border-primary-400 transition">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-50 text-secondary-600 dark:bg-secondary-500/10 dark:text-secondary-300">
+                        <span class="material-symbols-outlined">public</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="font-semibold text-font-important-light dark:text-font-important-dark">{{ world.name }}</p>
+                        <p class="text-xs uppercase tracking-wide text-base-400 dark:text-base-500">{{ world.created_at|date:"d E Y" }}</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-2 text-sm text-base-500 dark:text-base-400">
+                        <span class="flex items-center gap-1"><span class="material-symbols-outlined md-18 text-primary-500 dark:text-primary-300">groups</span>{{ world.player_count }}</span>
+                        <span class="flex items-center gap-1"><span class="material-symbols-outlined md-18 text-secondary-500 dark:text-secondary-300">stadia_controller</span>{{ world.character_count }}</span>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-sm text-base-500 dark:text-base-400">{% trans "Пока не создано ни одного мира." %}</p>
+            {% endfor %}
         </div>
-    </div>
+    {% endcomponent %}
+
+    {# --- Последние заклинания --- #}
+    {% component "unfold/components/card.html" with title=_("Последние заклинания") %}
+        <ul class="space-y-3">
+            {% for spell in latest_spells %}
+                <li class="flex items-start gap-3 rounded-default border border-base-200 p-3 dark:border-base-700 hover:border-primary-400 transition">
+                    <span class="material-symbols-outlined text-primary-500 dark:text-primary-300">auto_awesome</span>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-font-important-light dark:text-font-important-dark">{{ spell.name }}</p>
+                        <p class="text-sm text-base-500 dark:text-base-400">
+                            {{ spell.school.name }} · {{ spell.category.name }} ·
+                            {% blocktrans with level=spell.level %}уровень {{ level }}{% endblocktrans %}
+                        </p>
+                    </div>
+                </li>
+            {% empty %}
+                <p class="text-sm text-base-500 dark:text-base-400">{% trans "Добавьте первое заклинание, чтобы увидеть его здесь." %}</p>
+            {% endfor %}
+        </ul>
+    {% endcomponent %}
+
+    {# --- Новые предметы --- #}
+    {% component "unfold/components/card.html" with title=_("Новые предметы") %}
+        <ul class="space-y-3">
+            {% for item in latest_items %}
+                <li class="flex items-start gap-3 rounded-default border border-base-200 p-3 dark:border-base-700 hover:border-primary-400 transition">
+                    <span class="material-symbols-outlined text-amber-500">inventory_2</span>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-font-important-light dark:text-font-important-dark">{{ item.name }}</p>
+                        <p class="text-sm text-base-500 dark:text-base-400">
+                            {{ item.type.name }} · {{ item.rarity.name }} · {{ item.created_at|date:"d E Y" }}
+                        </p>
+                    </div>
+                </li>
+            {% empty %}
+                <p class="text-sm text-base-500 dark:text-base-400">{% trans "Предметы ещё не созданы." %}</p>
+            {% endfor %}
+        </ul>
+    {% endcomponent %}
+
+    {# --- Управление контентом --- #}
+    {% component "unfold/components/card.html" with title=_("Управление контентом") %}
+        {% include "unfold/helpers/app_list_default.html" %}
+    {% endcomponent %}
+
+    {# --- История --- #}
+{#    {% component "unfold/components/card.html" with title=_("История действий") %}#}
+{#        {% include "unfold/helpers/history.html" %}#}
+{#    {% endcomponent %}#}
+
+</div>
 {% endblock %}
