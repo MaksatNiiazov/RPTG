@@ -36,6 +36,7 @@
                 <thead>
                 <tr>
                     <th>Слот</th>
+                    <th>Действия</th>
                     <th>Предмет</th>
                     <th>Действия</th>
                     <th>Бонус</th>
@@ -54,17 +55,18 @@
                                     {% endif %}>
                                 <td>{{ label }}</td>
                                 {% if item %}
-                                    <td>{{ item.name }}</td>
                                     <td class="td-buttons">
                                         <form class="unequip-form">
                                             {% csrf_token %}
                                             <button class="btn-inventory btn-unequip">Снять</button>
                                         </form>
                                     </td>
+                                    <td>{{ item.name }}</td>
                                     <td>+{{ item.bonus }}</td>
                                     <td>{{ item.weight }} кг</td>
                                 {% else %}
-                                    <td colspan="4" class="empty-slot">Пусто</td>
+                                    <td class="td-buttons"></td>
+                                    <td colspan="3" class="empty-slot">Пусто</td>
                                 {% endif %}
                             </tr>
                         {% endwith %}
@@ -138,19 +140,19 @@
         {% if home_storage_enabled %}
             <div class="inventory-section home-storage" data-tab-label="Хранилище">
                 <h2>Домашнее хранилище</h2>
-                <table class="item-table home-storage-table">
-                    <thead>
-                    <tr>
-                        <th>Название</th>
-                        <th>Действия</th>
-                        <th>Кол-во</th>
-                        <th>Бонус</th>
-                        <th>Вес</th>
-                        <th>Легендарный баф</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% if home_storage_items %}
+                {% if home_storage_items %}
+                    <table class="item-table home-storage-table">   {# добавлен класс home-storage-table #}
+                        <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Действия</th>
+                            <th>Кол-во</th>
+                            <th>Бонус</th>
+                            <th>Вес</th>
+                            <th>Легендарный баф</th>
+                        </tr>
+                        </thead>
+                        <tbody>
                         {% for entry in home_storage_items %}
                             <tr class="storage-row" data-item-id="{{ entry.item.id }}">
                                 <td class="name-cell"><span
@@ -178,13 +180,11 @@
                                 </td>
                             </tr>
                         {% endfor %}
-                    {% else %}
-                        <tr class="empty-row" data-empty="storage">
-                            <td colspan="6" class="empty-slot">Хранилище пусто.</td>
-                        </tr>
-                    {% endif %}
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>Хранилище пусто.</p>
+                {% endif %}
 
                 {# Шаблон строки для динамического добавления в хранилище #}
                 <template id="storage-row-template">
@@ -212,7 +212,7 @@
     {# Шаблон строки для динамического добавления в инвентарь #}
     <template id="inv-row-template">
         <tr class="inv-row" data-item-id="">
-            <td class="name-cell"><span></span></td>
+            <td class="name-cell"></td>
             <td class="td-buttons">
                 {% if char.can_trade %}
                     <button class="btn-inventory btn-sell" data-sell-url=""></button>

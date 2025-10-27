@@ -234,13 +234,13 @@ function initInventoryActions(container) {
                 if (eqRow) {
                     eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
-          <td>${item.name}</td>
           <td class="td-buttons">
             <form class="unequip-form">
               <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
               <button type="submit" class="btn-inventory btn-unequip">Снять</button>
             </form>
           </td>
+          <td>${item.name}</td>
           <td>+${item.bonus}</td>
           <td>${item.weight} кг</td>`;
                     eqRow.dataset.slot = slot;
@@ -265,7 +265,8 @@ function initInventoryActions(container) {
                 if (eqRow) {
                     eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
-          <td colspan="4" class="empty-slot">Пусто</td>`;
+          <td class="td-buttons"></td>
+          <td colspan="3" class="empty-slot">Пусто</td>`;
                     delete eqRow.dataset.unequipUrl;
                     initFormButtons(eqRow);
                 }
