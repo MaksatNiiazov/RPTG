@@ -73,17 +73,14 @@ function initInventoryTabs(container) {
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const container = document.querySelector(".inventory-layout");
-    if (!container) return;
-
+function initInventoryActions(container) {
     const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
     if (!csrfInput) return;
 
     const csrfToken = csrfInput.value;
     const equipBase = container.dataset.equipBase;
     const dropBase = container.dataset.dropBase;
-    const unequipBase = equipBase.replace(/\/equip\/0\/$/, "/unequip/");
+    const unequipBaseRaw = container.dataset.unequipBase || "";
     const storeBase = container.dataset.storageStoreBase || "";
     const retrieveBase = container.dataset.storageRetrieveBase || "";
     const deleteBase = container.dataset.storageDeleteBase || "";
@@ -97,6 +94,38 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!csrfToken || !equipBase || !dropBase || !invTableBody) {
         console.warn("Inventory script: missing required data attributes or CSRF token.");
         return;
+    }
+
+    const unequipBaseFromEquip = equipBase ? equipBase.replace(/\/equip\/0\/?$/, "/unequip/") : "";
+
+    function buildUnequipUrl(slot) {
+        if (!slot) return "";
+
+        if (unequipBaseRaw) {
+            if (unequipBaseRaw.includes("{slot}")) {
+                return ensureTrailingSlash(unequipBaseRaw.replace("{slot}", slot));
+            }
+
+            if (unequipBaseRaw.includes("SLOT")) {
+                return ensureTrailingSlash(unequipBaseRaw.replace(/SLOT\/?$/, slot));
+            }
+
+            if (unequipBaseRaw.includes("SLO")) {
+                return ensureTrailingSlash(unequipBaseRaw.replace(/SLO\/?$/, slot));
+            }
+
+            return ensureTrailingSlash(`${unequipBaseRaw.replace(/\/$/, "")}/${slot}`);
+        }
+
+        if (unequipBaseFromEquip) {
+            return ensureTrailingSlash(`${unequipBaseFromEquip}${slot}`);
+        }
+
+        return "";
+    }
+
+    function ensureTrailingSlash(url) {
+        return url.endsWith("/") ? url : `${url}/`;
     }
 
     container.addEventListener("submit", async (e) => {
@@ -129,9 +158,17 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!tr) return;
             url = equipBase.replace(/0\/$/, tr.dataset.itemId + "/");
         } else if (form.matches(".unequip-form")) {
-            const slot = form.closest("tr.equip-row")?.dataset.slot;
-            if (!slot) return;
-            url = `${unequipBase}${slot}/`;
+            const equipRow = form.closest("tr.equip-row");
+            if (!equipRow) return;
+            const directUrl = equipRow.dataset.unequipUrl;
+            const slot = equipRow.dataset.slot;
+            if (directUrl) {
+                url = directUrl;
+            } else if (slot) {
+                url = buildUnequipUrl(slot);
+            } else {
+                return;
+            }
         } else {
             const tr = form.closest("tr.inv-row");
             if (!tr) return;
@@ -141,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const res = await fetch(url, {
                 method: "POST",
+                credentials: "same-origin",
                 headers: {
                     "X-CSRFToken": csrfToken,
                     "X-Requested-With": "XMLHttpRequest",
@@ -148,9 +186,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: new FormData(form),
             });
-            const payload = await res.json();
+            const payload = await parseJsonResponse(res);
             if (!res.ok || payload.status !== "ok") {
-                throw new Error(payload.message || payload.data?.message || `HTTP ${res.status}`);
+                const message = payload.message || payload.data?.message || `HTTP ${res.status}`;
+                throw Object.assign(new Error(message), { status: res.status, payload });
             }
 
             const data = payload.data;
@@ -169,6 +208,13 @@ document.addEventListener("DOMContentLoaded", () => {
               <button class="btn-inventory btn-unequip">Снять</button>
             </form>
           </td>`;
+                    eqRow.dataset.slot = slot;
+                    const unequipUrl = buildUnequipUrl(slot);
+                    if (unequipUrl) {
+                        eqRow.dataset.unequipUrl = unequipUrl;
+                    } else {
+                        delete eqRow.dataset.unequipUrl;
+                    }
                 }
                 const invRow = container.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
@@ -188,6 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
           <td colspan="4" class="empty-slot">Пусто</td>`;
+                    delete eqRow.dataset.unequipUrl;
                 }
                 let invRow = invTableBody?.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
@@ -225,7 +272,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (err) {
             console.error(err);
-            showToast(err.message || "Не удалось выполнить операцию", "error");
+            const message = err.userMessage || err.message || "Не удалось выполнить операцию";
+            showToast(message, "error");
         }
     }
 
@@ -244,6 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const res = await fetch(form.getAttribute("action"), {
                 method: "POST",
+                credentials: "same-origin",
                 headers: {
                     "X-CSRFToken": csrfToken,
                     "X-Requested-With": "XMLHttpRequest",
@@ -251,9 +300,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: new FormData(form)
             });
-            const payload = await res.json();
+            const payload = await parseJsonResponse(res);
             if (!res.ok || payload.status !== "ok") {
-                throw new Error(payload.message || `HTTP ${res.status}`);
+                const message = payload.message || `HTTP ${res.status}`;
+                throw Object.assign(new Error(message), { status: res.status, payload });
             }
 
             if (payload.action === "store") {
@@ -271,7 +321,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (err) {
             console.error(err);
-            showToast(err.message || "Не удалось выполнить операцию", "error");
+            const message = err.userMessage || err.message || "Не удалось выполнить операцию";
+            showToast(message, "error");
         }
     }
 
@@ -513,17 +564,14 @@ document.addEventListener("DOMContentLoaded", () => {
             storageTableBody.append(emptyRow);
         }
     }
-});
-document.addEventListener("DOMContentLoaded", () => {
-    initSellButtons();
-});
+}
 
 function initSellButtons(context = document) {
     if (!context || typeof context.querySelectorAll !== "function") return;
     context.querySelectorAll(".btn-sell").forEach(button => {
         if (button.dataset.sellHandlerAttached === "true") return;
         button.dataset.sellHandlerAttached = "true";
-        button.addEventListener("click", event => {
+        button.addEventListener("click", async event => {
             event.preventDefault();
 
             const url = button.dataset.sellUrl;
@@ -547,6 +595,7 @@ function initSellButtons(context = document) {
             try {
                 const response = await fetch(url, {
                     method: "POST",
+                    credentials: "same-origin",
                     headers: {
                         "X-CSRFToken": getCsrfToken(),
                         "X-Requested-With": "XMLHttpRequest",
@@ -554,22 +603,24 @@ function initSellButtons(context = document) {
                     },
                 });
 
-                if (!response.ok) {
-                    throw new Error("HTTP " + response.status);
+                const data = await parseJsonResponse(response);
+
+                if (!response.ok || data.status !== "ok") {
+                    throw Object.assign(
+                        new Error(data.message || `HTTP ${response.status}`),
+                        { status: response.status, payload: data }
+                    );
                 }
 
-                const data = await response.json();
-
-                if (data.status === "ok") {
-                    updateInventoryRow(row, data.remaining);
-                    updateGoldDisplay(data.new_gold);
+                updateInventoryRow(row, data.remaining);
+                updateGoldDisplay(data.new_gold);
+                if (data.message) {
                     showToast(data.message, "success");
-                } else {
-                    showToast(data.message || "Не удалось продать предмет.", "error");
                 }
             } catch (error) {
                 console.error(error);
-                showToast("Ошибка при отправке запроса.", "error");
+                const message = error.userMessage || error.message || "Ошибка при отправке запроса.";
+                showToast(message, "error");
             } finally {
                 button.disabled = false;
                 button.removeAttribute("aria-busy");
@@ -625,4 +676,24 @@ function removeExistingToasts() {
     document.querySelectorAll(".toast").forEach((toast) => {
         toast.remove();
     });
+}
+
+async function parseJsonResponse(response) {
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+        try {
+            return await response.json();
+        } catch (err) {
+            err.userMessage = "Не удалось обработать ответ сервера.";
+            throw err;
+        }
+    }
+
+    const text = await response.text();
+    const status = response.status || 0;
+    const error = new Error(`Сервер вернул неожиданный ответ (HTTP ${status || "?"}).`);
+    error.status = status;
+    error.responseText = text;
+    error.userMessage = "Неожиданный ответ от сервера. Попробуйте перезагрузить страницу.";
+    throw error;
 }
