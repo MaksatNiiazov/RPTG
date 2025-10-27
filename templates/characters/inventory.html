@@ -11,8 +11,10 @@
 {% block content %}
     <h1>Инвентарь: <a href="{% url 'characters:character_detail' char.id %}">{{ char.name }}</a></h1>
     <p><strong>Соллиды:</strong> <span id="char-gold">{{ char.gold }} Ꞩ</span></p>
-    <p><strong>Нагрузка:</strong> <span id="char-load">{{ char.get_current_load.total_weight }} / {{ char.get_current_load.carry_capacity }} кг</span></p>
-{#    <p>{{ char.get_current_load }}</p>#}
+    <p><strong>Нагрузка:</strong> <span
+            id="char-load">{{ char.get_current_load.total_weight }} / {{ char.get_current_load.carry_capacity }} кг</span>
+    </p>
+    {#    <p>{{ char.get_current_load }}</p>#}
 
     <div class="inventory-layout"
          data-char-id="{{ char.id }}"
@@ -22,7 +24,7 @@
          data-sell-base="{% if char.can_trade %}{% url 'shops:ajax-sell-item' char.id 0 %}{% endif %}"
          data-storage-store-base="{% url 'characters:home-storage-store' char.id 0 %}"
          data-storage-retrieve-base="{% url 'characters:home-storage-retrieve' char.id 0 %}"
-{#         data-storage-delete-base="{% url 'characters:home-storage-delete' char.id 0 %}"#}
+            {#         data-storage-delete-base="{% url 'characters:home-storage-delete' char.id 0 %}"#}
          data-can-trade="{{ char.can_trade|yesno:'true,false' }}"
          data-can-use-storage="{{ can_use_home_storage|yesno:'true,false' }}">
 
@@ -100,13 +102,13 @@
                             {% if entry.item.legendary_buff %}{{ entry.item.legendary_buff }}{% else %}—{% endif %}
                         </td>
                         <td class="td-buttons">
-                             {% if char.can_trade %}
-                    <button
-                            class="btn-inventory btn-sell"
-                            data-sell-url="{% url 'shops:ajax-sell-item' char.id entry.item.id %}">
-                        Продать ({{ entry.item|sell_price_for:char }}Ꞩ)
-                    </button>
-                {% endif %}
+                            {% if char.can_trade %}
+                                <button
+                                        class="btn-inventory btn-sell"
+                                        data-sell-url="{% url 'shops:ajax-sell-item' char.id entry.item.id %}">
+                                    Продать ({{ entry.item|sell_price_for:char }}Ꞩ)
+                                </button>
+                            {% endif %}
                             <form class="equip-form">
                                 {% csrf_token %}
                                 <button class="btn-inventory btn-equip">Экипировать</button>
@@ -116,10 +118,11 @@
                                 <button class="btn-inventory btn-drop">Выбросить</button>
                             </form>
                             {% if can_use_home_storage %}
-                                <form class="storage-form" method="post"
+                                <form class="storage-form" method="post" data-storage-action="store"
+                                      data-item-id="{{ entry.item.id }}"
                                       action="{% url 'characters:home-storage-store' char.id entry.item.id %}">
                                     {% csrf_token %}
-                                    <button class="btn-inventory btn-store">В хранилище</button>
+                                    <button type="submit" class="btn-inventory btn-store">В хранилище</button>
                                 </form>
                             {% endif %}
                         </td>
@@ -173,7 +176,7 @@
         <div class="inventory-section home-storage">
             <h2>Домашнее хранилище</h2>
             {% if home_storage_items %}
-                <table class="item-table">
+                <table class="item-table home-storage-table">   {# добавлен класс home-storage-table #}
                     <thead>
                     <tr>
                         <th>Название</th>
@@ -186,7 +189,7 @@
                     </thead>
                     <tbody>
                     {% for entry in home_storage_items %}
-                        <tr>
+                        <tr class="storage-row" data-item-id="{{ entry.item.id }}">
                             <td class="name-cell"><span
                                     style="border-left: 6px solid {{ entry.item.rarity.color }}; padding-left: 6px">{{ entry.item.name }}</span>
                             </td>
@@ -198,10 +201,13 @@
                             </td>
                             <td class="td-buttons">
                                 {% if can_use_home_storage %}
-                                    <form class="storage-form" method="post"
+                                    <form class="storage-form"
+                                          method="post"
+                                          data-storage-action="retrieve"     {# добавлено #}
+                                          data-item-id="{{ entry.item.id }}" {# добавлено #}
                                           action="{% url 'characters:home-storage-retrieve' char.id entry.item.id %}">
                                         {% csrf_token %}
-                                        <button class="btn-inventory btn-store">Забрать</button>
+                                        <button type="submit" class="btn-inventory btn-store">Забрать</button>
                                     </form>
                                 {% else %}
                                     <span class="text-muted">Недоступно</span>
@@ -215,6 +221,26 @@
                 <p>Хранилище пусто.</p>
             {% endif %}
         </div>
+
+        {# Шаблон строки для динамического добавления в хранилище #}
+        <template id="storage-row-template">
+            <tr class="storage-row" data-item-id="">
+                <td class="name-cell"><span></span></td>
+                <td class="quantity-cell">0</td>
+                <td class="bonus-cell">+0</td>
+                <td class="weight-cell">0 кг</td>
+                <td class="legendary-cell">—</td>
+                <td class="td-buttons">
+                    <form class="storage-form"
+                          method="post"
+                          data-storage-action="retrieve"
+                          data-item-id="">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-inventory btn-store">Забрать</button>
+                    </form>
+                </td>
+            </tr>
+        </template>
     {% else %}
         {% if can_toggle_home_storage %}
             <p class="text-muted">Домашнее хранилище сейчас отключено.</p>
@@ -239,3 +265,15 @@
     <script src="{% static 'js/character_inventory.js' %}"></script>
 {% endblock %}
 
+
+<form class="storage-form" method="post" data-storage-action="store" data-item-id="1"
+      action="/characters/characters/1/storage/store/1/"><input type="hidden" name="csrfmiddlewaretoken"
+                                                                value="B1jpVjbUcSQSwUgq6BzYzYKTTl1EuljI9HOd5GmVmvFG2NbxZpAhdOUkdaPQSG86"><input
+        type="hidden" name="quantity" value="1">
+    <button type="submit" class="btn-inventory btn-store">В хранилище</button>
+</form>
+<form class="storage-form" method="post" action="/characters/characters/1/storage/store/1/">
+    <input type="hidden" name="csrfmiddlewaretoken"
+           value="BZ0VxSisWGbEknZkDjD7IPfeObo98oNA9FvJHftt6j0sQgUrw7EqmFpF80clwJCY">
+    <button type="submit" class="btn-inventory btn-store">В хранилище</button>
+</form>

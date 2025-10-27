@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initInventoryTabs(container);
     initInventoryActions(container);
     initSellButtons();
+
 });
 
 function initInventoryTabs(container) {
@@ -81,10 +82,7 @@ function initInventoryTabs(container) {
 }
 
 function initInventoryActions(container) {
-    if (container.dataset.actionsInitialized === "true") {
-        return;
-    }
-    container.dataset.actionsInitialized = "true";
+
 
     const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
     if (!csrfInput) return;
@@ -128,6 +126,12 @@ function initInventoryActions(container) {
 
     function ensureTrailingSlash(url) {
         return url.endsWith("/") ? url : `${url}/`;
+    }
+
+    function initFormButtons(context = document) {
+        context.querySelectorAll('.equip-form button, .unequip-form button, .drop-form button, .storage-form button').forEach(btn => {
+            if (btn.type !== 'submit') btn.type = 'submit';
+        });
     }
 
     document.addEventListener("submit", async (e) => {
@@ -237,11 +241,12 @@ function initInventoryActions(container) {
           <td>
             <form class="unequip-form">
               <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
-              <button class="btn-inventory btn-unequip">Снять</button>
+              <button type="submit" class="btn-inventory btn-unequip">Снять</button>
             </form>
           </td>`;
                     eqRow.dataset.slot = slot;
                     eqRow.dataset.unequipUrl = buildUnequipUrl(slot);
+                    initFormButtons(eqRow);
                 }
                 const invRow = container.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
@@ -250,6 +255,7 @@ function initInventoryActions(container) {
                     if (nextQuantity > 0) {
                         cell.textContent = nextQuantity;
                         updateInventoryStoreForm(invRow, item.id, nextQuantity);
+                        initFormButtons(invRow);
                     } else {
                         invRow.remove();
                     }
@@ -262,6 +268,7 @@ function initInventoryActions(container) {
           <td>${eqRow.dataset.label}</td>
           <td colspan="4" class="empty-slot">Пусто</td>`;
                     delete eqRow.dataset.unequipUrl;
+                    initFormButtons(eqRow);
                 }
                 let invRow = invTableBody?.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
@@ -269,6 +276,7 @@ function initInventoryActions(container) {
                     const newQty = parseInt(qtyCell.textContent, 10) + 1;
                     qtyCell.textContent = newQty;
                     updateInventoryStoreForm(invRow, item.id, newQty);
+                    initFormButtons(invRow);
                 } else {
                     const newRow = buildInventoryRow({
                         id: item.id,
@@ -281,6 +289,7 @@ function initInventoryActions(container) {
                     }, 1);
                     invTableBody?.append(newRow);
                     initSellButtons(newRow);
+                    initFormButtons(newRow);
                 }
             } else {
                 const {item_id, remaining} = data;
@@ -289,6 +298,7 @@ function initInventoryActions(container) {
                 if (remaining > 0) {
                     invRow.querySelector(".quantity-cell").textContent = remaining;
                     updateInventoryStoreForm(invRow, item_id, remaining);
+                    initFormButtons(invRow);
                 } else {
                     invRow.remove();
                 }
@@ -301,11 +311,9 @@ function initInventoryActions(container) {
             console.error(err);
             const message = err.userMessage || err.message || "Не удалось выполнить операцию";
             showToast(message, "error");
-            if (message === "Неожиданный ответ от сервера. Попробуйте перезагрузить страницу.") {
-                location.reload();
-            }
         } finally {
             releaseFormBusy(form);
+            initFormButtons();
         }
     }
 
@@ -345,9 +353,12 @@ function initInventoryActions(container) {
             if (payload.action === "store") {
                 updateInventoryAfterStore(payload);
                 updateStorageRow(payload.item, payload.storage_quantity);
+                initInventoryActions(container);   // <--- добавь
+
             } else if (payload.action === "retrieve") {
                 updateStorageRow(payload.item, payload.storage_quantity);
                 updateInventoryAfterRetrieve(payload);
+                initInventoryActions(container);   // <--- добавь
             } else if (payload.action === "delete") {
                 updateStorageRow({id: payload.item_id}, payload.storage_quantity);
             }
@@ -359,11 +370,9 @@ function initInventoryActions(container) {
             console.error(err);
             const message = err.userMessage || err.message || "Не удалось выполнить операцию";
             showToast(message, "error");
-            if (message === "Неожиданный ответ от сервера. Попробуйте перезагрузить страницу.") {
-                location.reload();
-            }
         } finally {
             releaseFormBusy(form);
+            initFormButtons();
         }
     }
 
@@ -433,6 +442,7 @@ function initInventoryActions(container) {
         equipForm.method = "post";
         equipForm.append(createCsrfInput());
         const equipBtn = document.createElement("button");
+        equipBtn.type = "submit";
         equipBtn.className = "btn-inventory btn-equip";
         equipBtn.textContent = "Экипировать";
         equipForm.append(equipBtn);
@@ -443,6 +453,7 @@ function initInventoryActions(container) {
         dropForm.method = "post";
         dropForm.append(createCsrfInput());
         const dropBtn = document.createElement("button");
+        dropBtn.type = "submit";
         dropBtn.className = "btn-inventory btn-drop";
         dropBtn.textContent = "Выбросить";
         dropForm.append(dropBtn);
@@ -457,14 +468,11 @@ function initInventoryActions(container) {
             storeForm.action = storeBase.replace(/0\/$/, `${item.id}/`);
             storeForm.append(createCsrfInput());
             const quantityInput = document.createElement("input");
-            quantityInput.type = "number";
+            quantityInput.type = "hidden";
             quantityInput.name = "quantity";
-            quantityInput.min = "1";
-            quantityInput.max = String(quantity);
-            quantityInput.value = Math.min(quantity, 1);
-            quantityInput.className = "storage-quantity-input";
-            quantityInput.setAttribute("aria-label", "Количество");
+            quantityInput.value = "1";
             const storeBtn = document.createElement("button");
+            storeBtn.type = "submit";
             storeBtn.className = "btn-inventory btn-store";
             storeBtn.textContent = "В хранилище";
             storeForm.append(quantityInput, storeBtn);
@@ -472,6 +480,7 @@ function initInventoryActions(container) {
         }
 
         row.append(nameCell, quantityCell, bonusCell, weightCell, legendaryCell, actionsCell);
+        initFormButtons(row);
         return row;
     }
 
@@ -490,6 +499,7 @@ function initInventoryActions(container) {
         if (inventory_quantity > 0) {
             row.querySelector(".quantity-cell").textContent = inventory_quantity;
             updateInventoryStoreForm(row, item.id, inventory_quantity);
+            initFormButtons(row);
         } else {
             row.remove();
         }
@@ -501,10 +511,12 @@ function initInventoryActions(container) {
         if (row) {
             row.querySelector(".quantity-cell").textContent = inventory_quantity;
             updateInventoryStoreForm(row, item.id, inventory_quantity);
+            initFormButtons(row);
         } else {
             row = buildInventoryRow(item, inventory_quantity);
             invTableBody?.append(row);
             initSellButtons(row);
+            initFormButtons(row);
         }
     }
 
@@ -518,13 +530,7 @@ function initInventoryActions(container) {
         }
         const input = storeForm.querySelector('input[name="quantity"]');
         if (!input) return;
-        input.max = String(quantity);
-        if (!input.value || parseInt(input.value, 10) < 1) {
-            input.value = quantity > 0 ? 1 : 0;
-        }
-        if (parseInt(input.value, 10) > quantity) {
-            input.value = quantity;
-        }
+        input.value = "1";
     }
 
     function updateStorageRow(item, quantity) {
@@ -598,6 +604,7 @@ function initInventoryActions(container) {
                 }
             }
         });
+        initFormButtons(row);
     }
 
     function removeStorageEmptyRow() {
@@ -626,6 +633,8 @@ function initInventoryActions(container) {
             storageTableBody.append(emptyRow);
         }
     }
+
+    initFormButtons();
 }
 
 function initSellButtons(context = document) {

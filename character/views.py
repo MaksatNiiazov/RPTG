@@ -440,7 +440,10 @@ class StoreItemInHomeView(LoginRequiredMixin, View):
             return HttpResponseForbidden("Нет прав")
 
         if not character.home_storage_enabled and not is_gm:
-            messages.error(request, "Домашнее хранилище пока не разрешено ГМ.")
+            msg = "Домашнее хранилище пока не разрешено ГМ."
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({'status': 'error', 'message': msg}, status=403)
+            messages.error(request, msg)
             return redirect("characters:character-inventory", character_id)
 
         inv_entry = (
@@ -450,28 +453,53 @@ class StoreItemInHomeView(LoginRequiredMixin, View):
             .first()
         )
         if not inv_entry:
-            messages.error(request, "В инвентаре нет такого предмета.")
+            msg = "В инвентаре нет такого предмета."
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({'status': 'error', 'message': msg}, status=404)
+            messages.error(request, msg)
             return redirect("characters:character-inventory", character_id)
 
         item = inv_entry.item
-        if inv_entry.quantity <= 1:
+        quantity_moved = 1  # Since you're moving one at a time
+        if inv_entry.quantity <= quantity_moved:
             inv_entry.delete()
+            inventory_quantity = 0
         else:
-            inv_entry.quantity -= 1
+            inv_entry.quantity -= quantity_moved
             inv_entry.save(update_fields=["quantity"])
+            inventory_quantity = inv_entry.quantity
 
         storage_entry, created = HomeInventoryItem.objects.get_or_create(
             character=character,
             item=item,
-            defaults={"quantity": 1},
+            defaults={"quantity": quantity_moved},
         )
         if not created:
-            storage_entry.quantity += 1
+            storage_entry.quantity += quantity_moved
             storage_entry.save(update_fields=["quantity"])
+        storage_quantity = storage_entry.quantity
 
-        messages.success(request, f"{item.name} перемещён в домашнее хранилище.")
+        msg = f"{item.name} перемещён в домашнее хранилище."
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            item_data = {
+                'id': item.id,
+                'name': item.name,
+                'bonus': item.bonus,
+                'weight': item.weight,
+                'legendary_buff': item.legendary_buff if hasattr(item, 'legendary_buff') else "",
+                'rarity_color': item.rarity_color if hasattr(item, 'rarity_color') else "#a57c52",
+                'sell_price': item.sell_price if hasattr(item, 'sell_price') else None,
+            }
+            return JsonResponse({
+                'status': 'ok',
+                'action': 'store',
+                'item': item_data,
+                'inventory_quantity': inventory_quantity,
+                'storage_quantity': storage_quantity,
+                'message': msg
+            })
+        messages.success(request, msg)
         return redirect("characters:character-inventory", character_id)
-
 
 @method_decorator(require_POST, name="dispatch")
 class RetrieveItemFromHomeView(LoginRequiredMixin, View):
@@ -485,7 +513,10 @@ class RetrieveItemFromHomeView(LoginRequiredMixin, View):
             return HttpResponseForbidden("Нет прав")
 
         if not character.home_storage_enabled and not is_gm:
-            messages.error(request, "Домашнее хранилище пока не разрешено ГМ.")
+            msg = "Домашнее хранилище пока не разрешено ГМ."
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({'status': 'error', 'message': msg}, status=403)
+            messages.error(request, msg)
             return redirect("characters:character-inventory", character_id)
 
         storage_entry = (
@@ -495,29 +526,53 @@ class RetrieveItemFromHomeView(LoginRequiredMixin, View):
             .first()
         )
         if not storage_entry:
-            messages.error(request, "В хранилище нет такого предмета.")
+            msg = "В хранилище нет такого предмета."
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({'status': 'error', 'message': msg}, status=404)
+            messages.error(request, msg)
             return redirect("characters:character-inventory", character_id)
 
         item = storage_entry.item
-        if storage_entry.quantity <= 1:
+        quantity_moved = 1  # Since you're moving one at a time
+        if storage_entry.quantity <= quantity_moved:
             storage_entry.delete()
+            storage_quantity = 0
         else:
-            storage_entry.quantity -= 1
+            storage_entry.quantity -= quantity_moved
             storage_entry.save(update_fields=["quantity"])
+            storage_quantity = storage_entry.quantity
 
         inv_entry, created = InventoryItem.objects.get_or_create(
             character=character,
             item=item,
-            defaults={"quantity": 1},
+            defaults={"quantity": quantity_moved},
         )
         if not created:
-            inv_entry.quantity += 1
+            inv_entry.quantity += quantity_moved
             inv_entry.save(update_fields=["quantity"])
+        inventory_quantity = inv_entry.quantity
 
-        messages.success(request, f"{item.name} возвращён из домашнего хранилища.")
+        msg = f"{item.name} возвращён из домашнего хранилища."
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            item_data = {
+                'id': item.id,
+                'name': item.name,
+                'bonus': item.bonus,
+                'weight': item.weight,
+                'legendary_buff': item.legendary_buff if hasattr(item, 'legendary_buff') else "",
+                'rarity_color': item.rarity_color if hasattr(item, 'rarity_color') else "#a57c52",
+                'sell_price': item.sell_price if hasattr(item, 'sell_price') else None,
+            }
+            return JsonResponse({
+                'status': 'ok',
+                'action': 'retrieve',
+                'item': item_data,
+                'inventory_quantity': inventory_quantity,
+                'storage_quantity': storage_quantity,
+                'message': msg
+            })
+        messages.success(request, msg)
         return redirect("characters:character-inventory", character_id)
-
-
 @method_decorator(require_POST, name="dispatch")
 class ToggleHomeStorageView(LoginRequiredMixin, View):
     def post(self, request, character_id):
