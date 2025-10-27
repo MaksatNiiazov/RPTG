@@ -12,6 +12,7 @@ from django.views.generic import CreateView, DetailView, UpdateView, DeleteView,
 
 from items.models import Item
 from worlds.models import World
+from shops.utils.economy import get_sell_price
 from .forms import CharacterForm, LevelUpForm, CharacterUpdateForm, GoldDeltaForm
 from .models import (
     Character,
@@ -348,7 +349,8 @@ class EquipItemView(LoginRequiredMixin, View):
                     "legendary_buff": item.legendary_buff or "",
                     "rarity_color": getattr(item.rarity, "color", "#a57c52"),
                     "sell_price": get_sell_price(item, character) if character.can_trade else None,
-                }
+                },
+                "load": character.get_current_load(),
             }
         except Exception as e:
             message = str(e)
@@ -384,6 +386,7 @@ class UnequipSlotView(LoginRequiredMixin, View):
                     "rarity_color": getattr(item.rarity, "color", "#a57c52"),
                     "sell_price": get_sell_price(item, character) if character.can_trade else None,
                 },
+                "load": character.get_current_load(),
             }
         except Exception as e:
             message = str(e)
@@ -418,7 +421,11 @@ class DropItemView(LoginRequiredMixin, View):
                 remaining = inv_item.quantity
             message = f"{item.name} выброшен."
             status = "ok"
-            data = {"item_id": item.id, "remaining": remaining}
+            data = {
+                "item_id": item.id,
+                "remaining": remaining,
+                "load": character.get_current_load(),
+            }
 
         if is_ajax:
             return JsonResponse({"status": status, "message": message, "data": data})
@@ -496,6 +503,7 @@ class StoreItemInHomeView(LoginRequiredMixin, View):
                 'item': item_data,
                 'inventory_quantity': inventory_quantity,
                 'storage_quantity': storage_quantity,
+                'load': character.get_current_load(),
                 'message': msg
             })
         messages.success(request, msg)
@@ -569,6 +577,7 @@ class RetrieveItemFromHomeView(LoginRequiredMixin, View):
                 'item': item_data,
                 'inventory_quantity': inventory_quantity,
                 'storage_quantity': storage_quantity,
+                'load': character.get_current_load(),
                 'message': msg
             })
         messages.success(request, msg)

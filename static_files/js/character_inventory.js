@@ -304,6 +304,10 @@ function initInventoryActions(container) {
                 }
             }
 
+            if (data?.load) {
+                updateLoadDisplay(data.load);
+            }
+
             if (payload.message) {
                 showToast(payload.message, "success");
             }
@@ -353,14 +357,15 @@ function initInventoryActions(container) {
             if (payload.action === "store") {
                 updateInventoryAfterStore(payload);
                 updateStorageRow(payload.item, payload.storage_quantity);
-                initInventoryActions(container);   // <--- добавь
-
             } else if (payload.action === "retrieve") {
                 updateStorageRow(payload.item, payload.storage_quantity);
                 updateInventoryAfterRetrieve(payload);
-                initInventoryActions(container);   // <--- добавь
             } else if (payload.action === "delete") {
                 updateStorageRow({id: payload.item_id}, payload.storage_quantity);
+            }
+
+            if (payload.load) {
+                updateLoadDisplay(payload.load);
             }
 
             if (payload.message) {
@@ -637,6 +642,28 @@ function initInventoryActions(container) {
     initFormButtons();
 }
 
+function updateLoadDisplay(load) {
+    if (!load) return;
+    const loadDisplay = document.querySelector("#char-load");
+    if (!loadDisplay) return;
+    const total = normalizeWeight(load.total_weight);
+    const capacity = normalizeWeight(load.carry_capacity);
+    if (total == null || capacity == null) return;
+    loadDisplay.textContent = `${total} / ${capacity} кг`;
+}
+
+function normalizeWeight(value) {
+    if (value == null) return null;
+    const number = typeof value === "number" ? value : parseFloat(value);
+    if (Number.isFinite(number)) {
+        if (Math.abs(number % 1) < 0.001) {
+            return number.toString();
+        }
+        return number.toFixed(1);
+    }
+    return value;
+}
+
 function initSellButtons(context = document) {
     if (!context || typeof context.querySelectorAll !== "function") return;
     context.querySelectorAll(".btn-sell").forEach(button => {
@@ -685,6 +712,9 @@ function initSellButtons(context = document) {
 
                 updateInventoryRow(row, data.remaining);
                 updateGoldDisplay(data.new_gold);
+                if (data.load) {
+                    updateLoadDisplay(data.load);
+                }
                 if (data.message) {
                     showToast(data.message, "success");
                 }

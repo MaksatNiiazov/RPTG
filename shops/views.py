@@ -313,4 +313,5 @@ def ajax_sell_item(request, character_id, item_id):
         "item_id": item_id,
         "remaining": inv_entry.quantity if inv_entry.quantity > 0 else 0,
         "new_gold": character.gold,
+        "load": character.get_current_load(),
     })
