@@ -126,9 +126,17 @@ function initInventoryActions(container) {
             if (!tr) return;
             url = equipBase.replace(/0\/$/, tr.dataset.itemId + "/");
         } else if (form.matches(".unequip-form")) {
-            const slot = form.closest("tr.equip-row")?.dataset.slot;
-            if (!slot) return;
-            url = `${unequipBase}${slot}/`;
+            const equipRow = form.closest("tr.equip-row");
+            if (!equipRow) return;
+            const directUrl = equipRow.dataset.unequipUrl;
+            const slot = equipRow.dataset.slot;
+            if (directUrl) {
+                url = directUrl;
+            } else if (slot) {
+                url = `${unequipBase}${slot}/`;
+            } else {
+                return;
+            }
         } else {
             const tr = form.closest("tr.inv-row");
             if (!tr) return;
@@ -138,6 +146,7 @@ function initInventoryActions(container) {
         try {
             const res = await fetch(url, {
                 method: "POST",
+                credentials: "same-origin",
                 headers: {
                     "X-CSRFToken": csrfToken,
                     "X-Requested-With": "XMLHttpRequest",
@@ -145,9 +154,10 @@ function initInventoryActions(container) {
                 },
                 body: new FormData(form),
             });
-            const payload = await res.json();
+            const payload = await parseJsonResponse(res);
             if (!res.ok || payload.status !== "ok") {
-                throw new Error(payload.message || payload.data?.message || `HTTP ${res.status}`);
+                const message = payload.message || payload.data?.message || `HTTP ${res.status}`;
+                throw Object.assign(new Error(message), { status: res.status, payload });
             }
 
             const data = payload.data;
@@ -166,6 +176,8 @@ function initInventoryActions(container) {
               <button class="btn-inventory btn-unequip">Снять</button>
             </form>
           </td>`;
+                    eqRow.dataset.slot = slot;
+                    eqRow.dataset.unequipUrl = `${unequipBase}${slot}/`;
                 }
                 const invRow = container.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
@@ -185,6 +197,7 @@ function initInventoryActions(container) {
                     eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
           <td colspan="4" class="empty-slot">Пусто</td>`;
+                    delete eqRow.dataset.unequipUrl;
                 }
                 let invRow = invTableBody?.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
@@ -222,7 +235,8 @@ function initInventoryActions(container) {
             }
         } catch (err) {
             console.error(err);
-            showToast(err.message || "Не удалось выполнить операцию", "error");
+            const message = err.userMessage || err.message || "Не удалось выполнить операцию";
+            showToast(message, "error");
         }
     }
 
@@ -241,6 +255,7 @@ function initInventoryActions(container) {
         try {
             const res = await fetch(form.getAttribute("action"), {
                 method: "POST",
+                credentials: "same-origin",
                 headers: {
                     "X-CSRFToken": csrfToken,
                     "X-Requested-With": "XMLHttpRequest",
@@ -248,9 +263,10 @@ function initInventoryActions(container) {
                 },
                 body: new FormData(form)
             });
-            const payload = await res.json();
+            const payload = await parseJsonResponse(res);
             if (!res.ok || payload.status !== "ok") {
-                throw new Error(payload.message || `HTTP ${res.status}`);
+                const message = payload.message || `HTTP ${res.status}`;
+                throw Object.assign(new Error(message), { status: res.status, payload });
             }
 
             if (payload.action === "store") {
@@ -268,7 +284,8 @@ function initInventoryActions(container) {
             }
         } catch (err) {
             console.error(err);
-            showToast(err.message || "Не удалось выполнить операцию", "error");
+            const message = err.userMessage || err.message || "Не удалось выполнить операцию";
+            showToast(message, "error");
         }
     }
 
@@ -548,6 +565,7 @@ function initSellButtons(context = document) {
             try {
                 const response = await fetch(url, {
                     method: "POST",
+                    credentials: "same-origin",
                     headers: {
                         "X-CSRFToken": getCsrfToken(),
                         "X-Requested-With": "XMLHttpRequest",
@@ -555,22 +573,24 @@ function initSellButtons(context = document) {
                     },
                 });
 
-                if (!response.ok) {
-                    throw new Error("HTTP " + response.status);
+                const data = await parseJsonResponse(response);
+
+                if (!response.ok || data.status !== "ok") {
+                    throw Object.assign(
+                        new Error(data.message || `HTTP ${response.status}`),
+                        { status: response.status, payload: data }
+                    );
                 }
 
-                const data = await response.json();
-
-                if (data.status === "ok") {
-                    updateInventoryRow(row, data.remaining);
-                    updateGoldDisplay(data.new_gold);
+                updateInventoryRow(row, data.remaining);
+                updateGoldDisplay(data.new_gold);
+                if (data.message) {
                     showToast(data.message, "success");
-                } else {
-                    showToast(data.message || "Не удалось продать предмет.", "error");
                 }
             } catch (error) {
                 console.error(error);
-                showToast("Ошибка при отправке запроса.", "error");
+                const message = error.userMessage || error.message || "Ошибка при отправке запроса.";
+                showToast(message, "error");
             } finally {
                 button.disabled = false;
                 button.removeAttribute("aria-busy");
@@ -626,4 +646,24 @@ function removeExistingToasts() {
     document.querySelectorAll(".toast").forEach((toast) => {
         toast.remove();
     });
+}
+
+async function parseJsonResponse(response) {
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+        try {
+            return await response.json();
+        } catch (err) {
+            err.userMessage = "Не удалось обработать ответ сервера.";
+            throw err;
+        }
+    }
+
+    const text = await response.text();
+    const status = response.status || 0;
+    const error = new Error(`Сервер вернул неожиданный ответ (HTTP ${status || "?"}).`);
+    error.status = status;
+    error.responseText = text;
+    error.userMessage = "Неожиданный ответ от сервера. Попробуйте перезагрузить страницу.";
+    throw error;
 }
