@@ -18,65 +18,64 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initInventoryTabs(container) {
-    const tabs = document.createElement("div");
-    tabs.className = "inventory-tabs";
+    const sections = Array.from(container.querySelectorAll(".inventory-section"));
 
-    const btnEquip = document.createElement("button");
-    btnEquip.type = "button";
-    btnEquip.className = "tab-button";
-    btnEquip.textContent = "Экипировка";
-
-    const btnInv = document.createElement("button");
-    btnInv.type = "button";
-    btnInv.className = "tab-button";
-    btnInv.textContent = "Инвентарь";
-
-    tabs.append(btnEquip, btnInv);
-    container.parentNode.insertBefore(tabs, container);
-
-    const sections = container.querySelectorAll(".inventory-section");
-    const equipSection = sections[0];
-    const invSection = sections[1];
-
-    if (!equipSection || !invSection) {
+    if (sections.length === 0) {
         return;
     }
 
-    const activate = (tab) => {
-        if (tab === "equip") {
-            btnEquip.classList.add("active");
-            btnInv.classList.remove("active");
-            equipSection.classList.add("active");
-            invSection.classList.remove("active");
-        } else {
-            btnInv.classList.add("active");
-            btnEquip.classList.remove("active");
-            invSection.classList.add("active");
-            equipSection.classList.remove("active");
-        }
-    };
-
-    btnEquip.addEventListener("click", () => activate("equip"));
-    btnInv.addEventListener("click", () => activate("inv"));
-
-    const showBoth = () => {
-        btnEquip.classList.remove("active");
-        btnInv.classList.remove("active");
-        equipSection.classList.add("active");
-        invSection.classList.add("active");
-    };
-
-    if (window.innerWidth <= 800) {
-        activate("equip");
-    } else {
-        showBoth();
+    if (sections.length === 1) {
+        sections[0].classList.add("active");
+        return;
     }
+
+    const tabs = document.createElement("div");
+    tabs.className = "inventory-tabs";
+    container.parentNode.insertBefore(tabs, container);
+
+    const buttons = sections.map((section, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tab-button";
+        const label = section.dataset.tabLabel || section.querySelector("h2")?.textContent?.trim() || `Раздел ${index + 1}`;
+        button.textContent = label;
+        button.addEventListener("click", () => activate(index));
+        tabs.append(button);
+        return button;
+    });
+
+    let currentIndex = 0;
+
+    function activate(index) {
+        currentIndex = index;
+        sections.forEach((section, idx) => {
+            section.classList.toggle("active", idx === index);
+        });
+        buttons.forEach((button, idx) => {
+            button.classList.toggle("active", idx === index);
+        });
+    }
+
+    function showAll() {
+        sections.forEach((section) => section.classList.add("active"));
+        buttons.forEach((button) => button.classList.remove("active"));
+    }
+
+    function applyLayout() {
+        if (window.innerWidth <= 800) {
+            activate(currentIndex);
+        } else {
+            showAll();
+        }
+    }
+
+    applyLayout();
 
     window.addEventListener("resize", () => {
         if (window.innerWidth <= 800) {
-            activate("equip");
+            activate(currentIndex);
         } else {
-            showBoth();
+            showAll();
         }
     });
 }
@@ -235,15 +234,15 @@ function initInventoryActions(container) {
                 if (eqRow) {
                     eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
-          <td>${item.name}</td>
-          <td>+${item.bonus}</td>
-          <td>${item.weight} кг</td>
-          <td>
+          <td class="td-buttons">
             <form class="unequip-form">
               <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
               <button type="submit" class="btn-inventory btn-unequip">Снять</button>
             </form>
-          </td>`;
+          </td>
+          <td>${item.name}</td>
+          <td>+${item.bonus}</td>
+          <td>${item.weight} кг</td>`;
                     eqRow.dataset.slot = slot;
                     eqRow.dataset.unequipUrl = buildUnequipUrl(slot);
                     initFormButtons(eqRow);
@@ -266,7 +265,8 @@ function initInventoryActions(container) {
                 if (eqRow) {
                     eqRow.innerHTML = `
           <td>${eqRow.dataset.label}</td>
-          <td colspan="4" class="empty-slot">Пусто</td>`;
+          <td class="td-buttons"></td>
+          <td colspan="3" class="empty-slot">Пусто</td>`;
                     delete eqRow.dataset.unequipUrl;
                     initFormButtons(eqRow);
                 }
@@ -479,7 +479,7 @@ function initInventoryActions(container) {
             actionsCell.append(storeForm);
         }
 
-        row.append(nameCell, quantityCell, bonusCell, weightCell, legendaryCell, actionsCell);
+        row.append(nameCell, actionsCell, quantityCell, bonusCell, weightCell, legendaryCell);
         initFormButtons(row);
         return row;
     }
