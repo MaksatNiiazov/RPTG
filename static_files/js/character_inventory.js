@@ -133,6 +133,9 @@ function initInventoryActions(container) {
 
         if (form.matches(".storage-form")) {
             e.preventDefault();
+            if (form.dataset.pending === "true") {
+                return;
+            }
             if (canUseStorage) {
                 await handleStorageForm(form);
             }
@@ -141,6 +144,9 @@ function initInventoryActions(container) {
 
         if (!form.matches(".equip-form, .unequip-form, .drop-form")) return;
         e.preventDefault();
+        if (form.dataset.pending === "true") {
+            return;
+        }
         await handleEquipmentForm(form);
     });
 
@@ -152,10 +158,17 @@ function initInventoryActions(container) {
             }
         }
 
+        if (!markFormBusy(form)) {
+            return;
+        }
+
         let url;
         if (form.matches(".equip-form")) {
             const tr = form.closest("tr.inv-row");
-            if (!tr) return;
+            if (!tr) {
+                releaseFormBusy(form);
+                return;
+            }
             url = equipBase.replace(/0\/$/, tr.dataset.itemId + "/");
         } else if (form.matches(".unequip-form")) {
             const equipRow = form.closest("tr.equip-row");
@@ -171,8 +184,17 @@ function initInventoryActions(container) {
             }
         } else {
             const tr = form.closest("tr.inv-row");
-            if (!tr) return;
+            if (!tr) {
+                releaseFormBusy(form);
+                return;
+            }
             url = dropBase.replace(/0\/$/, tr.dataset.itemId + "/");
+        }
+
+        if (!url) {
+            releaseFormBusy(form);
+            showToast("Не удалось определить действие.", "error");
+            return;
         }
 
         try {
@@ -284,6 +306,10 @@ function initInventoryActions(container) {
             }
         }
 
+        if (!markFormBusy(form)) {
+            return;
+        }
+
         try {
             const res = await fetch(form.getAttribute("action"), {
                 method: "POST",
@@ -319,6 +345,82 @@ function initInventoryActions(container) {
             const message = err.userMessage || err.message || "Не удалось выполнить операцию";
             showToast(message, "error");
         }
+    }
+
+    function updateEquipmentSlot(slot, itemData) {
+        if (!slot) return;
+        const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
+        if (!eqRow) return;
+
+        while (eqRow.firstChild) {
+            eqRow.removeChild(eqRow.firstChild);
+        }
+
+        const labelCell = document.createElement("td");
+        labelCell.textContent = eqRow.dataset.label || "";
+        eqRow.append(labelCell);
+
+        if (itemData) {
+            const nameCell = document.createElement("td");
+            nameCell.textContent = itemData.name;
+            eqRow.append(nameCell);
+
+            const bonusCell = document.createElement("td");
+            bonusCell.textContent = `+${itemData.bonus}`;
+            eqRow.append(bonusCell);
+
+            const weightCell = document.createElement("td");
+            weightCell.textContent = `${itemData.weight} кг`;
+            eqRow.append(weightCell);
+
+            const actionCell = document.createElement("td");
+            const unequipForm = document.createElement("form");
+            unequipForm.className = "unequip-form";
+            unequipForm.method = "post";
+            unequipForm.append(createCsrfInput());
+            const unequipBtn = document.createElement("button");
+            unequipBtn.type = "submit";
+            unequipBtn.className = "btn-inventory btn-unequip";
+            unequipBtn.textContent = "Снять";
+            unequipForm.append(unequipBtn);
+            actionCell.append(unequipForm);
+            eqRow.append(actionCell);
+
+            const unequipUrl = buildUnequipUrl(slot);
+            if (unequipUrl) {
+                eqRow.dataset.unequipUrl = unequipUrl;
+            } else {
+                delete eqRow.dataset.unequipUrl;
+            }
+        } else {
+            const emptyCell = document.createElement("td");
+            emptyCell.colSpan = 4;
+            emptyCell.className = "empty-slot";
+            emptyCell.textContent = "Пусто";
+            eqRow.append(emptyCell);
+            delete eqRow.dataset.unequipUrl;
+        }
+    }
+
+    function markFormBusy(form) {
+        if (!form || form.dataset.pending === "true") {
+            return false;
+        }
+        form.dataset.pending = "true";
+        form.querySelectorAll("button").forEach((button) => {
+            button.disabled = true;
+            button.setAttribute("aria-busy", "true");
+        });
+        return true;
+    }
+
+    function releaseFormBusy(form) {
+        if (!form) return;
+        delete form.dataset.pending;
+        form.querySelectorAll("button").forEach((button) => {
+            button.disabled = false;
+            button.removeAttribute("aria-busy");
+        });
     }
 
     function buildInventoryRow(item, quantity) {
