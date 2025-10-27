@@ -96,6 +96,38 @@ function initInventoryActions(container) {
         return;
     }
 
+    const unequipBaseFromEquip = equipBase ? equipBase.replace(/\/equip\/0\/?$/, "/unequip/") : "";
+
+    function buildUnequipUrl(slot) {
+        if (!slot) return "";
+
+        if (unequipBaseRaw) {
+            if (unequipBaseRaw.includes("{slot}")) {
+                return ensureTrailingSlash(unequipBaseRaw.replace("{slot}", slot));
+            }
+
+            if (unequipBaseRaw.includes("SLOT")) {
+                return ensureTrailingSlash(unequipBaseRaw.replace(/SLOT\/?$/, slot));
+            }
+
+            if (unequipBaseRaw.includes("SLO")) {
+                return ensureTrailingSlash(unequipBaseRaw.replace(/SLO\/?$/, slot));
+            }
+
+            return ensureTrailingSlash(`${unequipBaseRaw.replace(/\/$/, "")}/${slot}`);
+        }
+
+        if (unequipBaseFromEquip) {
+            return ensureTrailingSlash(`${unequipBaseFromEquip}${slot}`);
+        }
+
+        return "";
+    }
+
+    function ensureTrailingSlash(url) {
+        return url.endsWith("/") ? url : `${url}/`;
+    }
+
     container.addEventListener("submit", async (e) => {
         const form = e.target;
 
