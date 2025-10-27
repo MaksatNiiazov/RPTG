@@ -30,16 +30,16 @@
 
 
         <!-- Экипировка -->
-        <div class="inventory-section">
+        <div class="inventory-section" data-tab-label="Экипировка">
             <h2>Экипировка</h2>
             <table class="item-table" id="equip-table">
                 <thead>
                 <tr>
                     <th>Слот</th>
                     <th>Предмет</th>
+                    <th>Действия</th>
                     <th>Бонус</th>
                     <th>Вес</th>
-                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -55,14 +55,14 @@
                                 <td>{{ label }}</td>
                                 {% if item %}
                                     <td>{{ item.name }}</td>
-                                    <td>+{{ item.bonus }}</td>
-                                    <td>{{ item.weight }} кг</td>
-                                    <td>
+                                    <td class="td-buttons">
                                         <form class="unequip-form">
                                             {% csrf_token %}
                                             <button class="btn-inventory btn-unequip">Снять</button>
                                         </form>
                                     </td>
+                                    <td>+{{ item.bonus }}</td>
+                                    <td>{{ item.weight }} кг</td>
                                 {% else %}
                                     <td colspan="4" class="empty-slot">Пусто</td>
                                 {% endif %}
@@ -75,17 +75,17 @@
         </div>
 
         <!-- Инвентарь -->
-        <div class="inventory-section">
+        <div class="inventory-section" data-tab-label="Инвентарь">
             <h2>Инвентарь</h2>
             <table class="item-table" id="inv-table">
                 <thead>
                 <tr>
                     <th>Название</th>
+                    <th>Действия</th>
                     <th>Кол-во</th>
                     <th>Бонус</th>
                     <th>Вес</th>
                     <th>Легендарный бaф</th>
-                    <th>Действия</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -94,12 +94,6 @@
                         data-item-id="{{ entry.item.id }}">
                         <td class="name-cell"><span
                                 style="border-left: 6px solid {{ entry.item.rarity.color }}; padding-left: 6px">{{ entry.item.name }}</span>
-                        </td>
-                        <td class="quantity-cell">{{ entry.quantity }}</td>
-                        <td class="bonus-cell">+{{ entry.item.bonus }}</td>
-                        <td class="weight-cell">{{ entry.item.weight }} кг</td>
-                        <td class="legendary-cell">
-                            {% if entry.item.legendary_buff %}{{ entry.item.legendary_buff }}{% else %}—{% endif %}
                         </td>
                         <td class="td-buttons">
                             {% if char.can_trade %}
@@ -126,6 +120,12 @@
                                 </form>
                             {% endif %}
                         </td>
+                        <td class="quantity-cell">{{ entry.quantity }}</td>
+                        <td class="bonus-cell">+{{ entry.item.bonus }}</td>
+                        <td class="weight-cell">{{ entry.item.weight }} кг</td>
+                        <td class="legendary-cell">
+                            {% if entry.item.legendary_buff %}{{ entry.item.legendary_buff }}{% else %}—{% endif %}
+                        </td>
                     </tr>
                 {% empty %}
                     <tr>
@@ -135,18 +135,88 @@
                 </tbody>
             </table>
         </div>
+        {% if home_storage_enabled %}
+            <div class="inventory-section home-storage" data-tab-label="Хранилище">
+                <h2>Домашнее хранилище</h2>
+                <table class="item-table home-storage-table">
+                    <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Действия</th>
+                        <th>Кол-во</th>
+                        <th>Бонус</th>
+                        <th>Вес</th>
+                        <th>Легендарный баф</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% if home_storage_items %}
+                        {% for entry in home_storage_items %}
+                            <tr class="storage-row" data-item-id="{{ entry.item.id }}">
+                                <td class="name-cell"><span
+                                        style="border-left: 6px solid {{ entry.item.rarity.color }}; padding-left: 6px">{{ entry.item.name }}</span>
+                                </td>
+                                <td class="td-buttons">
+                                    {% if can_use_home_storage %}
+                                        <form class="storage-form"
+                                              method="post"
+                                              data-storage-action="retrieve"
+                                              data-item-id="{{ entry.item.id }}"
+                                              action="{% url 'characters:home-storage-retrieve' char.id entry.item.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn-inventory btn-store">Забрать</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted">Недоступно</span>
+                                    {% endif %}
+                                </td>
+                                <td class="quantity-cell">{{ entry.quantity }}</td>
+                                <td class="bonus-cell">+{{ entry.item.bonus }}</td>
+                                <td class="weight-cell">{{ entry.item.weight }} кг</td>
+                                <td class="legendary-cell">
+                                    {% if entry.item.legendary_buff %}{{ entry.item.legendary_buff }}{% else %}—{% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr class="empty-row" data-empty="storage">
+                            <td colspan="6" class="empty-slot">Хранилище пусто.</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+
+                {# Шаблон строки для динамического добавления в хранилище #}
+                <template id="storage-row-template">
+                    <tr class="storage-row" data-item-id="">
+                        <td class="name-cell"><span></span></td>
+                        <td class="td-buttons">
+                            <form class="storage-form"
+                                  method="post"
+                                  data-storage-action="retrieve"
+                                  data-item-id="">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-inventory btn-store">Забрать</button>
+                            </form>
+                        </td>
+                        <td class="quantity-cell">0</td>
+                        <td class="bonus-cell">+0</td>
+                        <td class="weight-cell">0 кг</td>
+                        <td class="legendary-cell">—</td>
+                    </tr>
+                </template>
+            </div>
+        {% endif %}
     </div>
 
     {# Шаблон строки для динамического добавления в инвентарь #}
     <template id="inv-row-template">
         <tr class="inv-row" data-item-id="">
-            <td class="name-cell"></td>
-            <td class="quantity-cell"></td>
-            <td class="bonus-cell"></td>
-            <td class="weight-cell"></td>
-            <td class="legendary-cell"></td>
+            <td class="name-cell"><span></span></td>
             <td class="td-buttons">
-
+                {% if char.can_trade %}
+                    <button class="btn-inventory btn-sell" data-sell-url=""></button>
+                {% endif %}
                 <form class="equip-form">
                     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                     <button class="btn-inventory btn-equip">Экипировать</button>
@@ -155,7 +225,18 @@
                     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                     <button class="btn-inventory btn-drop">Выбросить</button>
                 </form>
+                {% if can_use_home_storage %}
+                    <form class="storage-form" method="post" data-storage-action="store" data-item-id="" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn-inventory btn-store">В хранилище</button>
+                    </form>
+                {% endif %}
             </td>
+            <td class="quantity-cell"></td>
+            <td class="bonus-cell"></td>
+            <td class="weight-cell"></td>
+            <td class="legendary-cell"></td>
         </tr>
     </template>
     <div class="home-storage-controls">
@@ -172,79 +253,8 @@
     </div>
     <br>
 
-    {% if home_storage_enabled %}
-        <div class="inventory-section home-storage">
-            <h2>Домашнее хранилище</h2>
-            {% if home_storage_items %}
-                <table class="item-table home-storage-table">   {# добавлен класс home-storage-table #}
-                    <thead>
-                    <tr>
-                        <th>Название</th>
-                        <th>Кол-во</th>
-                        <th>Бонус</th>
-                        <th>Вес</th>
-                        <th>Легендарный баф</th>
-                        <th>Действия</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for entry in home_storage_items %}
-                        <tr class="storage-row" data-item-id="{{ entry.item.id }}">
-                            <td class="name-cell"><span
-                                    style="border-left: 6px solid {{ entry.item.rarity.color }}; padding-left: 6px">{{ entry.item.name }}</span>
-                            </td>
-                            <td class="quantity-cell">{{ entry.quantity }}</td>
-                            <td class="bonus-cell">+{{ entry.item.bonus }}</td>
-                            <td class="weight-cell">{{ entry.item.weight }} кг</td>
-                            <td class="legendary-cell">
-                                {% if entry.item.legendary_buff %}{{ entry.item.legendary_buff }}{% else %}—{% endif %}
-                            </td>
-                            <td class="td-buttons">
-                                {% if can_use_home_storage %}
-                                    <form class="storage-form"
-                                          method="post"
-                                          data-storage-action="retrieve"     {# добавлено #}
-                                          data-item-id="{{ entry.item.id }}" {# добавлено #}
-                                          action="{% url 'characters:home-storage-retrieve' char.id entry.item.id %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn-inventory btn-store">Забрать</button>
-                                    </form>
-                                {% else %}
-                                    <span class="text-muted">Недоступно</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p>Хранилище пусто.</p>
-            {% endif %}
-        </div>
-
-        {# Шаблон строки для динамического добавления в хранилище #}
-        <template id="storage-row-template">
-            <tr class="storage-row" data-item-id="">
-                <td class="name-cell"><span></span></td>
-                <td class="quantity-cell">0</td>
-                <td class="bonus-cell">+0</td>
-                <td class="weight-cell">0 кг</td>
-                <td class="legendary-cell">—</td>
-                <td class="td-buttons">
-                    <form class="storage-form"
-                          method="post"
-                          data-storage-action="retrieve"
-                          data-item-id="">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-inventory btn-store">Забрать</button>
-                    </form>
-                </td>
-            </tr>
-        </template>
-    {% else %}
-        {% if can_toggle_home_storage %}
-            <p class="text-muted">Домашнее хранилище сейчас отключено.</p>
-        {% endif %}
+    {% if not home_storage_enabled and can_toggle_home_storage %}
+        <p class="text-muted">Домашнее хранилище сейчас отключено.</p>
     {% endif %}
     <h2>Сундуки</h2>
     {% if char.chests.exists %}
@@ -264,16 +274,3 @@
 {% block js %}
     <script src="{% static 'js/character_inventory.js' %}"></script>
 {% endblock %}
-
-
-<form class="storage-form" method="post" data-storage-action="store" data-item-id="1"
-      action="/characters/characters/1/storage/store/1/"><input type="hidden" name="csrfmiddlewaretoken"
-                                                                value="B1jpVjbUcSQSwUgq6BzYzYKTTl1EuljI9HOd5GmVmvFG2NbxZpAhdOUkdaPQSG86"><input
-        type="hidden" name="quantity" value="1">
-    <button type="submit" class="btn-inventory btn-store">В хранилище</button>
-</form>
-<form class="storage-form" method="post" action="/characters/characters/1/storage/store/1/">
-    <input type="hidden" name="csrfmiddlewaretoken"
-           value="BZ0VxSisWGbEknZkDjD7IPfeObo98oNA9FvJHftt6j0sQgUrw7EqmFpF80clwJCY">
-    <button type="submit" class="btn-inventory btn-store">В хранилище</button>
-</form>
