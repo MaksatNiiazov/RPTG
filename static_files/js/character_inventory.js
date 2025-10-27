@@ -80,7 +80,7 @@ function initInventoryActions(container) {
     const csrfToken = csrfInput.value;
     const equipBase = container.dataset.equipBase;
     const dropBase = container.dataset.dropBase;
-    const unequipBaseRaw = container.dataset.unequipBase || "";
+    const unequipBase = container.dataset.unequipBase || equipBase.replace(/\/equip\/0\/$/, "/unequip/");
     const storeBase = container.dataset.storageStoreBase || "";
     const retrieveBase = container.dataset.storageRetrieveBase || "";
     const deleteBase = container.dataset.storageDeleteBase || "";
@@ -165,7 +165,7 @@ function initInventoryActions(container) {
             if (directUrl) {
                 url = directUrl;
             } else if (slot) {
-                url = buildUnequipUrl(slot);
+                url = `${unequipBase}${slot}/`;
             } else {
                 return;
             }
@@ -209,12 +209,7 @@ function initInventoryActions(container) {
             </form>
           </td>`;
                     eqRow.dataset.slot = slot;
-                    const unequipUrl = buildUnequipUrl(slot);
-                    if (unequipUrl) {
-                        eqRow.dataset.unequipUrl = unequipUrl;
-                    } else {
-                        delete eqRow.dataset.unequipUrl;
-                    }
+                    eqRow.dataset.unequipUrl = `${unequipBase}${slot}/`;
                 }
                 const invRow = container.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
@@ -565,6 +560,13 @@ function initInventoryActions(container) {
         }
     }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const container = document.querySelector(".inventory-layout");
+    if (!container) return;
+    initInventoryActions(container);
+    initSellButtons();
+});
 
 function initSellButtons(context = document) {
     if (!context || typeof context.querySelectorAll !== "function") return;
