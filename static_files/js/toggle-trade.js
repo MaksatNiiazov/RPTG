@@ -1,3 +1,5 @@
+const TRADE_TOGGLE_COOLDOWN_MS = 1000;
+
 document.addEventListener("DOMContentLoaded", () => {
     const toggleBtns = document.querySelectorAll(".toggle-trade-btn");
 
@@ -7,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         toggleBtn.addEventListener("click", async (event) => {
             event.preventDefault();
-            if (toggleBtn.dataset.loading === "1") {
+            if (toggleBtn.dataset.loading === "1" || toggleBtn.dataset.cooldown === "1") {
                 return;
             }
 
@@ -50,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const newState = Boolean(payload.new_value);
                 updateTradeButton(toggleBtn, newState);
                 showToast(`Торговля ${newState ? "разрешена" : "запрещена"}`, "success");
+                startCooldown(toggleBtn);
             } catch (error) {
                 showToast(error.message || "Произошла ошибка при запросе", "error");
             } finally {
@@ -112,4 +115,15 @@ function showToast(msg, type = "info") {
 
 function removeExistingToasts() {
     document.querySelectorAll(".toast").forEach((toast) => toast.remove());
+}
+
+function startCooldown(button) {
+    button.dataset.cooldown = "1";
+
+    const removeCooldown = () => {
+        delete button.dataset.cooldown;
+        button.removeAttribute("data-cooldown");
+    };
+
+    window.setTimeout(removeCooldown, TRADE_TOGGLE_COOLDOWN_MS);
 }
