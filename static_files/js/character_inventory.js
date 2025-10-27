@@ -523,7 +523,7 @@ function initSellButtons(context = document) {
     context.querySelectorAll(".btn-sell").forEach(button => {
         if (button.dataset.sellHandlerAttached === "true") return;
         button.dataset.sellHandlerAttached = "true";
-        button.addEventListener("click", event => {
+        button.addEventListener("click", async event => {
             event.preventDefault();
 
             const url = button.dataset.sellUrl;
