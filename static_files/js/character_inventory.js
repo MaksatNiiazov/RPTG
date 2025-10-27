@@ -1,3 +1,10 @@
+function getCsrfToken() {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; csrftoken=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.querySelector(".inventory-layout");
     if (!container) {
@@ -74,13 +81,18 @@ function initInventoryTabs(container) {
 }
 
 function initInventoryActions(container) {
+    if (container.dataset.actionsInitialized === "true") {
+        return;
+    }
+    container.dataset.actionsInitialized = "true";
+
     const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
     if (!csrfInput) return;
 
     const csrfToken = csrfInput.value;
     const equipBase = container.dataset.equipBase;
     const dropBase = container.dataset.dropBase;
-    const unequipBase = container.dataset.unequipBase || equipBase.replace(/\/equip\/0\/$/, "/unequip/");
+    const unequipBase = container.dataset.unequipBase || equipBase?.replace(/\/equip\/0\/$/, "/unequip/");
     const storeBase = container.dataset.storageStoreBase || "";
     const retrieveBase = container.dataset.storageRetrieveBase || "";
     const deleteBase = container.dataset.storageDeleteBase || "";
@@ -96,40 +108,34 @@ function initInventoryActions(container) {
         return;
     }
 
-    const unequipBaseFromEquip = equipBase ? equipBase.replace(/\/equip\/0\/?$/, "/unequip/") : "";
-
     function buildUnequipUrl(slot) {
-        if (!slot) return "";
+        if (!slot || !unequipBase) return "";
 
-        if (unequipBaseRaw) {
-            if (unequipBaseRaw.includes("{slot}")) {
-                return ensureTrailingSlash(unequipBaseRaw.replace("{slot}", slot));
-            }
-
-            if (unequipBaseRaw.includes("SLOT")) {
-                return ensureTrailingSlash(unequipBaseRaw.replace(/SLOT\/?$/, slot));
-            }
-
-            if (unequipBaseRaw.includes("SLO")) {
-                return ensureTrailingSlash(unequipBaseRaw.replace(/SLO\/?$/, slot));
-            }
-
-            return ensureTrailingSlash(`${unequipBaseRaw.replace(/\/$/, "")}/${slot}`);
+        if (unequipBase.includes("{slot}")) {
+            return ensureTrailingSlash(unequipBase.replace("{slot}", slot));
         }
 
-        if (unequipBaseFromEquip) {
-            return ensureTrailingSlash(`${unequipBaseFromEquip}${slot}`);
+        if (unequipBase.includes("SLOT")) {
+            return ensureTrailingSlash(unequipBase.replace(/SLOT\/?$/, slot));
         }
 
-        return "";
+        if (unequipBase.includes("SLO")) {
+            return ensureTrailingSlash(unequipBase.replace(/SLO\/?$/, slot));
+        }
+
+        return ensureTrailingSlash(`${unequipBase.replace(/\/$/, "")}/${slot}`);
     }
 
     function ensureTrailingSlash(url) {
         return url.endsWith("/") ? url : `${url}/`;
     }
 
-    container.addEventListener("submit", async (e) => {
+    document.addEventListener("submit", async (e) => {
         const form = e.target;
+
+        if (!form.closest('.inventory-layout, .home-storage-table')) {
+            return;
+        }
 
         if (form.matches(".storage-form")) {
             e.preventDefault();
@@ -172,14 +178,18 @@ function initInventoryActions(container) {
             url = equipBase.replace(/0\/$/, tr.dataset.itemId + "/");
         } else if (form.matches(".unequip-form")) {
             const equipRow = form.closest("tr.equip-row");
-            if (!equipRow) return;
+            if (!equipRow) {
+                releaseFormBusy(form);
+                return;
+            }
             const directUrl = equipRow.dataset.unequipUrl;
             const slot = equipRow.dataset.slot;
             if (directUrl) {
                 url = directUrl;
             } else if (slot) {
-                url = `${unequipBase}${slot}/`;
+                url = buildUnequipUrl(slot);
             } else {
+                releaseFormBusy(form);
                 return;
             }
         } else {
@@ -231,7 +241,7 @@ function initInventoryActions(container) {
             </form>
           </td>`;
                     eqRow.dataset.slot = slot;
-                    eqRow.dataset.unequipUrl = `${unequipBase}${slot}/`;
+                    eqRow.dataset.unequipUrl = buildUnequipUrl(slot);
                 }
                 const invRow = container.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
@@ -291,6 +301,11 @@ function initInventoryActions(container) {
             console.error(err);
             const message = err.userMessage || err.message || "Не удалось выполнить операцию";
             showToast(message, "error");
+            if (message === "Неожиданный ответ от сервера. Попробуйте перезагрузить страницу.") {
+                location.reload();
+            }
+        } finally {
+            releaseFormBusy(form);
         }
     }
 
@@ -344,61 +359,11 @@ function initInventoryActions(container) {
             console.error(err);
             const message = err.userMessage || err.message || "Не удалось выполнить операцию";
             showToast(message, "error");
-        }
-    }
-
-    function updateEquipmentSlot(slot, itemData) {
-        if (!slot) return;
-        const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
-        if (!eqRow) return;
-
-        while (eqRow.firstChild) {
-            eqRow.removeChild(eqRow.firstChild);
-        }
-
-        const labelCell = document.createElement("td");
-        labelCell.textContent = eqRow.dataset.label || "";
-        eqRow.append(labelCell);
-
-        if (itemData) {
-            const nameCell = document.createElement("td");
-            nameCell.textContent = itemData.name;
-            eqRow.append(nameCell);
-
-            const bonusCell = document.createElement("td");
-            bonusCell.textContent = `+${itemData.bonus}`;
-            eqRow.append(bonusCell);
-
-            const weightCell = document.createElement("td");
-            weightCell.textContent = `${itemData.weight} кг`;
-            eqRow.append(weightCell);
-
-            const actionCell = document.createElement("td");
-            const unequipForm = document.createElement("form");
-            unequipForm.className = "unequip-form";
-            unequipForm.method = "post";
-            unequipForm.append(createCsrfInput());
-            const unequipBtn = document.createElement("button");
-            unequipBtn.type = "submit";
-            unequipBtn.className = "btn-inventory btn-unequip";
-            unequipBtn.textContent = "Снять";
-            unequipForm.append(unequipBtn);
-            actionCell.append(unequipForm);
-            eqRow.append(actionCell);
-
-            const unequipUrl = buildUnequipUrl(slot);
-            if (unequipUrl) {
-                eqRow.dataset.unequipUrl = unequipUrl;
-            } else {
-                delete eqRow.dataset.unequipUrl;
+            if (message === "Неожиданный ответ от сервера. Попробуйте перезагрузить страницу.") {
+                location.reload();
             }
-        } else {
-            const emptyCell = document.createElement("td");
-            emptyCell.colSpan = 4;
-            emptyCell.className = "empty-slot";
-            emptyCell.textContent = "Пусто";
-            eqRow.append(emptyCell);
-            delete eqRow.dataset.unequipUrl;
+        } finally {
+            releaseFormBusy(form);
         }
     }
 
@@ -663,13 +628,6 @@ function initInventoryActions(container) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const container = document.querySelector(".inventory-layout");
-    if (!container) return;
-    initInventoryActions(container);
-    initSellButtons();
-});
-
 function initSellButtons(context = document) {
     if (!context || typeof context.querySelectorAll !== "function") return;
     context.querySelectorAll(".btn-sell").forEach(button => {
@@ -747,13 +705,6 @@ function updateGoldDisplay(newGold) {
     if (goldDisplay) {
         goldDisplay.textContent = `${newGold} Ꞩ`;
     }
-}
-
-function getCsrfToken() {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; csrftoken=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return '';
 }
 
 function showToast(message, type = "info") {
