@@ -73,17 +73,14 @@ function initInventoryTabs(container) {
     });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const container = document.querySelector(".inventory-layout");
-    if (!container) return;
-
+function initInventoryActions(container) {
     const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
     if (!csrfInput) return;
 
     const csrfToken = csrfInput.value;
     const equipBase = container.dataset.equipBase;
     const dropBase = container.dataset.dropBase;
-    const unequipBase = equipBase.replace(/\/equip\/0\/$/, "/unequip/");
+    const unequipBase = container.dataset.unequipBase || equipBase.replace(/\/equip\/0\/$/, "/unequip/");
     const storeBase = container.dataset.storageStoreBase || "";
     const retrieveBase = container.dataset.storageRetrieveBase || "";
     const deleteBase = container.dataset.storageDeleteBase || "";
@@ -513,8 +510,12 @@ document.addEventListener("DOMContentLoaded", () => {
             storageTableBody.append(emptyRow);
         }
     }
-});
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    const container = document.querySelector(".inventory-layout");
+    if (!container) return;
+    initInventoryActions(container);
     initSellButtons();
 });
 
@@ -523,7 +524,7 @@ function initSellButtons(context = document) {
     context.querySelectorAll(".btn-sell").forEach(button => {
         if (button.dataset.sellHandlerAttached === "true") return;
         button.dataset.sellHandlerAttached = "true";
-        button.addEventListener("click", event => {
+        button.addEventListener("click", async event => {
             event.preventDefault();
 
             const url = button.dataset.sellUrl;
