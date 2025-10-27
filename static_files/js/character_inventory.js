@@ -529,6 +529,13 @@ function initInventoryActions(container) {
     }
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    const container = document.querySelector(".inventory-layout");
+    if (!container) return;
+    initInventoryActions(container);
+    initSellButtons();
+});
+
 function initSellButtons(context = document) {
     if (!context || typeof context.querySelectorAll !== "function") return;
     context.querySelectorAll(".btn-sell").forEach(button => {
