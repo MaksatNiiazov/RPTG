@@ -80,7 +80,7 @@ function initInventoryActions(container) {
     const csrfToken = csrfInput.value;
     const equipBase = container.dataset.equipBase;
     const dropBase = container.dataset.dropBase;
-    const unequipBaseRaw = container.dataset.unequipBase || "";
+    const unequipBase = container.dataset.unequipBase || equipBase.replace(/\/equip\/0\/$/, "/unequip/");
     const storeBase = container.dataset.storageStoreBase || "";
     const retrieveBase = container.dataset.storageRetrieveBase || "";
     const deleteBase = container.dataset.storageDeleteBase || "";
@@ -172,18 +172,14 @@ function initInventoryActions(container) {
             url = equipBase.replace(/0\/$/, tr.dataset.itemId + "/");
         } else if (form.matches(".unequip-form")) {
             const equipRow = form.closest("tr.equip-row");
-            if (!equipRow) {
-                releaseFormBusy(form);
-                return;
-            }
+            if (!equipRow) return;
             const directUrl = equipRow.dataset.unequipUrl;
             const slot = equipRow.dataset.slot;
             if (directUrl) {
                 url = directUrl;
             } else if (slot) {
-                url = buildUnequipUrl(slot);
+                url = `${unequipBase}${slot}/`;
             } else {
-                releaseFormBusy(form);
                 return;
             }
         } else {
@@ -221,7 +217,22 @@ function initInventoryActions(container) {
             const data = payload.data;
             if (form.matches(".equip-form")) {
                 const { slot, item } = data;
-                updateEquipmentSlot(slot, item);
+                const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
+                if (eqRow) {
+                    eqRow.innerHTML = `
+          <td>${eqRow.dataset.label}</td>
+          <td>${item.name}</td>
+          <td>+${item.bonus}</td>
+          <td>${item.weight} кг</td>
+          <td>
+            <form class="unequip-form">
+              <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+              <button class="btn-inventory btn-unequip">Снять</button>
+            </form>
+          </td>`;
+                    eqRow.dataset.slot = slot;
+                    eqRow.dataset.unequipUrl = `${unequipBase}${slot}/`;
+                }
                 const invRow = container.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
                     const cell = invRow.querySelector(".quantity-cell");
@@ -235,7 +246,13 @@ function initInventoryActions(container) {
                 }
             } else if (form.matches(".unequip-form")) {
                 const { slot, item } = data;
-                updateEquipmentSlot(slot, null);
+                const eqRow = container.querySelector(`tr.equip-row[data-slot="${slot}"]`);
+                if (eqRow) {
+                    eqRow.innerHTML = `
+          <td>${eqRow.dataset.label}</td>
+          <td colspan="4" class="empty-slot">Пусто</td>`;
+                    delete eqRow.dataset.unequipUrl;
+                }
                 let invRow = invTableBody?.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
                 if (invRow) {
                     const qtyCell = invRow.querySelector(".quantity-cell");
@@ -274,8 +291,6 @@ function initInventoryActions(container) {
             console.error(err);
             const message = err.userMessage || err.message || "Не удалось выполнить операцию";
             showToast(message, "error");
-        } finally {
-            releaseFormBusy(form);
         }
     }
 
@@ -329,8 +344,6 @@ function initInventoryActions(container) {
             console.error(err);
             const message = err.userMessage || err.message || "Не удалось выполнить операцию";
             showToast(message, "error");
-        } finally {
-            releaseFormBusy(form);
         }
     }
 
@@ -649,6 +662,13 @@ function initInventoryActions(container) {
         }
     }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const container = document.querySelector(".inventory-layout");
+    if (!container) return;
+    initInventoryActions(container);
+    initSellButtons();
+});
 
 function initSellButtons(context = document) {
     if (!context || typeof context.querySelectorAll !== "function") return;
