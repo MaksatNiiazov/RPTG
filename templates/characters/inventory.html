@@ -213,7 +213,9 @@
         <tr class="inv-row" data-item-id="">
             <td class="name-cell"></td>
             <td class="td-buttons">
-
+                {% if char.can_trade %}
+                    <button class="btn-inventory btn-sell" data-sell-url=""></button>
+                {% endif %}
                 <form class="equip-form">
                     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                     <button class="btn-inventory btn-equip">Экипировать</button>
@@ -222,6 +224,13 @@
                     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                     <button class="btn-inventory btn-drop">Выбросить</button>
                 </form>
+                {% if can_use_home_storage %}
+                    <form class="storage-form" method="post" data-storage-action="store" data-item-id="" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn-inventory btn-store">В хранилище</button>
+                    </form>
+                {% endif %}
             </td>
             <td class="quantity-cell"></td>
             <td class="bonus-cell"></td>
