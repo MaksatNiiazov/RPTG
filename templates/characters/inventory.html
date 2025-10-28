@@ -129,10 +129,7 @@
                             {% if entry.item.legendary_buff %}{{ entry.item.legendary_buff }}{% else %}—{% endif %}
                         </td>
                     </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="6" class="empty-slot">Инвентарь пуст.</td>
-                    </tr>
+
                 {% endfor %}
                 </tbody>
             </table>
@@ -215,7 +212,7 @@
             <td class="name-cell"></td>
             <td class="td-buttons">
                 {% if char.can_trade %}
-                    <button class="btn-inventory btn-sell" data-sell-url=""></button>
+                    <button class="btn-inventory btn-sell" data-sell-url="">Продать</button>
                 {% endif %}
                 <form class="equip-form">
                     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">

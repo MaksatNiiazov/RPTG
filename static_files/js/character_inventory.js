@@ -5,6 +5,33 @@ function getCsrfToken() {
     return '';
 }
 
+// Функция для получения цены предмета из разных источников
+function getItemSellPrice(item) {
+    // Пытаемся получить цену из разных источников в порядке приоритета
+    if (item.sell_price != null) return item.sell_price;
+    if (item.price != null) return item.price;
+    if (item.get_sell_price != null) return item.base_price;
+
+    // Если в ответе нет цены, пытаемся найти существующий элемент в DOM
+    const existingRow = document.querySelector(`tr.inv-row[data-item-id="${item.id}"]`);
+    if (existingRow) {
+        const sellBtn = existingRow.querySelector('.btn-sell');
+        if (sellBtn) {
+            const priceMatch = sellBtn.textContent.match(/(\d+)Ꞩ/);
+            if (priceMatch) return parseInt(priceMatch[1]);
+        }
+    }
+
+    // Пытаемся найти в начальном HTML
+    const initialRow = document.querySelector(`tr.inv-row[data-item-id="${item.id}"] .btn-sell`);
+    if (initialRow) {
+        const priceMatch = initialRow.textContent.match(/(\d+)Ꞩ/);
+        if (priceMatch) return parseInt(priceMatch[1]);
+    }
+
+    return null;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.querySelector(".inventory-layout");
     if (!container) {
@@ -13,8 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     initInventoryTabs(container);
     initInventoryActions(container);
-    initSellButtons();
-
+    initAllSellButtons();
 });
 
 function initInventoryTabs(container) {
@@ -54,6 +80,11 @@ function initInventoryTabs(container) {
         buttons.forEach((button, idx) => {
             button.classList.toggle("active", idx === index);
         });
+
+        // Переинициализируем кнопки продажи при смене таба
+        setTimeout(() => {
+            initAllSellButtons();
+        }, 100);
     }
 
     function showAll() {
@@ -81,8 +112,6 @@ function initInventoryTabs(container) {
 }
 
 function initInventoryActions(container) {
-
-
     const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
     if (!csrfInput) return;
 
@@ -254,6 +283,7 @@ function initInventoryActions(container) {
                     if (nextQuantity > 0) {
                         cell.textContent = nextQuantity;
                         updateInventoryStoreForm(invRow, item.id, nextQuantity);
+                        updateSellButton(invRow, item);
                         initFormButtons(invRow);
                     } else {
                         invRow.remove();
@@ -276,18 +306,13 @@ function initInventoryActions(container) {
                     const newQty = parseInt(qtyCell.textContent, 10) + 1;
                     qtyCell.textContent = newQty;
                     updateInventoryStoreForm(invRow, item.id, newQty);
+                    updateSellButton(invRow, item);
                     initFormButtons(invRow);
                 } else {
-                    const newRow = buildInventoryRow({
-                        id: item.id,
-                        name: item.name,
-                        bonus: item.bonus,
-                        weight: item.weight,
-                        legendary_buff: item.legendary_buff || "",
-                        rarity_color: item.rarity_color || "#a57c52",
-                        sell_price: item.sell_price ?? null,
-                    }, 1);
+                    const newRow = buildInventoryRow(item, 1, canTrade, sellBase, canUseStorage, storeBase, csrfToken);
                     invTableBody?.append(newRow);
+                    // 🔥 ФИКС: Принудительно обновляем кнопку продажи
+                    updateSellButton(newRow, item);
                     initSellButtons(newRow);
                     initFormButtons(newRow);
                 }
@@ -298,6 +323,7 @@ function initInventoryActions(container) {
                 if (remaining > 0) {
                     invRow.querySelector(".quantity-cell").textContent = remaining;
                     updateInventoryStoreForm(invRow, item_id, remaining);
+                    updateSellButton(invRow, {id: item_id});
                     initFormButtons(invRow);
                 } else {
                     invRow.remove();
@@ -402,7 +428,8 @@ function initInventoryActions(container) {
         });
     }
 
-    function buildInventoryRow(item, quantity) {
+    // 🔥 ФИКС: Всегда создаём кнопку если canTrade && sellBase (БЕЗ проверки price!)
+    function buildInventoryRow(item, quantity, canTrade, sellBase, canUseStorage, storeBase, csrfToken) {
         const row = document.createElement("tr");
         row.className = "inv-row";
         row.dataset.itemId = item.id;
@@ -434,18 +461,21 @@ function initInventoryActions(container) {
         const actionsCell = document.createElement("td");
         actionsCell.className = "td-buttons";
 
-        if (canTrade && sellBase && item.sell_price != null) {
+        // 🔥 ФИКС: Всегда создаём кнопку если canTrade && sellBase (БЕЗ проверки price!)
+        if (canTrade && sellBase) {
+            const sellPrice = getItemSellPrice(item);
             const sellBtn = document.createElement("button");
             sellBtn.className = "btn-inventory btn-sell";
             sellBtn.dataset.sellUrl = sellBase.replace(/0\/$/, `${item.id}/`);
-            sellBtn.textContent = `Продать (${item.sell_price}Ꞩ)`;
+            sellBtn.textContent = sellPrice ? `Продать (${sellPrice}Ꞩ)` : `Продать`;
+            sellBtn.dataset.sellHandlerAttached = "false";
             actionsCell.append(sellBtn);
         }
 
         const equipForm = document.createElement("form");
         equipForm.className = "equip-form";
         equipForm.method = "post";
-        equipForm.append(createCsrfInput());
+        equipForm.append(createCsrfInput(csrfToken));
         const equipBtn = document.createElement("button");
         equipBtn.type = "submit";
         equipBtn.className = "btn-inventory btn-equip";
@@ -456,7 +486,7 @@ function initInventoryActions(container) {
         const dropForm = document.createElement("form");
         dropForm.className = "drop-form";
         dropForm.method = "post";
-        dropForm.append(createCsrfInput());
+        dropForm.append(createCsrfInput(csrfToken));
         const dropBtn = document.createElement("button");
         dropBtn.type = "submit";
         dropBtn.className = "btn-inventory btn-drop";
@@ -471,7 +501,7 @@ function initInventoryActions(container) {
             storeForm.dataset.storageAction = "store";
             storeForm.dataset.itemId = String(item.id);
             storeForm.action = storeBase.replace(/0\/$/, `${item.id}/`);
-            storeForm.append(createCsrfInput());
+            storeForm.append(createCsrfInput(csrfToken));
             const quantityInput = document.createElement("input");
             quantityInput.type = "hidden";
             quantityInput.name = "quantity";
@@ -489,11 +519,11 @@ function initInventoryActions(container) {
         return row;
     }
 
-    function createCsrfInput() {
+    function createCsrfInput(token) {
         const input = document.createElement("input");
         input.type = "hidden";
         input.name = "csrfmiddlewaretoken";
-        input.value = csrfToken;
+        input.value = token;
         return input;
     }
 
@@ -504,6 +534,7 @@ function initInventoryActions(container) {
         if (inventory_quantity > 0) {
             row.querySelector(".quantity-cell").textContent = inventory_quantity;
             updateInventoryStoreForm(row, item.id, inventory_quantity);
+            updateSellButton(row, item);
             initFormButtons(row);
         } else {
             row.remove();
@@ -516,13 +547,49 @@ function initInventoryActions(container) {
         if (row) {
             row.querySelector(".quantity-cell").textContent = inventory_quantity;
             updateInventoryStoreForm(row, item.id, inventory_quantity);
+            updateSellButton(row, item);
             initFormButtons(row);
         } else {
-            row = buildInventoryRow(item, inventory_quantity);
+            row = buildInventoryRow(item, inventory_quantity, canTrade, sellBase, canUseStorage, storeBase, csrfToken);
             invTableBody?.append(row);
+            // 🔥 ФИКС: Принудительно обновляем кнопку (на случай null price)
+            updateSellButton(row, item);
             initSellButtons(row);
             initFormButtons(row);
         }
+    }
+
+    // 🔥 ФИКС: Создаём/обновляем БЕЗ проверки price!
+    function updateSellButton(row, item) {
+        if (!canTrade || !sellBase) return;
+
+        let sellBtn = row.querySelector('.btn-sell');
+
+        // 🔥 ФИКС: Создаём/обновляем БЕЗ проверки price!
+        const sellPrice = getItemSellPrice(item);
+        const newText = sellPrice ? `Продать (${sellPrice}Ꞩ)` : `Продать`;
+
+        if (!sellBtn) {
+            // Создаём новую
+            sellBtn = document.createElement("button");
+            sellBtn.className = "btn-inventory btn-sell";
+            sellBtn.dataset.sellUrl = sellBase.replace(/0\/$/, `${item.id}/`);
+            sellBtn.textContent = newText;
+            sellBtn.dataset.sellHandlerAttached = "false";
+
+            const actionsCell = row.querySelector('.td-buttons');
+            if (actionsCell) {
+                actionsCell.insertBefore(sellBtn, actionsCell.firstChild);  // В начало
+            }
+        } else {
+            // Обновляем существующую
+            sellBtn.dataset.sellUrl = sellBase.replace(/0\/$/, `${item.id}/`);
+            sellBtn.textContent = newText;
+            sellBtn.dataset.sellHandlerAttached = "false";  // Reset listener
+        }
+
+        // Инициализируем listener
+        initSellButtons(row);
     }
 
     function updateInventoryStoreForm(row, itemId, quantity) {
@@ -664,13 +731,38 @@ function normalizeWeight(value) {
     return value;
 }
 
+function initAllSellButtons() {
+    initSellButtons();
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1 && node.matches &&
+                   (node.matches('tr.inv-row') || node.querySelector('tr.inv-row'))) {
+                    setTimeout(() => {
+                        initSellButtons(node);
+                    }, 10);
+                }
+            });
+        });
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
 function initSellButtons(context = document) {
     if (!context || typeof context.querySelectorAll !== "function") return;
+
     context.querySelectorAll(".btn-sell").forEach(button => {
         if (button.dataset.sellHandlerAttached === "true") return;
+
         button.dataset.sellHandlerAttached = "true";
         button.addEventListener("click", async event => {
             event.preventDefault();
+            event.stopPropagation();
 
             const url = button.dataset.sellUrl;
             const row = button.closest("tr");
@@ -683,12 +775,16 @@ function initSellButtons(context = document) {
             const itemName = row.querySelector(".name-cell")?.textContent.trim() || "";
             const quantity = row.querySelector(".quantity-cell")?.textContent.trim() || "0";
 
-            const priceText = button.textContent.match(/\d+/g)?.[0] || "?";
-            const confirmText = `Продать ${itemName} за ${priceText} Ꞩ ?\nУ вас ${quantity} шт.`;
+            // 🔥 ФИКС: Парсим цену из текста кнопки (fallback если нет цифр)
+            const priceMatch = button.textContent.match(/(\d+)Ꞩ/);
+            const priceText = priceMatch ? priceMatch[1] : "?";
+            const confirmText = `Продать ${itemName} за ${priceText} Ꞩ?\nУ вас ${quantity} шт.`;
+
             if (!confirm(confirmText)) return;
 
             button.disabled = true;
             button.setAttribute("aria-busy", "true");
+            button.textContent = "Продажа...";
 
             try {
                 const response = await fetch(url, {
@@ -725,6 +821,9 @@ function initSellButtons(context = document) {
             } finally {
                 button.disabled = false;
                 button.removeAttribute("aria-busy");
+                // Восстанавливаем оригинальный текст кнопки
+                const originalPrice = priceMatch ? priceMatch[1] : "?";
+                button.textContent = `Продать (${originalPrice}Ꞩ)`;
             }
         });
     });
