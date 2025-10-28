@@ -23,7 +23,6 @@
     left: 8px;
     right: 8px;
     bottom: 8px;
-    border: 1px solid rgba(230, 214, 181, 0.3);
     border-radius: 2px;
     pointer-events: none;
 }
@@ -384,6 +383,7 @@
 
 .inventory-section {
     animation: fadeIn 0.2s ease-out;
+    overflow: hidden;
 }
 
 /* Заголовок страницы */
