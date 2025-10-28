@@ -509,6 +509,7 @@ class StoreItemInHomeView(LoginRequiredMixin, View):
         messages.success(request, msg)
         return redirect("characters:character-inventory", character_id)
 
+
 @method_decorator(require_POST, name="dispatch")
 class RetrieveItemFromHomeView(LoginRequiredMixin, View):
     def post(self, request, character_id, item_id):
@@ -582,6 +583,8 @@ class RetrieveItemFromHomeView(LoginRequiredMixin, View):
             })
         messages.success(request, msg)
         return redirect("characters:character-inventory", character_id)
+
+
 @method_decorator(require_POST, name="dispatch")
 class ToggleHomeStorageView(LoginRequiredMixin, View):
     def post(self, request, character_id):
@@ -596,7 +599,8 @@ class ToggleHomeStorageView(LoginRequiredMixin, View):
         if character.home_storage_enabled:
             messages.success(request, "Домашнее хранилище включено.")
         else:
-            messages.info(request, "Домашнее хранилище отключено. Игроки не смогут им пользоваться до повторного включения.")
+            messages.info(request,
+                          "Домашнее хранилище отключено. Игроки не смогут им пользоваться до повторного включения.")
 
         return redirect("characters:character-inventory", character_id)
 

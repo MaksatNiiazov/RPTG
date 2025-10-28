@@ -140,7 +140,6 @@
         {% if home_storage_enabled %}
             <div class="inventory-section home-storage" data-tab-label="Хранилище">
                 <h2>Домашнее хранилище</h2>
-                {% if home_storage_items %}
                     <table class="item-table home-storage-table">   {# добавлен класс home-storage-table #}
                         <thead>
                         <tr>
@@ -179,12 +178,13 @@
                                     {% if entry.item.legendary_buff %}{{ entry.item.legendary_buff }}{% else %}—{% endif %}
                                 </td>
                             </tr>
+                            {% empty %}
+                            <tr>
+
                         {% endfor %}
                         </tbody>
                     </table>
-                {% else %}
-                    <p>Хранилище пусто.</p>
-                {% endif %}
+
 
                 {# Шаблон строки для динамического добавления в хранилище #}
                 <template id="storage-row-template">
