@@ -124,7 +124,7 @@ class CharacterGetUtils:
     def action_points(self):
         """Очки действий с учетом перегрузки"""
         base = self._get_class_bonus('action_count', 1)
-        if self.effective_dex == 10:
+        if self.effective_dex == 9:
             base += 1
         penalty = self.overload_penalties["actions"]
         return max(0, base - penalty)
@@ -133,7 +133,7 @@ class CharacterGetUtils:
     def possible_reactions(self):
         """Реакции с учетом перегрузки"""
         base = self._get_class_bonus('reaction_count', 1)
-        if self.effective_wis >= 7:
+        if self.effective_wis >= 9:
             base += 1
         if self.effective_dex >= 7:
             base += 1
