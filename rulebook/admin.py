@@ -30,6 +30,7 @@ class ArticleAdmin(ModelAdmin):
     list_editable = ("order",)
     list_filter = ("folder",)
     prepopulated_fields = {"slug": ("title",)}
+    filter_horizontal = ("related_articles",)
 
 
 @admin.register(ImprovementProposal)

@@ -1,5 +1,6 @@
 # docs/views.py
 
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 from django.views import View
@@ -45,6 +46,16 @@ class ArticleDetailView(DetailView):
     context_object_name = "article"
     slug_field = "slug"
     slug_url_kwarg = "slug"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        article = self.object
+        related = Article.objects.filter(
+            Q(pk__in=article.related_articles.values_list("pk", flat=True))
+            | Q(related_articles=article)
+        ).exclude(pk=article.pk).distinct().order_by("title")
+        ctx["related_articles"] = related
+        return ctx
 
 
 
