@@ -176,6 +176,10 @@
             z-index: 15;
         }
 
+        .article-layout.no-sidebar {
+            grid-template-columns: 1fr;
+        }
+
         @media (max-width: 1100px) {
             .article-layout {
                 grid-template-columns: 240px 1fr;
@@ -231,7 +235,7 @@
 {% block content %}
 <div class="article-page">
     <div class="sidebar-overlay" id="relatedOverlay"></div>
-    <div class="article-layout">
+    <div class="article-layout{% if not related_articles %} no-sidebar{% endif %}">
         {% if related_articles %}
         <aside class="related-sidebar" id="relatedSidebar" aria-label="Смежные темы">
             <div class="related-header">
