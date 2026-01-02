@@ -7,16 +7,91 @@
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/md_style.css' %}">
     <style>
-        .article-container {
-            max-width: 800px;
+        .article-page {
+            max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1.5rem;
         }
 
+        .article-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .related-sidebar {
+            background: #f8f3eb;
+            border: 1px solid #e0d6c2;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 1.5rem;
+        }
+
+        .related-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            color: #3a2e1b;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 0.02em;
+        }
+
+        .related-title-icon {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        .related-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .related-link {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.4rem;
+            border-radius: 8px;
+            color: #3a2e1b;
+            font-family: 'Merriweather', serif;
+            text-decoration: none;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .related-link:hover {
+            background: #efe5d6;
+            transform: translateX(3px);
+        }
+
+        .related-link svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        .article-main {
+            background: #fff;
+            border: 1px solid #e0d6c2;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
         .article-header {
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
             border-bottom: 1px solid #e0d6c2;
-            padding-bottom: 1.5rem;
+            padding-bottom: 1.25rem;
         }
 
         .article-title {
@@ -72,63 +147,199 @@
             text-decoration: underline;
         }
 
-        @media (max-width: 768px) {
-            .article-container {
+        .sidebar-toggle {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            background: #3a2e1b;
+            color: #f8f3eb;
+            border: none;
+            border-radius: 10px;
+            padding: 0.55rem 0.9rem;
+            font-family: 'Merriweather', serif;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-toggle svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2.5;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 15;
+        }
+
+        @media (max-width: 1100px) {
+            .article-layout {
+                grid-template-columns: 240px 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .article-page {
                 padding: 0 1rem;
+            }
+
+            .article-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .article-main {
+                padding: 1.25rem;
             }
 
             .article-title {
                 font-size: 1.8rem;
+            }
+
+            .related-sidebar {
+                display: none;
+                position: fixed;
+                inset: 0;
+                right: auto;
+                width: 82%;
+                max-width: 320px;
+                height: 100%;
+                overflow-y: auto;
+                z-index: 20;
+                border-radius: 0 16px 16px 0;
+                box-shadow: 4px 0 14px rgba(0,0,0,0.15);
+            }
+
+            .related-sidebar.is-open {
+                display: block;
+            }
+
+            .sidebar-overlay.is-visible {
+                display: block;
+            }
+
+            .sidebar-toggle {
+                display: inline-flex;
             }
         }
     </style>
 {% endblock %}
 
 {% block content %}
-<div class="article-container">
-    <header class="article-header">
-        <nav class="breadcrumb">
-            <a href="{% url 'rulebook:folder_list' %}">Справочник</a>
-            <span> / </span>
-            <a href="{% url 'rulebook:article_list' slug=article.folder.slug %}">
-                {{ article.folder.name }}
-            </a>
-        </nav>
-
-        <h1 class="article-title">{{ article.title }}</h1>
-
-        <div class="article-meta">
-            <span class="meta-item">
-                <svg class="meta-icon" viewBox="0 0 24 24">
-                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+<div class="article-page">
+    <div class="sidebar-overlay" id="relatedOverlay"></div>
+    <div class="article-layout">
+        {% if related_articles %}
+        <aside class="related-sidebar" id="relatedSidebar" aria-label="Смежные темы">
+            <div class="related-header">
+                <svg class="related-title-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 6v12m-6-6h12" />
                 </svg>
-                Опубликовано: {{ article.created_at|date:"d.m.Y H:i" }}
-            </span>
+                <span>Смежные темы</span>
+            </div>
+            <ul class="related-list">
+                {% for related in related_articles %}
+                <li>
+                    <a class="related-link" href="{% url 'rulebook:article_detail' slug=related.slug %}">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M9 12h6M9 8h6M9 16h6" />
+                        </svg>
+                        <span>{{ related.title }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </aside>
+        {% endif %}
 
-            {% if article.updated_at != article.created_at %}
-            <span class="meta-item">
-                <svg class="meta-icon" viewBox="0 0 24 24">
-                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        <main class="article-main">
+            {% if related_articles %}
+            <button class="sidebar-toggle" id="toggleSidebar" type="button">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                Обновлено: {{ article.updated_at|date:"d.m.Y H:i" }}
-            </span>
+                Смежные темы
+            </button>
             {% endif %}
-        </div>
-    </header>
 
-    <div class="article-content">
-        {{ article.content_html|safe }}
+            <header class="article-header">
+                <nav class="breadcrumb">
+                    <a href="{% url 'rulebook:folder_list' %}">Справочник</a>
+                    <span> / </span>
+                    <a href="{% url 'rulebook:article_list' slug=article.folder.slug %}">
+                        {{ article.folder.name }}
+                    </a>
+                </nav>
+
+                <h1 class="article-title">{{ article.title }}</h1>
+
+                <div class="article-meta">
+                    <span class="meta-item">
+                        <svg class="meta-icon" viewBox="0 0 24 24">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Опубликовано: {{ article.created_at|date:"d.m.Y H:i" }}
+                    </span>
+
+                    {% if article.updated_at != article.created_at %}
+                    <span class="meta-item">
+                        <svg class="meta-icon" viewBox="0 0 24 24">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Обновлено: {{ article.updated_at|date:"d.m.Y H:i" }}
+                    </span>
+                    {% endif %}
+                </div>
+            </header>
+
+            <div class="article-content">
+                {{ article.content_html|safe }}
+            </div>
+
+            <footer class="article-footer">
+                <a href="{% url 'rulebook:article_list' slug=article.folder.slug %}" class="back-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    Назад к списку статей
+                </a>
+
+                {% suggestion_form article.slug %}
+            </footer>
+        </main>
     </div>
-
-    <footer class="article-footer">
-        <a href="{% url 'rulebook:article_list' slug=article.folder.slug %}" class="back-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            Назад к списку статей
-        </a>
-
-        {% suggestion_form article.slug %}
-    </footer>
 </div>
+
+{% if related_articles %}
+<script>
+    (function() {
+        const toggle = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('relatedSidebar');
+        const overlay = document.getElementById('relatedOverlay');
+
+        if (!toggle || !sidebar || !overlay) return;
+
+        const closeSidebar = () => {
+            sidebar.classList.remove('is-open');
+            overlay.classList.remove('is-visible');
+        };
+
+        toggle.addEventListener('click', () => {
+            const opened = sidebar.classList.toggle('is-open');
+            overlay.classList.toggle('is-visible', opened);
+        });
+
+        overlay.addEventListener('click', closeSidebar);
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 900) {
+                closeSidebar();
+            }
+        });
+    })();
+</script>
+{% endif %}
 {% endblock %}

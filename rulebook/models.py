@@ -59,6 +59,13 @@ class Article(models.Model):
     order = models.PositiveIntegerField("Порядок", default=0)
     created_at = models.DateTimeField("Создана", auto_now_add=True)
     updated_at = models.DateTimeField("Обновлена", auto_now=True)
+    related_articles = models.ManyToManyField(
+        "self",
+        verbose_name="Смежные темы",
+        symmetrical=False,
+        blank=True,
+        related_name="related_to",
+    )
 
     class Meta:
         unique_together = (('folder', 'slug'),)
