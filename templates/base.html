@@ -96,97 +96,93 @@
 {% block extra_js %}{% endblock %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Элементы
     const header = document.querySelector('.site-header');
-    const mainContent = document.querySelector('.main-content');
 
-    // Переменные для отслеживания скролла
-    let lastScroll = 0;
-    const scrollThreshold = 10; // Минимальное расстояние скролла для срабатывания
-
-    // Добавляем отступ для main-content равный высоте хедера
-    if (header && mainContent) {
-        const headerHeight = header.offsetHeight;
-        mainContent.style.paddingTop = headerHeight + 'px';
+    if (!header) {
+        return;
     }
 
-    // Функция для обработки скролла
+    let lastScroll = 0;
+    const scrollThreshold = 10;
+    let touchStart = null;
+
+    function showHeader() {
+        header.classList.remove('hidden');
+    }
+
+    function hideHeader() {
+        header.classList.add('hidden');
+    }
+
     function handleScroll() {
         const currentScroll = window.pageYOffset;
+        const isMobile = window.innerWidth <= 768;
 
-        // Только для мобильных устройств
-        if (window.innerWidth <= 768) {
-            if (currentScroll <= 0) {
-                // В самом верху - показываем хедер
-                header.classList.remove('hidden');
-            } else if (currentScroll > lastScroll && currentScroll > scrollThreshold) {
-                // Скроллим вниз - скрываем
-                header.classList.add('hidden');
-            } else if (currentScroll < lastScroll) {
-                // Скроллим вверх - показываем
-                header.classList.remove('hidden');
-            }
-        } else {
-            // На десктопах всегда показываем хедер
-            header.classList.remove('hidden');
+        if (!isMobile) {
+            showHeader();
+            lastScroll = currentScroll;
+            return;
+        }
+
+        if (currentScroll <= 0) {
+            showHeader();
+        } else if (currentScroll > lastScroll + scrollThreshold) {
+            hideHeader();
+        } else if (currentScroll + scrollThreshold < lastScroll) {
+            showHeader();
         }
 
         lastScroll = currentScroll;
     }
 
-    // Добавляем обработчик события
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
 
-    // Инициализация при загрузке
+    window.addEventListener('touchstart', function(e) {
+        touchStart = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', function(e) {
+        if (touchStart === null) return;
+
+        const touchDiff = touchStart - e.touches[0].clientY;
+
+        if (Math.abs(touchDiff) > 10) {
+            if (touchDiff > 0) {
+                hideHeader();
+            } else {
+                showHeader();
+            }
+        }
+    }, { passive: true });
+
+    window.addEventListener('touchend', function() {
+        touchStart = null;
+    }, { passive: true });
+
+    document.querySelectorAll('.message-close').forEach(button => {
+        button.addEventListener('click', function() {
+            const message = this.closest('.message');
+            if (message) {
+                message.style.opacity = '0';
+                message.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    message.remove();
+                    updateMessagesPosition();
+                }, 300);
+            }
+        });
+    });
+
+    function updateMessagesPosition() {
+        const messages = document.querySelectorAll('.message');
+        messages.forEach((message, index) => {
+            message.style.transform = `translateY(${index * 60}px)`;
+        });
+    }
+
     handleScroll();
 });
-// Добавьте это в тот же script
-let touchStart = 0;
-
-document.addEventListener('touchstart', function(e) {
-    touchStart = e.touches[0].clientY;
-}, { passive: true });
-
-document.addEventListener('touchmove', function(e) {
-    const touchY = e.touches[0].clientY;
-    const touchDiff = touchStart - touchY;
-
-    if (Math.abs(touchDiff) > 10) {
-        if (touchDiff > 0) {
-            // Свайп вниз - скрываем
-            header.classList.add('hidden');
-        } else {
-            // Свайп вверх - показываем
-            header.classList.remove('hidden');
-        }
-    }
-}, { passive: true });
-
-// Закрытие сообщений
-document.querySelectorAll('.message-close').forEach(button => {
-    button.addEventListener('click', function() {
-        // Находим родительский элемент сообщения и удаляем его
-        const message = this.closest('.message');
-        if (message) {
-            message.style.opacity = '0';
-            message.style.transform = 'translateX(100%)';
-            // Удаляем элемент после завершения анимации
-            setTimeout(() => {
-                message.remove();
-                // Обновляем положение других сообщений
-                updateMessagesPosition();
-            }, 300);
-        }
-    });
-});
-
-// Функция для обновления позиции сообщений после удаления
-function updateMessagesPosition() {
-    const messages = document.querySelectorAll('.message');
-    messages.forEach((message, index) => {
-        message.style.transform = `translateY(${index * 60}px)`;
-    });
-}
 </script>
 </body>
 </html>
