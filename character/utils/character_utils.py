@@ -51,7 +51,7 @@ class CharacterGetUtils:
     @property
     def max_hp(self):
         """Макс. HP с учетом бонуса класса"""
-        return 10 + 10 * self.effective_con + self._get_class_bonus('hp_bonus')
+        return 20 + 5 * self.effective_con + self._get_class_bonus('hp_bonus')
 
     @property
     def get_concentration(self):
@@ -124,7 +124,7 @@ class CharacterGetUtils:
     def action_points(self):
         """Очки действий с учетом перегрузки"""
         base = self._get_class_bonus('action_count', 1)
-        if self.effective_dex == 9:
+        if self.effective_dex == 8:
             base += 1
         penalty = self.overload_penalties["actions"]
         return max(0, base - penalty)
@@ -133,9 +133,7 @@ class CharacterGetUtils:
     def possible_reactions(self):
         """Реакции с учетом перегрузки"""
         base = self._get_class_bonus('reaction_count', 1)
-        if self.effective_wis >= 9:
-            base += 1
-        if self.effective_dex >= 7:
+        if self.effective_wis >= 8:
             base += 1
         penalty = self.overload_penalties["reactions"]
         return max(0, base - penalty)
