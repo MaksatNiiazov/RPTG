@@ -163,7 +163,6 @@ CKEDITOR_CONFIGS = {
     },
 }
 
-
 UNFOLD = {
     "SITE_TITLE": "RPTG Admin",
     "SITE_HEADER": "RPTG",
@@ -288,6 +287,23 @@ UNFOLD = {
                 ],
             },
             {
+                "title": _("Торговля"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Магазины"),
+                        "icon": "store",
+                        "link": reverse_lazy("admin:shops_shop_changelist"),
+                    },
+                    {
+                        "title": _("Товары в магазинах"),
+                        "icon": "sell",
+                        "link": reverse_lazy("admin:shops_shopitem_changelist"),
+                    },
+                ],
+            },
+
+            {
                 "title": _("Правила и предложения"),
                 "collapsible": True,
                 "items": [
@@ -328,7 +344,6 @@ UNFOLD = {
         ],
     },
 }
-
 
 ASGI_APPLICATION = 'core.asgi.application'  # замени на своё
 
